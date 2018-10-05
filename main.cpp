@@ -7,7 +7,7 @@
 
 /* Main */
 int main(int argc, char* argv[]){
-    cv::VideoCapture cap("a.mp4");
+    cv::VideoCapture cap("test.mp4");
     if(!cap.isOpened()){
         std::cout << "read error." << std::endl;
         return -1;
