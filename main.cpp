@@ -5,76 +5,130 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <iostream>
 #include <string>
+#include <thread>
 #include <stdlib.h>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
+#include <boost/foreach.hpp>
+#include <boost/optional.hpp>
+#include <boost/asio.hpp>
 
-/* 動画フレームの分割を行うクラス */
+/* 名前空間のエイリアス */
+namespace pt = boost::property_tree;
+namespace asio = boost::asio;
+
+/* 別スレッドでフレーム送信を行う関数 */
+void sendTrimmedFrame(int id, cv::Mat frame){
+    std::vector<uchar> buf(frame.rows*frame.cols*frame.channels());
+    std::vector<int> params = {cv::IMWRITE_JPEG_QUALITY, 95};
+    cv::imencode(".jpg", frame, buf, params);    
+}
+
+/* 動画フレーム分割器 */
 class VideoDemuxer{
     private:
         cv::VideoCapture video;  // 再生する動画
-        cv::Rect *rects;         // 各フレームの分割領域
-        int width;               // フレームの横の長さ
-        int height;              // フレームの縦の長さ
-        int frame_num;           // 総フレーム数
-        int display_num;         // ディスプレイ数
+        cv::Rect *rects;         // フレームの分割領域
+        cv::Mat *div_frames;     // 分割フレーム
+        int x;                   // ディスプレイの横の枚数
+        int y;                   // ディスプレイの縦の枚数
+        int frame_num = 0;       // 現在のフレーム番号
+        int total_frame_num;     // 総フレーム数
         double fps;              // 動画のフレームレート
     public:
-        VideoDemuxer(const char* filename, int x, int y);  // コンストラクタ
-        cv::Mat getNextFrame(int id);                      // 次番のフレームを取得
+        VideoDemuxer(const char *filename, int x, int y);  // コンストラクタ
+        ~VideoDemuxer();                                   // デストラクタ
+        bool loadVideo(const char *filename);              // 動画ファイルを読み込み
+        void divideNextFrame();                            // 次番のフレームを分割
+        cv::Mat *getDividedFrame(int x, int y);            // 分割フレームを取得
 };
 
 // コンストラクタ
-VideoDemuxer::VideoDemuxer(const char* filename, int x, int y){
+VideoDemuxer::VideoDemuxer(const char *filename, int x, int y){
+    // パラメータを設定
+    this->x = x;
+    this->y = y;
+    
+    // 動画ファイルを読み込み
+    if(this->loadVideo(filename) == false){
+        exit(-1);
+    }
+}
+
+// デストラクタ
+VideoDemuxer::~VideoDemuxer(){
+    delete[] this->rects;
+    delete[] this->div_frames;
+}
+
+// 動画ファイルを読み込むメソッド
+bool VideoDemuxer::loadVideo(const char *filename){
     // 動画ファイルを読み込み
     cv::VideoCapture video(filename);
     if(video.isOpened()){
         this->video = video;
     }else{
-        std::cerr << "Error: Could not open file." << std::endl;
-        exit(-1);
+        std::cerr << "[Error] Could not open file." << std::endl;
+        return false;
     }
     
-    // フレームサイズを取得
-    this->width = video.get(CV_CAP_PROP_FRAME_WIDTH);
-    this->height = video.get(CV_CAP_PROP_FRAME_HEIGHT);
-    this->frame_num = video.get(CV_CAP_PROP_FRAME_COUNT);
+    // 動画ファイルの情報を取得
+    int width = int(video.get(CV_CAP_PROP_FRAME_WIDTH)/this->x);
+    int height = int(video.get(CV_CAP_PROP_FRAME_HEIGHT)/this->y);
+    this->total_frame_num = video.get(CV_CAP_PROP_FRAME_COUNT);
     this->fps = video.get(CV_CAP_PROP_FPS);
     
     // フレームの分割方法を決定
-    this->display_num = x * y;
-    this->rects = new cv::Rect[this->display_num];
-    int div_x = int(this->width/x);
-    int div_y = int(this->height/y);
-    for(int j=0; j<y; j++){
-        for(int i=0; i<x; i++){
-            this->rects[i+x*j] = cv::Rect(i*div_x, j*div_y, div_x-1, div_y-1);
-            std::cout << this->rects[i+x*j];
+    int display_num = x * y;
+    this->rects = new cv::Rect[display_num];
+    this->div_frames = new cv::Mat[display_num];
+    for(int j=0; j<this->y; ++j){
+        for(int i=0; i<this->x; ++i){
+            this->rects[i+this->x*j] = cv::Rect(i*width, j*height, width, height);
         }
     }
+    return true;
 }
 
-// 次番のフレームを取得するメソッド
-cv::Mat VideoDemuxer::getNextFrame(int id){
+// 次番のフレームを分割するメソッド
+void VideoDemuxer::divideNextFrame(){
+    // 動画からフレームを取得
     cv::Mat frame;
     this->video >> frame;
-    cv::Mat trimmed(frame, this->rects[id]);
-    return trimmed;
+    
+    // フレームを分割
+    for(int j=0; j<this->y; ++j){
+        for(int i=0; i<this->x; ++i){
+            int idx = i + this->x * j;
+            this->div_frames[idx] = cv::Mat(frame, this->rects[idx]);
+        }
+    }
+    return;
 }
 
-/* Main */
+// 分割フレームを取得するメソッド
+cv::Mat *VideoDemuxer::getDividedFrame(int x, int y){
+    return &(this->div_frames[x*this->y*y]);
+}
+
+/* Main関数 */
 int main(int argc, char* argv[]){
-    VideoDemuxer demuxer("test2.mp4", 2, 2);
+    // 設定ファイルをパース
+    pt::ptree conf;
+    pt::read_json("config.json", conf);
+    boost::optional<std::string> filename = conf.get_optional<std::string>("head_node.filename");
+    boost::optional<int> x = conf.get_optional<int>("head_node.layout.x");
+    boost::optional<int> y = conf.get_optional<int>("head_node.layout.y");
+    boost::optional<int> width = conf.get_optional<int>("head_node.resolution.width");
+    boost::optional<int> height = conf.get_optional<int>("head_node.resoution.height");
+    pt::ptree display_node = conf.get_child("display_node");
     
-    for(;;){
-        cv::Mat frame0 = demuxer.getNextFrame(0);
-        cv::Mat frame1 = demuxer.getNextFrame(1);
-        cv::Mat frame2 = demuxer.getNextFrame(2);
-        cv::Mat frame3 = demuxer.getNextFrame(3);
-        cv::imshow("0", frame0);
-        cv::imshow("1", frame1);
-        cv::imshow("2", frame2);
-        cv::imshow("3", frame3);
-        cv::waitKey(1);
-    }
+    // 動画フレーム分割器を起動
+    VideoDemuxer demuxer(filename->c_str(), *x, *y);
+    demuxer.divideNextFrame();
+    
+    // フレーム送信スレッドを起動
+    std::vector<std::thread> threads;
     return 0;
 }
 
