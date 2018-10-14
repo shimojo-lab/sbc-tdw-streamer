@@ -16,10 +16,10 @@ int main(int argc, char* argv[]){
     
     // 動画フレーム分割器を起動
     VideoDemuxer demuxer(filename->c_str(), *x, *y);
-    demuxer.divideNextFrame();
-                                        
+    
     // フレーム送信スレッドを起動
     std::vector<std::thread> threads;
+    FrameStreamer streamer("127.0.0.1", 10000);
     return 0;
 }
 

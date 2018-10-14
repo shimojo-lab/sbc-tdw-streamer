@@ -4,6 +4,7 @@
 #define MAIN_HPP
 
 #include "video_demuxer.hpp"
+#include "frame_streamer.hpp"
 #include <string>
 #include <thread>
 #include <boost/property_tree/ptree.hpp>
