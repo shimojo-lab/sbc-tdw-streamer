@@ -3,6 +3,7 @@
 #ifndef FRAME_STREAMER_HPP
 #define FRAME_STREAMER_HPP
 
+#include <iostream>
 #include <boost/asio.hpp>
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>

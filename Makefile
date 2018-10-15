@@ -7,8 +7,8 @@ CLIENT_SRC = ./src/client
 BIN = ./bin
 CV2_HEADER = /usr/local/include/opencv2
 CXXFLAGS = -Wall -std=c++11
-CXXLINKS = -l opencv_core -l opencv_imgcodecs -l opencv_highgui -l opencv_videoio \
-           -l boost_system -l pthread
+SERVER_LD = -l opencv_core -l opencv_imgcodecs -l opencv_highgui -l opencv_videoio -l boost_system -l pthread
+CLIENT_LD = -l opencv_core -l opencv_imgcodecs -l SDL2 -l pthread
 
 # 全てコンパイル
 .PHONY: all
@@ -17,7 +17,7 @@ all: server client
 # サーバをコンパイル
 .PHONY: server
 server: $(SERVER_SRC)/main.o $(SERVER_SRC)/video_demuxer.o $(SERVER_SRC)/frame_streamer.o 
-	$(CXX) $(CXXFLAGS) $(CXXLINKS) -o $(BIN)/server $^
+	$(CXX) $(CXXFLAGS) $(SERVER_LD) -o $(BIN)/server $^
 
 $(SERVER_SRC)/main.o: $(SERVER_SRC)/main.cpp
 	$(CXX) $(CXXFLAGS) -I $(SERVER_SRC)/include -c -o $@ $<
@@ -30,12 +30,16 @@ $(SERVER_SRC)/frame_streamer.o: $(SERVER_SRC)/frame_streamer.cpp
 
 # クライアントをコンパイル
 .PHONY: client
-client:
-	ls
+client: $(CLIENT_SRC)/main.o
+	$(CXX) $(CXXFLAGS) $(CLIENT_LD) -o $(BIN)/client $^
+
+$(CLIENT_SRC)/main.o: $(CLIENT_SRC)/main.cpp
+	$(CXX) $(CXXFLAGS) -I $(CLIENT_SRC)/include -c -o $@ $<
 
 # バイナリを実行
 .PHONY: test
 test:
+	$(BIN)/client
 	$(BIN)/server
 
 # バイナリを全消去
