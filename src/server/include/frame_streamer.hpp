@@ -5,6 +5,7 @@
 
 #include <iostream>
 #include <boost/asio.hpp>
+#include <boost/bind.hpp>
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
 
@@ -13,14 +14,14 @@ namespace asio = boost::asio;
 /* 分割フレーム送信器 */
 class FrameStreamer{
     private:
-        asio::ip::tcp::socket *sock;      // TCPソケット
-        boost::system::error_code error;  // Boostのエラーコード
-        std::vector<uchar> comp_buf;      // 画像圧縮用バッファ
-        
+        asio::io_service *ios;                // BoostのI/Oオブジェクト
+        asio::ip::tcp::socket *sock;          // 送信用TCPソケット
+        std::vector<unsigned char> comp_buf;  // 画像圧縮用バッファ        
     public:
-        FrameStreamer(const char *ip, int port);              // コンストラクタ
+        FrameStreamer(asio::io_service *ios, const char *ip, int port);  // コンストラクタ
         ~FrameStreamer();                                     // デストラクタ
-        bool connectToDisplayNode(const char *ip, int port);  // ディスプレイノードと接続
+        void connectToDisplayNode(const char *ip, int port);  // ディスプレイノードと接続
+        void callbackForConnection(const boost::system::error_code &error);  // コールバック
         bool sendFrame(cv::Mat &frame);                       // 分割フレームを送信
 };
 

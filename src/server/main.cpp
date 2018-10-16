@@ -3,8 +3,8 @@
 #include "main.hpp"
 
 /* Main関数 */
-int main(int argc, char* argv[]){
-    // 設定ファイルをパース
+int main(int argc, char *argv[]){
+/*    // 設定ファイルをパース
     pt::ptree conf;
     pt::read_json("config.json", conf);
     boost::optional<std::string> filename = conf.get_optional<std::string>("head_node.filename");
@@ -16,10 +16,12 @@ int main(int argc, char* argv[]){
     
     // 動画フレーム分割器を起動
     VideoDemuxer demuxer(filename->c_str(), *x, *y);
-    
+*/    
     // フレーム送信スレッドを起動
     std::vector<std::thread> threads;
-    FrameStreamer streamer("127.0.0.1", 10000);
+    asio::io_service ios;
+    FrameStreamer streamer(&ios, "127.0.0.1", 11111);
+    ios.run();
     return 0;
 }
 

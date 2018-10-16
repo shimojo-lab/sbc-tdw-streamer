@@ -3,18 +3,12 @@
 #include "frame_streamer.hpp"
 
 // コンストラクタ
-FrameStreamer::FrameStreamer(const char *ip, int port){
+FrameStreamer::FrameStreamer(asio::io_service *ios, const char *ip, int port){
     // パラメータを設定
-    asio::io_service ios;
-    asio::ip::tcp::socket sock(ios);
-    boost::system::error_code error;
-    this->sock = &sock;
-    this->error = error;
+    this->ios = ios;
     
     // ディスプレイノードと接続
-    if(this->connectToDisplayNode(ip, port) == false){
-        exit(-1);
-    }
+    this->connectToDisplayNode(ip, port);
 }
 
 // デストラクタ
@@ -22,18 +16,27 @@ FrameStreamer::~FrameStreamer(){
     
 }
 
-// ディスプレイノードとコネクションを確立するメソッド
-bool FrameStreamer::connectToDisplayNode(const char *ip, int port){
+// ディスプレイノードにTCP接続するメソッド
+void FrameStreamer::connectToDisplayNode(const char *ip, int port){
+    // 送信用TCPソケットを用意
+    asio::ip::tcp::socket sock(*(this->ios));
+    this->sock = &sock;
+    
     // ディスプレイノードに接続
     bool result = true;
-    this->sock->connect(asio::ip::tcp::endpoint(asio::ip::address::from_string(ip), port), this->error);
-    if(this->error){
-        std::cout << "[Error] Connection failed. (" << error.message() << ")" << std::endl;
-        result = false;
-    }else{
-        std::cout << "Connected to display (" << ip  << ")." << std::endl;
+    this->sock->async_connect(
+        asio::ip::tcp::endpoint(asio::ip::address::from_string(ip), port),
+        boost::bind(&FrameStreamer::callbackForConnection, this, asio::placeholders::error)
+    );
+    return;
+}
+
+// TCP接続時のコールバック
+void FrameStreamer::callbackForConnection(const boost::system::error_code &error){
+    if(error){
+        std::cerr << "[Error] Connection failed. (" << error.message() << ")" << std::endl;
     }
-    return result;
+    return;
 }
 
 // 分割フレームを送信するメソッド
@@ -42,14 +45,18 @@ inline bool FrameStreamer::sendFrame(cv::Mat &frame){
     std::vector<int> params = {cv::IMWRITE_JPEG_QUALITY, 95};
     cv::imencode(".jpg", frame, this->comp_buf, params);
     
+    // 送信用バイト列を作成
+    std::string bytes_buf(this->comp_buf.begin(), this->comp_buf.end());
+    bytes_buf += "\r\n\r\n";
+    auto send_buf = asio::buffer(bytes_buf);
+    
     // フレームを送信
     bool result = true;
-    auto send_buf = asio::buffer(this->comp_buf);
-    asio::write(*(this->sock), send_buf, this->error);
-    if(this->error){
+    //asio::write(*(this->sock), send_buf, this->error);
+    /*if(this->error){
         std::cout << "[Error] Send failed. (" << error.message() << ")" << std::endl;
         result = false;
-    }
+    }*/
     return result;
 }
 

@@ -27,7 +27,7 @@ bool VideoDemuxer::loadVideo(const char *filename){
     if(video.isOpened()){
         this->video = video;
     }else{
-        std::cerr << "[Error] Could not open file." << std::endl;
+        std::cerr << "[Error] File open failed." << std::endl;
         return false;
     }
     // 動画ファイルの情報を取得
