@@ -1,45 +1,48 @@
-/** frame_streamer.cpp **/
+/********************************
+ *      frame_streamer.cpp     *
+ *   (フレーム送信モジュール)  *
+ *******************************/
 
 #include "frame_streamer.hpp"
 
-// コンストラクタ
-FrameStreamer::FrameStreamer(asio::io_service *ios, const char *ip, int port){
-    // パラメータを設定
-    this->ios = ios;
-    
-    // ディスプレイノードと接続
-    this->connectToDisplayNode(ip, port);
+/* コンストラクタ */
+FrameStreamer::FrameStreamer(_asio::io_service &ios, VideoDemuxer &demuxer, const char *ip, int port):
+    ios(ios),
+    sock(ios),
+    ip(ip),
+    demuxer(demuxer)
+{
+    // 受信側と接続
+    this->connectByTCP(ip, port);
 }
 
-// デストラクタ
-FrameStreamer::~FrameStreamer(){
-    
-}
+/* デストラクタ */
+FrameStreamer::~FrameStreamer(){}
 
-// ディスプレイノードにTCP接続するメソッド
-void FrameStreamer::connectToDisplayNode(const char *ip, int port){
-    // 送信用TCPソケットを用意
-    asio::ip::tcp::socket sock(*(this->ios));
-    this->sock = &sock;
-    
-    // ディスプレイノードに接続
-    bool result = true;
-    this->sock->async_connect(
-        asio::ip::tcp::endpoint(asio::ip::address::from_string(ip), port),
-        boost::bind(&FrameStreamer::callbackForConnection, this, asio::placeholders::error)
-    );
+/* 受信側にTCPで接続するメソッド */
+void FrameStreamer::connectByTCP(const char *ip, int port){
+    auto bind = boost::bind(&FrameStreamer::onConnect, this, _ph::error);
+    this->sock.async_connect(_ip::tcp::endpoint(_ip::address::from_string(ip), port), bind);
     return;
 }
 
-// TCP接続時のコールバック
-void FrameStreamer::callbackForConnection(const boost::system::error_code &error){
+/* 接続時のコールバック関数 */
+void FrameStreamer::onConnect(const _system::error_code &error){
     if(error){
         std::cerr << "[Error] Connection failed. (" << error.message() << ")" << std::endl;
+        return;
+    }
+    std::cout << "[Info] Established TCP Connection with " << this->ip << "." << std::endl;
+    
+    // 送信処理をループ
+    while(true){
+        //demuxer.divideNextFrame();
+        /* to do */
     }
     return;
 }
 
-// 分割フレームを送信するメソッド
+/* 分割フレームを送信するメソッド */
 inline bool FrameStreamer::sendFrame(cv::Mat &frame){
     // フレームを圧縮
     std::vector<int> params = {cv::IMWRITE_JPEG_QUALITY, 95};
@@ -47,16 +50,15 @@ inline bool FrameStreamer::sendFrame(cv::Mat &frame){
     
     // 送信用バイト列を作成
     std::string bytes_buf(this->comp_buf.begin(), this->comp_buf.end());
-    bytes_buf += "\r\n\r\n";
-    auto send_buf = asio::buffer(bytes_buf);
+    bytes_buf += SEPARATOR;
+    auto send_buf = _asio::buffer(bytes_buf);
     
     // フレームを送信
-    bool result = true;
-    //asio::write(*(this->sock), send_buf, this->error);
+    //_asio::write(*(this->sock), send_buf, this->error);
     /*if(this->error){
         std::cout << "[Error] Send failed. (" << error.message() << ")" << std::endl;
-        result = false;
+        return false;
     }*/
-    return result;
+    return true;
 }
 

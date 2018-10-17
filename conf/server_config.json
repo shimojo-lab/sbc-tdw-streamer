@@ -3,12 +3,8 @@
     "head_node": {
         "filename": "./test.mp4",
         "layout": {
-            "x": 2,
-            "y": 2
-        },
-        "resolution": {
-            "width": 1920,
-            "height": 1080
+            "row": 2,
+            "column": 2
         }
     },
     

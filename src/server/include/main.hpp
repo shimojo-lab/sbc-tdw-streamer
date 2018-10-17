@@ -1,17 +1,16 @@
-/** main.hpp **/
+/********************************
+ *           main.hpp           *
+ *      (送信側プログラム)      *
+ ********************************/
 
 #ifndef MAIN_HPP
 #define MAIN_HPP
 
-#include "video_demuxer.hpp"
 #include "frame_streamer.hpp"
-#include <string>
+#include "config_parser.hpp"
 #include <thread>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/json_parser.hpp>
-#include <boost/optional.hpp>
 
-namespace pt = boost::property_tree;
+#define ARGUMENT_NUM 2
 
 #endif
 
