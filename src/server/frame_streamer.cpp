@@ -6,11 +6,12 @@
 #include "frame_streamer.hpp"
 
 /* コンストラクタ */
-FrameStreamer::FrameStreamer(_asio::io_service &ios, VideoDemuxer &demuxer, const char *ip, int port):
+FrameStreamer::FrameStreamer(_asio::io_service &ios, VideoDemuxer &demuxer, const char *ip, int port, int id):
     ios(ios),
     sock(ios),
     ip(ip),
-    demuxer(demuxer)
+    demuxer(demuxer),
+    id(id)
 {
     // 受信側と接続
     this->connectByTCP(ip, port);
@@ -36,29 +37,28 @@ void FrameStreamer::onConnect(const _system::error_code &error){
     
     // 送信処理をループ
     while(true){
-        //demuxer.divideNextFrame();
-        /* to do */
+        this->demuxer.divideNextFrame();
+        this->sendFrame(this->demuxer.getDividedFrame(this->id));
     }
     return;
 }
 
 /* 分割フレームを送信するメソッド */
-inline bool FrameStreamer::sendFrame(cv::Mat &frame){
+inline void FrameStreamer::sendFrame(cv::Mat *frame){
     // フレームを圧縮
     std::vector<int> params = {cv::IMWRITE_JPEG_QUALITY, 95};
-    cv::imencode(".jpg", frame, this->comp_buf, params);
+    cv::imencode(".jpg", *frame, this->comp_buf, params);
     
     // 送信用バイト列を作成
     std::string bytes_buf(this->comp_buf.begin(), this->comp_buf.end());
     bytes_buf += SEPARATOR;
     auto send_buf = _asio::buffer(bytes_buf);
-    
+    std::cout << "aaaaa";
     // フレームを送信
     //_asio::write(*(this->sock), send_buf, this->error);
     /*if(this->error){
         std::cout << "[Error] Send failed. (" << error.message() << ")" << std::endl;
-        return false;
     }*/
-    return true;
+    return;
 }
 

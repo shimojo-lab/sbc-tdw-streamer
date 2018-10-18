@@ -46,18 +46,18 @@ void VideoDemuxer::divideNextFrame(){
     this->video >> frame;
     
     // フレームを分割
-    int idx;
+    int id;
     for(int j=0; j<this->column; ++j){
        for(int i=0; i<this->row; ++i){
-           idx = i + this->row * j;
-           this->div_frames[idx] = cv::Mat(frame, this->rects[idx]);
+           id = i + this->row * j;
+           this->div_frames[id] = cv::Mat(frame, this->rects[id]);
        }
     }
     return;
 }
 
 /* 分割フレームを取得するメソッド */
-inline cv::Mat *VideoDemuxer::getDividedFrame(int x, int y){
-    return &(this->div_frames[x+(this->row)*y]);
+cv::Mat *VideoDemuxer::getDividedFrame(int id){
+    return &(this->div_frames[id]);
 }
 

@@ -45,6 +45,7 @@ inline void FrameReceiver::onReceive(const _system::error_code &error, size_t si
         const unsigned char *frame = _asio::buffer_cast<const unsigned char*>(this->receive_buf.data());
         std::cout << *frame << std::endl;
         //this->recieve_buf.consume(len);
+        //this->viewer.displayFrame(frame);
     }
     return;
 }

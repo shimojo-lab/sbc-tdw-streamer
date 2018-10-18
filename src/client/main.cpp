@@ -10,7 +10,7 @@ int main(int argc, char* argv[]){
     // コマンドライン引数をチェック
     if(argc != ARGUMENT_NUM){
         std::cerr << "[Error] Invaild arguments." << std::endl;
-        std::cerr << "Usage: ./client <Config_File>" << std::endl;
+        std::cerr << "Usage: ./client <config_file>" << std::endl;
         std::exit(EXIT_FAILURE);
     }
     

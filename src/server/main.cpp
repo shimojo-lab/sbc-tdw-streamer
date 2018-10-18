@@ -32,7 +32,7 @@ int main(int argc, char *argv[]){
         const char *ip;
         int port;
         std::tie(ip, port) = parser.getFrameStreamerParams(i);
-        FrameStreamer streamer(ios, demuxer, ip, port);
+        FrameStreamer streamer(ios, demuxer, ip, port, i);
         ios.run();
     }
     return 0;
