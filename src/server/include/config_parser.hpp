@@ -1,6 +1,6 @@
 /********************************
  *      config_parser.hpp       *
- *   (設定読み込みモジュール)   *
+ *   (設定ファイルのパーサー)   *
  ********************************/
 
 #ifndef CONFIG_PARSER_HPP
@@ -18,7 +18,7 @@
 /* 名前空間のエイリアス */
 namespace _pt = boost::property_tree;
 
-/* 設定読み込みモジュール */
+/* コンフィグパーサ */
 class ConfigParser{
     private:
         const char *video_src;             // 再生する動画
@@ -31,9 +31,9 @@ class ConfigParser{
         ConfigParser(const char *conf_file);  // コンストラクタ
         ~ConfigParser();                      // デストラクタ
         int getDisplayNum();                  // ディスプレイ数を取得
-        std::tuple<const char*, int, int> getVideoDemuxerParams();    // フレーム分割モジュール用のゲッター
-        std::tuple<const char*, int> getFrameStreamerParams(int id);  // フレーム送信モジュール用のゲッター
+        std::tuple<const char*, int, int> getVideoSplitterParams();  // フレーム分割器用に値を取得
+        std::tuple<const char*, int> getFrameSenderParams(int id);   // 分割フレーム送信器用に値を取得
 };
 
-#endif
+#endif  /* CONFIG_PARSER_HPP */
 

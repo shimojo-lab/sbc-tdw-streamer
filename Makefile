@@ -10,7 +10,7 @@ CLI_SRC = ./src/client
 BIN = ./bin
 CONF = ./conf
 CV2_HDR = /usr/local/include/opencv2
-SRV_LD = -l opencv_core -l opencv_imgcodecs -l opencv_highgui -l opencv_videoio -l boost_system -l pthread
+SRV_LD = -l opencv_core -l opencv_imgcodecs -l opencv_highgui -l opencv_videoio -l boost_system -l boost_thread -l pthread
 CLI_LD = -l opencv_core -l opencv_imgcodecs -l opencv_highgui -l opencv_imgproc -l SDL2 -l boost_system -l pthread
 
 # 全てのコンパイルとテストを一括実行
@@ -25,21 +25,24 @@ server: compile_server test_server
 .PHONY: client
 client: compile_client test_client
 
-# 表示サーバをコンパイル
+# 送信サーバをコンパイル
 .PHONY: compile_server
-compile_server: $(SRV_SRC)/main.o $(SRV_SRC)/config_parser.o $(SRV_SRC)/video_demuxer.o $(SRV_SRC)/frame_streamer.o 
+compile_server: $(SRV_SRC)/main.o $(SRV_SRC)/config_parser.o $(SRV_SRC)/frame_queue.o $(SRV_SRC)/video_splitter.o $(SRV_SRC)/frame_sender.o 
 	$(CXX) $(CXXFLAGS) $(SRV_LD) -o $(BIN)/sbc_server $^
 
 $(SRV_SRC)/main.o: $(SRV_SRC)/main.cpp
 	$(CXX) $(CXXFLAGS) -I $(SRV_SRC)/include -c -o $@ $<
 
 $(SRV_SRC)/config_parser.o: $(SRV_SRC)/config_parser.cpp	
-	$(CXX) $(CXXFLAGS) -I $(SRV_SRC)/include  -c -o $@ $<
+	$(CXX) $(CXXFLAGS) -I $(SRV_SRC)/include -c -o $@ $<
 
-$(SRV_SRC)/video_demuxer.o: $(SRV_SRC)/video_demuxer.cpp
+$(SRV_SRC)/frame_queue.o: $(SRV_SRC)/frame_queue.cpp
 	$(CXX) $(CXXFLAGS) -I $(SRV_SRC)/include -I $(CV2_HDR) -c -o $@ $<
 
-$(SRV_SRC)/frame_streamer.o: $(SRV_SRC)/frame_streamer.cpp
+$(SRV_SRC)/video_splitter.o: $(SRV_SRC)/video_splitter.cpp
+	$(CXX) $(CXXFLAGS) -I $(SRV_SRC)/include -I $(CV2_HDR) -c -o $@ $<
+
+$(SRV_SRC)/frame_sender.o: $(SRV_SRC)/frame_sender.cpp
 	$(CXX) $(CXXFLAGS) -I $(SRV_SRC)/include -I $(CV2_HDR) -c -o $@ $<
 
 # 表示クライアントをコンパイル

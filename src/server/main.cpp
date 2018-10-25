@@ -1,6 +1,6 @@
 /********************************
  *           main.cpp           *
- *  (ヘッドノード側プログラム)  *
+ *  (ヘッドノード側送信サーバ)  *
  ********************************/
 
 #include "main.hpp"
@@ -17,30 +17,33 @@ int main(int argc, char *argv[]){
         std::exit(EXIT_FAILURE);
     }
     
-    // 設定読み込みモジュールを起動
+    // 設定ファイルをパース
     ConfigParser parser(argv[1]);
     
-    // フレーム分割モジュールを起動
-    const char *filename;
-    int row;
-    int column;
-    std::tie(filename, row, column) = parser.getVideoDemuxerParams();
-    VideoDemuxer demuxer(filename, row, column);
+    // フレーム分割器を初期化
+    const char *video_src;
+    int row, column;
+    std::tie(video_src, row, column) = parser.getVideoSplitterParams();
+    VideoSplitter splitter(video_src, row, column);
     
-    // フレーム送信スレッドを起動
-    const int display_num = parser.getDisplayNum();
+    // 別スレッドで分割フレーム送信器を起動
     const char *ip;
     int port;
+    const int display_num = parser.getDisplayNum();
     for(int i=0; i<display_num; ++i){
-        std::tie(ip, port) = parser.getFrameStreamerParams(i);
-        std::thread send_thread([&demuxer, &ip, &port, &i]{
+        std::shared_ptr<FrameQueue> queue = splitter.getFrameQueuePtr(i);
+        std::tie(ip, port) = parser.getFrameSenderParams(i);
+        std::thread send_thread([&queue, &ip, &port]{
             _asio::io_service ios;
-            FrameStreamer streamer(ios, demuxer, ip, port, i);
+            FrameSender sender(ios, queue);
             ios.run();
+            sender.start(ip, port);
         });
         send_thread.detach();
     }
-    while(true){}
+    
+    // フレーム分割を開始
+    splitter.start();
     return 0;
 }
 

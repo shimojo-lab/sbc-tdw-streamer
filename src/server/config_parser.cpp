@@ -1,7 +1,7 @@
 /********************************
- *       config_parser.cpp      *
- *   (設定読み込みモジュール)   *
- *******************************/
+ *      config_parser.cpp       *
+ *   (設定ファイルのパーサー)   *
+ ********************************/
 
 #include "config_parser.hpp"
 
@@ -34,21 +34,21 @@ ConfigParser::ConfigParser(const char *conf_file){
 /* デストラクタ */
 ConfigParser::~ConfigParser(){}
 
-/* 全ディスプレイ数用のゲッター */
+/* 全ディスプレイ数を取得 */
 int ConfigParser::getDisplayNum(){
     return this->display_num;
 }
 
-/* フレーム分割モジュール用のゲッター */
-std::tuple<const char*, int, int> ConfigParser::getVideoDemuxerParams(){
+/* フレーム分割器用に値を取得 */
+std::tuple<const char*, int, int> ConfigParser::getVideoSplitterParams(){
     const char *video_src = this->video_src;
     int row = this->row;
     int column = this->column;
     return std::forward_as_tuple(video_src, row, column);
 }
 
-/* フレーム送信モジュール用のゲッター */
-std::tuple<const char*, int> ConfigParser::getFrameStreamerParams(int id){
+/* 分割フレーム送信器用に値を取得 */
+std::tuple<const char*, int> ConfigParser::getFrameSenderParams(int id){
     const char *ip = this->ip_list[id].c_str();
     int port = this->port_list[id];
     return std::forward_as_tuple(ip, port);
