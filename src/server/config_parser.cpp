@@ -12,46 +12,42 @@ ConfigParser::ConfigParser(const char *conf_file){
     _pt::read_json(conf_file, conf);
     
     // パラメータを取得
-    this->setHeadNodeParams(conf.get_child("head_node"));
-    this->setDisplayNodeParams(conf.get_child("display_node"));
+    this->video_src = conf.get_optional<std::string>("video_src").get().c_str();
+    this->row = conf.get_optional<int>("layout.row").get();
+    this->column = conf.get_optional<int>("layout.column").get();
+    this->display_num = this->row * this->column;
+    
+    // ディスプレイノードを登録
+    int count = 0;
+    BOOST_FOREACH(_pt::ptree::value_type &child, conf.get_child("display_node")){
+        const _pt::ptree &node = child.second;
+        this->ip_list.push_back(node.get_optional<std::string>("ip").get());
+        this->port_list.push_back(node.get_optional<int>("port").get());
+        ++count;
+    }
+    if(count != this->display_num){
+        std::cerr << "[Error] Number of display nodes is invalid." << std::endl;
+        std::exit(EXIT_FAILURE);
+    }
 }
 
 /* デストラクタ */
 ConfigParser::~ConfigParser(){}
 
-/* ヘッドノードのパラメータを設定するメソッド */
-void ConfigParser::setHeadNodeParams(_pt::ptree conf){
-    this->filename = conf.get_optional<std::string>("filename").get().c_str();
-    this->row = conf.get_optional<int>("layout.row").get();
-    this->column = conf.get_optional<int>("layout.column").get();
-    this->display_num = this->row * this->column;
-    return;
-}
-
-/* ディスプレイノードのパラメータを設定するメソッド */
-void ConfigParser::setDisplayNodeParams(_pt::ptree conf){
-    BOOST_FOREACH(_pt::ptree::value_type &child, conf){
-        const _pt::ptree &entry = child.second;
-        this->ip_list.push_back(entry.get_optional<std::string>("ip").get());
-        this->port_list.push_back(entry.get_optional<int>("port").get());
-    }
-    return;
-}
-
-/* 全ディスプレイ数を取得するメソッド */
+/* 全ディスプレイ数用のゲッター */
 int ConfigParser::getDisplayNum(){
     return this->display_num;
 }
 
-/* フレーム分割モジュール用のパラメータを取得するメソッド */
+/* フレーム分割モジュール用のゲッター */
 std::tuple<const char*, int, int> ConfigParser::getVideoDemuxerParams(){
-    const char *filename = this->filename;
+    const char *video_src = this->video_src;
     int row = this->row;
     int column = this->column;
-    return std::forward_as_tuple(filename, row, column);
+    return std::forward_as_tuple(video_src, row, column);
 }
 
-/* フレーム送信モジュール用のパラメータを取得するメソッド */
+/* フレーム送信モジュール用のゲッター */
 std::tuple<const char*, int> ConfigParser::getFrameStreamerParams(int id){
     const char *ip = this->ip_list[id].c_str();
     int port = this->port_list[id];

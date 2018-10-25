@@ -1,4 +1,4 @@
-/********************************
+/*******************************
  *      frame_receiver.hpp     *
  *   (フレーム受信モジュール)  *
  *******************************/
@@ -7,15 +7,17 @@
 #define FRAME_RECEIVER_HPP
 
 #include "frame_viewer.hpp"
-#include <cstdlib>
+#include <cstring>
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
 
-#define SEPARATOR "\r\n\r\n"  // TCPメッセージのセパレータ
+/* 定数の定義 */
+extern const char* const SEPARATOR;  // TCPメッセージのセパレータ
+extern const int SEPARATOR_NUM;      // TCPメッセージのセパレータの長さ
 
 /* 名前空間のエイリアス */
 namespace _asio = boost::asio;
-namespace _system = boost::system;
+namespace _sys = boost::system;
 namespace _ip = boost::asio::ip;
 namespace _ph = boost::asio::placeholders;
 
@@ -29,9 +31,9 @@ class FrameReceiver{
         FrameViewer &viewer;           // フレーム表示モジュール
     public:
         FrameReceiver(_asio::io_service &ios, FrameViewer &viewer, int port);  // コンストラクタ
-        ~FrameReceiver();                                  // デストラクタ
-        void onConnect(const _system::error_code &error);  // 接続時のコールバック関数
-        inline void onReceive(const _system::error_code &error, size_t size);  // 受信時のコールバック関数
+        ~FrameReceiver();                                                      // デストラクタ
+        void onConnect(const _sys::error_code &error);                         // 接続時のコールバック関数
+        inline void onReceive(const _sys::error_code &error, size_t size);     // 受信時のコールバック関数
 };
 
 #endif

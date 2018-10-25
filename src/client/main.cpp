@@ -1,16 +1,19 @@
-/*******************************
- *           main.cpp          *
- *      (表示側プログラム)     *
- *******************************/
+/*************************************
+*              main.cpp              *
+*  (ディスプレイノード側プログラム)  *
+**************************************/
 
 #include "main.hpp"
+
+/* 定数の定義 */
+const int ARGUMENT_NUM = 2;  // コマンドライン引数の個数
 
 /* Main関数 */
 int main(int argc, char* argv[]){
     // コマンドライン引数をチェック
     if(argc != ARGUMENT_NUM){
         std::cerr << "[Error] Invaild arguments." << std::endl;
-        std::cerr << "Usage: ./client <config_file>" << std::endl;
+        std::cerr << "Usage: sbc_client <config file>" << std::endl;
         std::exit(EXIT_FAILURE);
     }
     
@@ -28,7 +31,6 @@ int main(int argc, char* argv[]){
     int port = parser.getFrameReceiverParams();
     FrameReceiver receiver(ios, viewer, port);
     ios.run();
-    
     return 0;
 }
 

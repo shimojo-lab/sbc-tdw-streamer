@@ -6,24 +6,22 @@
 #include "video_demuxer.hpp"
 
 /* コンストラクタ */
-VideoDemuxer::VideoDemuxer(const char *filename, int row, int column):
+VideoDemuxer::VideoDemuxer(const char *video_src, int row, int column):
+    video(cv::VideoCapture(video_src)),
     row(row),
     column(column)
 {
-    // 動画ファイルを読み込み
-    cv::VideoCapture video(filename);
-    if(video.isOpened()){
-        this->video = video;
-    }else{
+    // 再生する動画のチェック
+    if(this->video.isOpened() == false){
         std::cerr << "[Error] File open failed." << std::endl;
         std::exit(EXIT_FAILURE);
     }
     
     // 動画ファイルの情報を取得
-    const int width = int(video.get(CV_CAP_PROP_FRAME_WIDTH)/this->row);
-    const int height = int(video.get(CV_CAP_PROP_FRAME_HEIGHT)/this->column);
-    this->total_frame_num = video.get(CV_CAP_PROP_FRAME_COUNT);
-    this->fps = video.get(CV_CAP_PROP_FPS);
+    const int width = int(this->video.get(CV_CAP_PROP_FRAME_WIDTH)/this->row);
+    const int height = int(this->video.get(CV_CAP_PROP_FRAME_HEIGHT)/this->column);
+    this->total_frame_num = this->video.get(CV_CAP_PROP_FRAME_COUNT);
+    this->fps = this->video.get(CV_CAP_PROP_FPS);
     
     // フレームの分割領域を決定
     const int display_num = this->row * this->column;

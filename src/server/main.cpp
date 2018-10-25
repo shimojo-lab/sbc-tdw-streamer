@@ -1,16 +1,19 @@
 /********************************
  *           main.cpp           *
- *      (送信側プログラム)      *
+ *  (ヘッドノード側プログラム)  *
  ********************************/
 
 #include "main.hpp"
+
+/* 定数の定義 */
+const int ARGUMENT_NUM = 2;  // コマンドライン引数の個数
 
 /* Main関数 */
 int main(int argc, char *argv[]){
     // コマンドライン引数をチェック
     if(argc != ARGUMENT_NUM){
         std::cerr << "[Error] Invalid arguments." << std::endl;
-        std::cerr << "Usage: server ＜Config File＞" << std::endl;
+        std::cerr << "Usage: sbc_server <config file>" << std::endl;
         std::exit(EXIT_FAILURE);
     }
     
@@ -24,17 +27,20 @@ int main(int argc, char *argv[]){
     std::tie(filename, row, column) = parser.getVideoDemuxerParams();
     VideoDemuxer demuxer(filename, row, column);
     
-    // フレーム送信モジュールを起動
-    int display_num = parser.getDisplayNum();
-    std::vector<std::thread> threads;
+    // フレーム送信スレッドを起動
+    const int display_num = parser.getDisplayNum();
+    const char *ip;
+    int port;
     for(int i=0; i<display_num; ++i){
-        _asio::io_service ios;
-        const char *ip;
-        int port;
         std::tie(ip, port) = parser.getFrameStreamerParams(i);
-        FrameStreamer streamer(ios, demuxer, ip, port, i);
-        ios.run();
+        std::thread send_thread([&demuxer, &ip, &port, &i]{
+            _asio::io_service ios;
+            FrameStreamer streamer(ios, demuxer, ip, port, i);
+            ios.run();
+        });
+        send_thread.detach();
     }
+    while(true){}
     return 0;
 }
 

@@ -1,5 +1,7 @@
-# Makefile 
-# (pi_tdw_streamerビルド用)
+#################################
+#           Makefile            #
+#   (pi_tdw_streamerビルド用)   #
+#################################
 
 CXX = g++
 CXXFLAGS = -Wall -std=c++11
@@ -9,24 +11,24 @@ BIN = ./bin
 CONF = ./conf
 CV2_HDR = /usr/local/include/opencv2
 SRV_LD = -l opencv_core -l opencv_imgcodecs -l opencv_highgui -l opencv_videoio -l boost_system -l pthread
-CLI_LD = -l opencv_core -l opencv_imgcodecs -l opencv_highgui -l SDL2 -l boost_system -l pthread
+CLI_LD = -l opencv_core -l opencv_imgcodecs -l opencv_highgui -l opencv_imgproc -l SDL2 -l boost_system -l pthread
 
-# コンパイルとテストを一括実行
+# 全てのコンパイルとテストを一括実行
 .PHONY: all
 all: server client
 
-# 送信側のコンパイルとテスト
+# 送信サーバのコンパイルとテスト
 .PHONY: server
 server: compile_server test_server
 
-# 受信側のコンパイルとテスト
+# 表示クライアントのコンパイルとテスト
 .PHONY: client
 client: compile_client test_client
 
-# サーバをコンパイル
+# 表示サーバをコンパイル
 .PHONY: compile_server
 compile_server: $(SRV_SRC)/main.o $(SRV_SRC)/config_parser.o $(SRV_SRC)/video_demuxer.o $(SRV_SRC)/frame_streamer.o 
-	$(CXX) $(CXXFLAGS) $(SRV_LD) -o $(BIN)/server $^
+	$(CXX) $(CXXFLAGS) $(SRV_LD) -o $(BIN)/sbc_server $^
 
 $(SRV_SRC)/main.o: $(SRV_SRC)/main.cpp
 	$(CXX) $(CXXFLAGS) -I $(SRV_SRC)/include -c -o $@ $<
@@ -40,10 +42,10 @@ $(SRV_SRC)/video_demuxer.o: $(SRV_SRC)/video_demuxer.cpp
 $(SRV_SRC)/frame_streamer.o: $(SRV_SRC)/frame_streamer.cpp
 	$(CXX) $(CXXFLAGS) -I $(SRV_SRC)/include -I $(CV2_HDR) -c -o $@ $<
 
-# クライアントをコンパイル
+# 表示クライアントをコンパイル
 .PHONY: compile_client
 compile_client: $(CLI_SRC)/main.o $(CLI_SRC)/config_parser.o $(CLI_SRC)/frame_receiver.o $(CLI_SRC)/frame_viewer.o
-	$(CXX) $(CXXFLAGS) $(CLI_LD) -o $(BIN)/client $^
+	$(CXX) $(CXXFLAGS) $(CLI_LD) -o $(BIN)/sbc_client $^
 
 $(CLI_SRC)/main.o: $(CLI_SRC)/main.cpp
 	$(CXX) $(CXXFLAGS) -I $(CLI_SRC)/include -c -o $@ $<
@@ -57,15 +59,25 @@ $(CLI_SRC)/frame_receiver.o: $(CLI_SRC)/frame_receiver.cpp
 $(CLI_SRC)/frame_viewer.o: $(CLI_SRC)/frame_viewer.cpp
 	$(CXX) $(CXXFLAGS) -I $(CLI_SRC)/include -I $(CV2_HDR) -c -o $@ $<
 
-# サーバを起動
+# 送信サーバを起動
 .PHONY: test_server
 test_server:
-	$(BIN)/server $(CONF)/server_config.json
+	$(BIN)/sbc_server $(CONF)/server_config.json
 
-# クライアントを起動
+# 表示クライアントを起動
 .PHONY: test_client
 test_client:
-	$(BIN)/client $(CONF)/client_config.json
+	$(BIN)/sbc_client $(CONF)/client_config.json
+
+# 実行ファイルをインストール
+.PHONY: install
+install: install_server install_client
+
+install_server:
+	sleep 1
+
+install_client:
+	sleep 1
 
 # 実行ファイルを全消去
 .PHONY: clean

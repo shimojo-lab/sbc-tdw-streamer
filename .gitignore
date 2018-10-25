@@ -1,5 +1,6 @@
 *.mp4
 *.out
 *.o
-pi_tdw_streamer
+sbc_client
+sbc_server
 

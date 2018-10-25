@@ -20,14 +20,14 @@ ConfigParser::ConfigParser(const char *conf_file){
 /* デストラクタ */
 ConfigParser::~ConfigParser(){}
 
-/* フレーム表示モジュール用のパラメータを取得するメソッド */
+/* フレーム表示モジュール用のゲッター */
 std::tuple<int, int> ConfigParser::getFrameViewerParams(){
     int res_width = this->res_width;
     int res_height = this->res_height;
     return std::forward_as_tuple(res_width, res_height);
 }
 
-/* フレーム受信モジュール用のパラメータを取得するメソッド */
+/* フレーム受信モジュール用のゲッター */
 int ConfigParser::getFrameReceiverParams(){
     return this->port;
 }

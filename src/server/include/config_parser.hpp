@@ -6,6 +6,7 @@
 #ifndef CONFIG_PARSER_HPP
 #define CONFIG_PARSER_HPP
 
+#include <iostream>
 #include <string>
 #include <vector>
 #include <tuple>
@@ -20,20 +21,18 @@ namespace _pt = boost::property_tree;
 /* 設定読み込みモジュール */
 class ConfigParser{
     private:
-        const char *filename;              // 再生する動画ファイル
-        int row;                           // ディスプレイの横の長さ
-        int column;                        // ディスプレイの縦の長さ
+        const char *video_src;             // 再生する動画
+        int row;                           // ディスプレイの横の枚数
+        int column;                        // ディスプレイの縦の枚数
+        int display_num;                   // 全ディスプレイ数
         std::vector<std::string> ip_list;  // ディスプレイノードのIP
         std::vector<int> port_list;        // ディスプレイノードのポート
-        int display_num;                   // 全ディスプレイ数
     public:
-        ConfigParser(const char *conf_file);         // コンストラクタ
-        ~ConfigParser();                             // デストラクタ
-        void setHeadNodeParams(_pt::ptree conf);     // ヘッドノードのパラメータを設定
-        void setDisplayNodeParams(_pt::ptree conf);  // ディスプレイノードのパラメータを設定
-        int getDisplayNum();                         // ディスプレイ数を取得
-        std::tuple<const char*, int, int> getVideoDemuxerParams();    // フレーム分割モジュール用に値を取得
-        std::tuple<const char*, int> getFrameStreamerParams(int id);  // フレーム送信モジュール用に値を取得
+        ConfigParser(const char *conf_file);  // コンストラクタ
+        ~ConfigParser();                      // デストラクタ
+        int getDisplayNum();                  // ディスプレイ数を取得
+        std::tuple<const char*, int, int> getVideoDemuxerParams();    // フレーム分割モジュール用のゲッター
+        std::tuple<const char*, int> getFrameStreamerParams(int id);  // フレーム送信モジュール用のゲッター
 };
 
 #endif
