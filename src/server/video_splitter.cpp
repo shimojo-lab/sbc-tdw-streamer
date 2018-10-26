@@ -48,7 +48,7 @@ void VideoSplitter::setVideoParams(){
 }
 
 /* 分割フレーム用キューのポインタを取得 */
-std::shared_ptr<FrameQueue> VideoSplitter::getFrameQueuePtr(const int id){
+const smt_FrameQueue_t VideoSplitter::getFrameQueuePtr(const int id){
     return this->queue_list[id];
 }
 

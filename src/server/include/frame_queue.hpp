@@ -1,12 +1,13 @@
-/********************************
- *       frame_queue.hpp        *
- *    (分割フレーム用キュー)    *
- ********************************/
+/*******************************
+ *       frame_queue.hpp       *
+ *    (分割フレーム用キュー)   *
+ *******************************/
 
 #ifndef FRAME_QUEUE_HPP
 #define FRAME_QUEUE_HPP
 
 #include <queue>
+#include <memory>
 #include <boost/thread.hpp>
 #include <opencv2/core.hpp>
 
@@ -24,6 +25,9 @@ class FrameQueue{
         cv::Mat dequeue();                   // キューからフレームを取り出し
         const std::size_t getSize();         // キュー内のフレーム数を取得
 };
+
+/* 変数型の定義 */
+using smt_FrameQueue_t = std::shared_ptr<FrameQueue>;
 
 #endif  /* FRAME_QUEUE_HPP */
 

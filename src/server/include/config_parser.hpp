@@ -18,7 +18,7 @@
 /* 名前空間のエイリアス */
 namespace _pt = boost::property_tree;
 
-/* コンフィグパーサ */
+/* 設定ファイルのパーサー */
 class ConfigParser{
     private:
         const char *video_src;             // 再生する動画

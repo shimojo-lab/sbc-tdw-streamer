@@ -31,9 +31,9 @@ int main(int argc, char *argv[]){
     int port;
     const int display_num = parser.getDisplayNum();
     for(int i=0; i<display_num; ++i){
-        std::shared_ptr<FrameQueue> queue = splitter.getFrameQueuePtr(i);
+        smt_FrameQueue_t queue = splitter.getFrameQueuePtr(i);
         std::tie(ip, port) = parser.getFrameSenderParams(i);
-        std::thread send_thread([&queue, &ip, &port]{
+        std::thread send_thread([&]{
             _asio::io_service ios;
             FrameSender sender(ios, queue);
             ios.run();

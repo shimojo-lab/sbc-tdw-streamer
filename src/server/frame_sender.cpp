@@ -8,7 +8,7 @@
 const char* const SEPARATOR = "--boundary\r\n";  // 受信メッセージのセパレータ
 
 /* コンストラクタ */
-FrameSender::FrameSender(_asio::io_service &ios, std::shared_ptr<FrameQueue> queue):
+FrameSender::FrameSender(_asio::io_service &ios, smt_FrameQueue_t queue):
     ios(ios),
     sock(ios),
     queue(queue)

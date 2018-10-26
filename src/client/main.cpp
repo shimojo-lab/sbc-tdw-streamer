@@ -1,12 +1,13 @@
-/*************************************
-*              main.cpp              *
-*  (ディスプレイノード側プログラム)  *
-**************************************/
+/*****************************************
+*               main.cpp                 *
+* (ディスプレイノード側表示クライアント) *
+******************************************/
 
 #include "main.hpp"
 
 /* 定数の定義 */
-const int ARGUMENT_NUM = 2;  // コマンドライン引数の個数
+const int ARGUMENT_NUM = 2;                       // コマンドライン引数の個数
+const char* const APP_NAME = "sbc-tdw-streamer";  // アプリケーション名
 
 /* Main関数 */
 int main(int argc, char* argv[]){
@@ -17,20 +18,21 @@ int main(int argc, char* argv[]){
         std::exit(EXIT_FAILURE);
     }
     
-    // 設定読み込みモジュールを起動
+    // 設定ファイルをパース
     ConfigParser parser(argv[1]);
     
-    // フレーム表示モジュールを起動
-    int res_width;
-    int res_height;
-    std::tie(res_width, res_height) = parser.getFrameViewerParams();
-    FrameViewer viewer(res_height, res_height);
-    
-    // フレーム受信モジュールを起動
+    // フレーム受信器を起動
     _asio::io_service ios;
+    std::shared_ptr<FrameQueue> queue(std::make_shared<FrameQueue>(32));
     int port = parser.getFrameReceiverParams();
-    FrameReceiver receiver(ios, viewer, port);
+    FrameReceiver receiver(ios, queue, port);
     ios.run();
+    
+    // フレーム表示器を起動
+    int res_x, res_y, width, height;
+    std::tie(res_x, res_y, width, height) = parser.getFrameViewerParams();
+    FrameViewer viewer(APP_NAME, res_x, res_y, width, height, queue);
+    viewer.start();
     return 0;
 }
 

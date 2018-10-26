@@ -22,14 +22,14 @@ class VideoSplitter{
         int total_frame_num;                  // 総フレーム数
         double fps;                           // 動画のフレームレート
         std::vector<cv::Rect> region_list;    // フレームの分割領域
-        std::vector<std::shared_ptr<FrameQueue>> queue_list;  // 分割フレーム用キュー
+        std::vector<smt_FrameQueue_t> queue_list;  // 分割フレーム用キュー
         cv::Mat frame;                        // 分割前のフレーム
         void setVideoParams();                // 分割時のパラメータを設定
     public:
-        VideoSplitter(const char *video_src, int row, int column);   // コンストラクタ
-        ~VideoSplitter();                                            // デストラクタ
-        std::shared_ptr<FrameQueue> getFrameQueuePtr(const int id);  // 分割フレーム用キューのポインタを取得
-        void start();                                                // フレームの分割を開始
+        VideoSplitter(const char *video_src, int row, int column);  // コンストラクタ
+        ~VideoSplitter();                                           // デストラクタ
+        const smt_FrameQueue_t getFrameQueuePtr(const int id);      // 分割フレーム用キューのポインタを取得
+        void start();                                               // フレームの分割を開始
 };
 
 #endif  /* VIDEO_SPLITTER_HPP */

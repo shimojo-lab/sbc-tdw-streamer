@@ -1,5 +1,5 @@
 /*******************************
- *       frame_queue.cpp       *
+ *       frame_queue.hpp       *
  *    (分割フレーム用キュー)   *
  *******************************/
 
@@ -12,7 +12,7 @@ FrameQueue::FrameQueue(int max_size): max_size(max_size){}
 FrameQueue::~FrameQueue(){}
 
 /* キューにフレームを投入 */
-void FrameQueue::enqueue(const cv::Mat &frame){
+void FrameQueue::enqueue(const std::vector<unsigned char> &frame){
     boost::unique_lock<boost::mutex> u_lock(this->lock);
     const bool was_empty = this->queue.empty();
     this->queue.push(frame);
@@ -23,12 +23,12 @@ void FrameQueue::enqueue(const cv::Mat &frame){
 }
 
 /* キューからフレームを取り出し */
-cv::Mat FrameQueue::dequeue(){
+std::vector<unsigned char> FrameQueue::dequeue(){
     boost::unique_lock<boost::mutex> u_lock(this->lock);
     while(this->queue.empty()){
         this->cond.wait(u_lock);
     }
-    cv::Mat frame = this->queue.front();
+    std::vector<unsigned char> frame = this->queue.front();
     this->queue.pop();
     return frame;
 }

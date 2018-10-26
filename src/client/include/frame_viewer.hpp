@@ -1,36 +1,69 @@
-/*******************************
-*       frame_viewer.hpp       *
-*   (フレーム表示モジュール)   *
-*******************************/
+/********************************
+ *       frame_viewer.hpp       *
+ *     (分割フレーム表示器)     *
+ ********************************/
 
 #ifndef FRAME_VIEWER_HPP
 #define FRAME_VIEWER_HPP
 
+#include "frame_queue.hpp"
 #include <iostream>
 #include <cstdlib>
-#include <vector>
+#include <SDL2/SDL.h>
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
-#include <SDL2/SDL.h>
 
 /* 定数の定義 */
-extern const char* const APP_NAME;  // プログラム名
-extern const int ALPHA;             // アルファチャンネル
+extern const int SDL_STATUS_GREEN;      // SDL正常起動時のステータスコード
+extern const int SDL_DRIVER_INDEX;      // SDLレンダラーのドライバ指定
+extern const int SDL_ALPHA_CH;          // アルファチャンネル値
 
-/* フレーム表示モジュール */
-class FrameViewer{
-    private:
-        int width;               // フレームの横の長さ
-        int height;              // フレームの縦の長さ
-        SDL_Window *window;      // SDLのウィンドウ
-        SDL_Renderer *renderer;  // SDLのレンダラー
-        SDL_Texture *texture;    // SDLのテクスチャ
-    public:
-        FrameViewer(int res_x, int res_y);         // コンストラクタ
-        ~FrameViewer();                            // デストラクタ
-        void displayFrame(std::vector<unsigned char> &comp_buf);  // フレームを表示
+/* SDLオブジェクト削除用の構造体 */
+struct SDL_Deleter_t{
+    void operator()(SDL_Window *ptr){
+        if(ptr){
+            SDL_DestroyWindow(ptr);
+        }
+    }
+    void operator()(SDL_Renderer *ptr){
+        if(ptr){
+            SDL_DestroyRenderer(ptr);
+        }
+    }
+    void operator()(SDL_Texture *ptr){
+        if(ptr){
+            SDL_DestroyTexture(ptr);
+        }
+    }
 };
 
-#endif
+/* 変数型の定義 */
+using smt_window_t = std::unique_ptr<SDL_Window, SDL_Deleter_t>;      // SDLウィンドウのスマートポインタ
+using smt_renderer_t = std::unique_ptr<SDL_Renderer, SDL_Deleter_t>;  // SDLレンダラーのスマートポインタ
+using smt_texture_t = std::unique_ptr<SDL_Texture, SDL_Deleter_t>;    // SDLテクスチャのスマートポインタ
+
+/* 分割フレーム表示部 */
+class FrameViewer{
+    private:
+        int res_x;                             // ディスプレイの縦の長さ
+        int res_y;                             // ディスプレイの横の長さ
+        int width;                             // フレームの横の長さ
+        int height;                            // フレームの縦の長さ
+        smt_FrameQueue_t queue;                // 分割フレームキュー
+        smt_window_t window;                   // SDLウィンドウ
+        smt_renderer_t renderer;               // SDLレンダラー
+        smt_texture_t texture;                 // SDLテクスチャ
+        bool createWindow(const char *title);  // SDLウィンドウを初期化
+        bool createRenderer();                 // SDLレンダラーを初期化
+        bool createTexture();                  // SDLテクスチャを初期化
+        cv::Mat decompressFrame();             // フレームを展開
+        void displayFrame(cv::Mat frame);      // フレームを表示
+    public:
+        FrameViewer(const char *title, int res_x, int res_y, int width, int height, smt_FrameQueue_t queue);  // コンストラクタ
+        ~FrameViewer();          // デストラクタ
+        void start();            // フレーム表示を開始
+};
+
+#endif  /* FRAME_VIEWER_HPP */
 

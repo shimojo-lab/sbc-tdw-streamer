@@ -1,7 +1,7 @@
-#################################
-#           Makefile            #
-#   (pi_tdw_streamerビルド用)   #
-#################################
+##################################
+#            Makefile            #
+#   (sbc_tdw_streamerビルド用)   #
+##################################
 
 CXX = g++
 CXXFLAGS = -Wall -std=c++11
@@ -11,7 +11,7 @@ BIN = ./bin
 CONF = ./conf
 CV2_HDR = /usr/local/include/opencv2
 SRV_LD = -l opencv_core -l opencv_imgcodecs -l opencv_highgui -l opencv_videoio -l boost_system -l boost_thread -l pthread
-CLI_LD = -l opencv_core -l opencv_imgcodecs -l opencv_highgui -l opencv_imgproc -l SDL2 -l boost_system -l pthread
+CLI_LD = -l opencv_core -l opencv_imgcodecs -l opencv_highgui -l opencv_imgproc -l SDL2 -l boost_system -l boost_thread -l pthread
 
 # 全てのコンパイルとテストを一括実行
 .PHONY: all
@@ -33,11 +33,11 @@ compile_server: $(SRV_SRC)/main.o $(SRV_SRC)/config_parser.o $(SRV_SRC)/frame_qu
 $(SRV_SRC)/main.o: $(SRV_SRC)/main.cpp
 	$(CXX) $(CXXFLAGS) -I $(SRV_SRC)/include -c -o $@ $<
 
-$(SRV_SRC)/config_parser.o: $(SRV_SRC)/config_parser.cpp	
+$(SRV_SRC)/config_parser.o: $(SRV_SRC)/config_parser.cpp
 	$(CXX) $(CXXFLAGS) -I $(SRV_SRC)/include -c -o $@ $<
 
 $(SRV_SRC)/frame_queue.o: $(SRV_SRC)/frame_queue.cpp
-	$(CXX) $(CXXFLAGS) -I $(SRV_SRC)/include -I $(CV2_HDR) -c -o $@ $<
+	$(CXX) $(CXXFLAGS) -I $(SRV_SRC)/include -c -o $@ $<
 
 $(SRV_SRC)/video_splitter.o: $(SRV_SRC)/video_splitter.cpp
 	$(CXX) $(CXXFLAGS) -I $(SRV_SRC)/include -I $(CV2_HDR) -c -o $@ $<
@@ -47,13 +47,16 @@ $(SRV_SRC)/frame_sender.o: $(SRV_SRC)/frame_sender.cpp
 
 # 表示クライアントをコンパイル
 .PHONY: compile_client
-compile_client: $(CLI_SRC)/main.o $(CLI_SRC)/config_parser.o $(CLI_SRC)/frame_receiver.o $(CLI_SRC)/frame_viewer.o
+compile_client: $(CLI_SRC)/main.o $(CLI_SRC)/config_parser.o $(CLI_SRC)/frame_queue.o $(CLI_SRC)/frame_receiver.o $(CLI_SRC)/frame_viewer.o
 	$(CXX) $(CXXFLAGS) $(CLI_LD) -o $(BIN)/sbc_client $^
 
 $(CLI_SRC)/main.o: $(CLI_SRC)/main.cpp
 	$(CXX) $(CXXFLAGS) -I $(CLI_SRC)/include -c -o $@ $<
 
 $(CLI_SRC)/config_parser.o: $(CLI_SRC)/config_parser.cpp
+	$(CXX) $(CXXFLAGS) -I $(CLI_SRC)/include -c -o $@ $<
+
+$(CLI_SRC)/frame_queue.o: $(CLI_SRC)/frame_queue.cpp
 	$(CXX) $(CXXFLAGS) -I $(CLI_SRC)/include -c -o $@ $<
 
 $(CLI_SRC)/frame_receiver.o: $(CLI_SRC)/frame_receiver.cpp

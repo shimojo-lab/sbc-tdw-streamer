@@ -9,7 +9,6 @@
 #include "config_parser.hpp"
 #include "video_splitter.hpp"
 #include "frame_sender.hpp"
-#include <memory>
 #include <thread>
 
 /* 定数の定義 */

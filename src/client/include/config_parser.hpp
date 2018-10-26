@@ -1,6 +1,6 @@
 /********************************
  *      config_parser.hpp       *
- *   (設定読み込みモジュール)   *
+ *   (設定ファイルのパーサー)   *
  ********************************/
 
 #ifndef CONFIG_PARSER_HPP
@@ -14,18 +14,20 @@
 /* 名前空間のエイリアス */
 namespace _pt = boost::property_tree;
 
-/* 設定読み込みモジュール */
+/* 設定ファイルのパーサー */
 class ConfigParser{
     private:
-        int res_width;   // ディスプレイの横の長さ
-        int res_height;  // ディスプレイの縦の長さ
-        int port;        // 受信用のポート
+        int res_x;   // ディスプレイの横の長さ
+        int res_y;   // ディスプレイの縦の長さ
+        int width;   // フレームの横の長さ
+        int height;  // フレームの縦の長さ
+        int port;    // 受信用のポート
     public:
-        ConfigParser(const char *conf_file);          // コンストラクタ
-        ~ConfigParser();                              // デストラクタ
-        std::tuple<int, int> getFrameViewerParams();  // フレーム表示モジュール用に値を取得
-        int getFrameReceiverParams();                 // フレーム受信モジュール用に値を取得
+        ConfigParser(const char *conf_file);                    // コンストラクタ
+        ~ConfigParser();                                        // デストラクタ
+        std::tuple<int, int, int, int> getFrameViewerParams();  // フレーム表示器用に値を取得
+        int getFrameReceiverParams();                           // フレーム受信器用に値を取得
 };
 
-#endif
+#endif  /* CONFIG_PARSER_HPP */
 

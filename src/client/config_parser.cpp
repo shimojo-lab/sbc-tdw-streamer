@@ -1,7 +1,7 @@
 /********************************
- *       config_parser.cpp      *
- *   (設定読み込みモジュール)   *
- *******************************/
+ *      config_parser.cpp       *
+ *   (設定ファイルのパーサー)   *
+ ********************************/
 
 #include "config_parser.hpp"
 
@@ -12,22 +12,26 @@ ConfigParser::ConfigParser(const char *conf_file){
     _pt::read_json(conf_file, conf);
     
     // パラメータを取得
-    this->res_width = conf.get_optional<int>("resolution.width").get();
-    this->res_height = conf.get_optional<int>("resolution.height").get();
+    this->res_x = conf.get_optional<int>("resolution.width").get();
+    this->res_y = conf.get_optional<int>("resolution.height").get();
+    this->width = conf.get_optional<int>("frame.width").get();
+    this->height = conf.get_optional<int>("frame.height").get();
     this->port = conf.get_optional<int>("port").get();
 }
 
 /* デストラクタ */
 ConfigParser::~ConfigParser(){}
 
-/* フレーム表示モジュール用のゲッター */
-std::tuple<int, int> ConfigParser::getFrameViewerParams(){
-    int res_width = this->res_width;
-    int res_height = this->res_height;
-    return std::forward_as_tuple(res_width, res_height);
+/* フレーム表示器用に値を取得 */
+std::tuple<int, int, int, int> ConfigParser::getFrameViewerParams(){
+    int res_x = this->res_x;
+    int res_y = this->res_y;
+    int width = this->width;
+    int height = this->height;
+    return std::forward_as_tuple(res_x, res_y, width, height);
 }
 
-/* フレーム受信モジュール用のゲッター */
+/* フレーム受信器用に値を取得 */
 int ConfigParser::getFrameReceiverParams(){
     return this->port;
 }
