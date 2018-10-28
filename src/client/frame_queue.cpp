@@ -6,7 +6,9 @@
 #include "frame_queue.hpp"
 
 /* コンストラクタ */
-FrameQueue::FrameQueue(int max_size): max_size(max_size){}
+FrameQueue::FrameQueue(const int max_size):
+    max_size(max_size)
+{}
 
 /* デストラクタ */
 FrameQueue::~FrameQueue(){}

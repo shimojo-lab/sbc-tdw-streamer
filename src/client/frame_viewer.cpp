@@ -1,17 +1,17 @@
-/********************************
- *       frame_viewer.cpp       *
- *     (分割フレーム表示器)     *
- ********************************/
+/******************************
+ *      frame_viewer.cpp      *
+ *    (分割フレーム表示器)    *
+ ******************************/
 
 #include "frame_viewer.hpp"
 
-/* 定数の定義 */
 const int SDL_STATUS_GREEN = 0;   // SDL正常起動時のステータスコード
 const int SDL_DRIVER_INDEX = -1;  // SDLレンダラーのドライバ指定
+const int SDL_DRIVER_FLAG = 0;    // SDLレンダラーのフラグ
 const int SDL_ALPHA_CH = 255;     // アルファチャンネル値
 
 /* コンストラクタ */
-FrameViewer::FrameViewer(const char *title, int res_x, int res_y, int width, int height, smt_FrameQueue_t queue):
+FrameViewer::FrameViewer(const char* const title, const int res_x, const int res_y, const int width, const int height, const smt_fq_t queue):
     res_x(res_x),
     res_y(res_y),
     width(width),
@@ -45,8 +45,8 @@ FrameViewer::FrameViewer(const char *title, int res_x, int res_y, int width, int
 FrameViewer::~FrameViewer(){}
 
 /* SDLウィンドウを初期化 */
-bool FrameViewer::createWindow(const char* title){
-    SDL_Deleter_t deleter;
+const bool FrameViewer::createWindow(const char* const title){
+    sdl_deleter_t deleter;
     this->window = smt_window_t(
         SDL_CreateWindow(title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, this->res_x, this->res_y, SDL_WINDOW_FULLSCREEN),
         deleter
@@ -60,10 +60,10 @@ bool FrameViewer::createWindow(const char* title){
 }
 
 /* SDLレンダラーを初期化 */
-bool FrameViewer::createRenderer(){
-    SDL_Deleter_t deleter;
+const bool FrameViewer::createRenderer(){
+    sdl_deleter_t deleter;
     this->renderer = smt_renderer_t(
-        SDL_CreateRenderer(this->window.get(), -1, 0),
+        SDL_CreateRenderer(this->window.get(), SDL_DRIVER_INDEX, SDL_DRIVER_FLAG),
         deleter
     );
     if(this->renderer == NULL){
@@ -75,8 +75,8 @@ bool FrameViewer::createRenderer(){
 }
 
 /* SDLテクスチャを初期化 */
-bool FrameViewer::createTexture(){
-    SDL_Deleter_t deleter;
+const bool FrameViewer::createTexture(){
+    sdl_deleter_t deleter;
     this->texture = smt_texture_t(
         SDL_CreateTexture(this->renderer.get(), SDL_PIXELFORMAT_BGRA8888, SDL_TEXTUREACCESS_TARGET, this->width, this->height),
         deleter
@@ -92,7 +92,6 @@ bool FrameViewer::createTexture(){
     }
     if(SDL_RenderClear(this->renderer.get()) != SDL_STATUS_GREEN){
         std::cerr << "[Error] SDL_RenderClear failed. (" << SDL_GetError() << ")" << std::endl;
-        return false;
         return false;
     }
     return true;

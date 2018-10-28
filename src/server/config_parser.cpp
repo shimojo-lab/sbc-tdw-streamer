@@ -6,11 +6,11 @@
 #include "config_parser.hpp"
 
 /* コンストラクタ */
-ConfigParser::ConfigParser(const char *conf_file){
+ConfigParser::ConfigParser(const char* const filename){
     // 設定ファイルをパース
     _pt::ptree conf;
     try{
-        _pt::read_json(conf_file, conf);
+        _pt::read_json(filename, conf);
     }catch(...){
         std::cerr << "[Error] Read config failed." << std::endl;
         std::exit(EXIT_FAILURE);
@@ -40,12 +40,12 @@ ConfigParser::ConfigParser(const char *conf_file){
 ConfigParser::~ConfigParser(){}
 
 /* 全ディスプレイ数を取得 */
-int ConfigParser::getDisplayNum(){
+const int ConfigParser::getDisplayNum(){
     return this->display_num;
 }
 
 /* フレーム分割器用に値を取得 */
-std::tuple<const char*, int, int> ConfigParser::getVideoSplitterParams(){
+vs_params_t ConfigParser::getVideoSplitterParams(){
     const char *video_src = this->video_src;
     int row = this->row;
     int column = this->column;
@@ -53,7 +53,7 @@ std::tuple<const char*, int, int> ConfigParser::getVideoSplitterParams(){
 }
 
 /* 分割フレーム送信器用に値を取得 */
-std::tuple<std::vector<std::string>, std::vector<int>> ConfigParser::getFrameSenderParams(){
+fs_params_t ConfigParser::getFrameSenderParams(){
     std::vector<std::string> ip_list = this->ip_list;
     std::vector<int> port_list = this->port_list;
     return std::forward_as_tuple(ip_list, port_list);

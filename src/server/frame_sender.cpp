@@ -8,7 +8,7 @@
 const char* const SEPARATOR = "--boundary\r\n";  // 受信メッセージのセパレータ
 
 /* コンストラクタ */
-FrameSender::FrameSender(smt_ios_t ios, smt_fq_t queue):
+FrameSender::FrameSender(const smt_ios_t ios, const smt_fq_t queue):
     ios(ios),
     sock(*ios),
     queue(queue)
@@ -18,10 +18,11 @@ FrameSender::FrameSender(smt_ios_t ios, smt_fq_t queue):
 FrameSender::~FrameSender(){}
 
 /* 送信処理を開始 */
-void FrameSender::start(const char *ip, int port){
+void FrameSender::start(const char* const ip, const int port){
     this->ip = ip;
-    std::cout << "[Info] Connecting to " << ip << ":" << port << "..." << std::endl;
-    const auto endpoint = _ip::tcp::endpoint(_ip::address::from_string(ip), port);
+    this->port = port;
+    c_lock(), std::cout << "[Info] Connecting to '" << ip << ":" << port << "'..." << std::endl;
+    const _ip::tcp::endpoint endpoint(_ip::address::from_string(ip), port);
     const auto bind = boost::bind(&FrameSender::onTCPConnect, this, _ph::error);
     this->sock.async_connect(endpoint, bind);
     return;
@@ -30,10 +31,10 @@ void FrameSender::start(const char *ip, int port){
 /* TCP接続時のコールバック */
 void FrameSender::onTCPConnect(const _sys::error_code &error){
     if(error){
-        std::cerr << "[Error] TCP Connection with " << this->ip << " failed. (" << error.message() << ")" << std::endl;
+        c_lock(), std::cerr << "[Error] TCP Connection with '" << this->ip << ":" << this->port << "' failed. (" << error.message() << ")" << std::endl;
         return;
     }
-    std::cout << "[Info] Established TCP Connection with " << this->ip << "." << std::endl;
+    c_lock(), std::cout << "[Info] Established TCP Connection with '" << this->ip << ":" << this->port << "'." << std::endl;
     
     // 分割フレームの送信を開始
     cv::Mat frame = this->queue->dequeue();
@@ -55,9 +56,9 @@ std::string FrameSender::compressFrame(cv::Mat &frame){
 }
 
 /* 分割フレーム送信時のコールバック */
-void FrameSender::onSend(const _sys::error_code &error, std::size_t bytes_transferred){
+void FrameSender::onSend(const _sys::error_code &error, std::size_t sended_bytes){
     if(error){
-        std::cout << "[Error] Send failed. (" << error.message() << ")" << std::endl;
+        c_lock(), std::cout << "[Error] Send failed. (" << error.message() << ")" << std::endl;
     }
     
     // 次番のフレームを送信

@@ -11,8 +11,8 @@
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/optional.hpp>
 
-/* 名前空間のエイリアス */
 namespace _pt = boost::property_tree;
+using fv_params_t = std::tuple<int, int, int, int>;
 
 /* 設定ファイルのパーサー */
 class ConfigParser{
@@ -23,10 +23,10 @@ class ConfigParser{
         int height;  // フレームの縦の長さ
         int port;    // 受信用のポート
     public:
-        ConfigParser(const char *conf_file);                    // コンストラクタ
-        ~ConfigParser();                                        // デストラクタ
-        std::tuple<int, int, int, int> getFrameViewerParams();  // フレーム表示器用に値を取得
-        int getFrameReceiverParams();                           // フレーム受信器用に値を取得
+        ConfigParser(const char* const filename);  // コンストラクタ
+        ~ConfigParser();                           // デストラクタ
+        fv_params_t getFrameViewerParams();        // フレーム表示器用に値を取得
+        int getFrameReceiverParams();              // フレーム受信器用に値を取得
 };
 
 #endif  /* CONFIG_PARSER_HPP */

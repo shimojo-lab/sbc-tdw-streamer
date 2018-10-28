@@ -6,11 +6,11 @@
 #include "config_parser.hpp"
 
 /* コンストラクタ */
-ConfigParser::ConfigParser(const char *conf_file){
+ConfigParser::ConfigParser(const char* const filename){
     // 設定ファイルをパース
     _pt::ptree conf;
     try{
-        _pt::read_json(conf_file, conf);
+        _pt::read_json(filename, conf);
     }catch(...){
         std::cerr << "[Error] Read config failed." << std::endl;
         std::exit(EXIT_FAILURE);
@@ -28,7 +28,7 @@ ConfigParser::ConfigParser(const char *conf_file){
 ConfigParser::~ConfigParser(){}
 
 /* フレーム表示器用に値を取得 */
-std::tuple<int, int, int, int> ConfigParser::getFrameViewerParams(){
+fv_params_t ConfigParser::getFrameViewerParams(){
     int res_x = this->res_x;
     int res_y = this->res_y;
     int width = this->width;

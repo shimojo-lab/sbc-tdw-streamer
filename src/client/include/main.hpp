@@ -10,9 +10,11 @@
 #include "frame_receiver.hpp"
 #include "frame_viewer.hpp"
 
-/* 定数の定義 */
 extern const int ARGUMENT_NUM;      // コマンドライン引数の個数
 extern const char* const APP_NAME;  // プログラム名
+
+/* 別スレッド実行用の関数 */
+void thread_task(const smt_ios_t ios, const smt_fq_t queue, const int port);
 
 #endif  /* MAIN_HPP */
 

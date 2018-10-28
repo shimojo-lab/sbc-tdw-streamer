@@ -14,20 +14,19 @@
 /* 分割フレーム用キュー */
 class FrameQueue{
     private:
-        int max_size;                            // キューの容量
+        const int max_size;                      // キューの容量
         std::queue<cv::Mat> queue;               // キュー
         mutable boost::mutex lock;               // 排他制御用のロック
         mutable boost::condition_variable cond;  // 条件変数
     public:
-        FrameQueue(int max_size);            // コンストラクタ
+        FrameQueue(const int max_size);      // コンストラクタ
         ~FrameQueue();                       // デストラクタ
         void enqueue(const cv::Mat &frame);  // キューにフレームを投入
         cv::Mat dequeue();                   // キューからフレームを取り出し
         const std::size_t getSize();         // キュー内のフレーム数を取得
 };
 
-/* 変数型の定義 */
-using smt_fq_t = std::shared_ptr<FrameQueue>;
+using smt_fq_t = std::shared_ptr<FrameQueue>;  // FrameQueue用のsharedポインタ
 
 #endif  /* FRAME_QUEUE_HPP */
 

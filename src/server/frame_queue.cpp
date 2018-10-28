@@ -6,7 +6,9 @@
 #include "frame_queue.hpp"
 
 /* コンストラクタ */
-FrameQueue::FrameQueue(int max_size): max_size(max_size){}
+FrameQueue::FrameQueue(const int max_size):
+    max_size(max_size)
+{}
 
 /* デストラクタ */
 FrameQueue::~FrameQueue(){}
@@ -28,7 +30,7 @@ cv::Mat FrameQueue::dequeue(){
     while(this->queue.empty()){
         this->cond.wait(u_lock);
     }
-    cv::Mat frame = this->queue.front();
+    const cv::Mat frame = this->queue.front();
     this->queue.pop();
     return frame;
 }
