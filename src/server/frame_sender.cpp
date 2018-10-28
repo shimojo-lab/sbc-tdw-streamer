@@ -8,9 +8,9 @@
 const char* const SEPARATOR = "--boundary\r\n";  // 受信メッセージのセパレータ
 
 /* コンストラクタ */
-FrameSender::FrameSender(_asio::io_service &ios, smt_FrameQueue_t queue):
+FrameSender::FrameSender(smt_ios_t ios, smt_fq_t queue):
     ios(ios),
-    sock(ios),
+    sock(*ios),
     queue(queue)
 {}
 
@@ -19,7 +19,6 @@ FrameSender::~FrameSender(){}
 
 /* 送信処理を開始 */
 void FrameSender::start(const char *ip, int port){
-    // ディスプレイノードにTCPで接続
     this->ip = ip;
     std::cout << "[Info] Connecting to " << ip << ":" << port << "..." << std::endl;
     const auto endpoint = _ip::tcp::endpoint(_ip::address::from_string(ip), port);

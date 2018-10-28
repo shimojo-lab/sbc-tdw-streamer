@@ -31,8 +31,8 @@ class ConfigParser{
         ConfigParser(const char *conf_file);  // コンストラクタ
         ~ConfigParser();                      // デストラクタ
         int getDisplayNum();                  // ディスプレイ数を取得
-        std::tuple<const char*, int, int> getVideoSplitterParams();  // フレーム分割器用に値を取得
-        std::tuple<const char*, int> getFrameSenderParams(int id);   // 分割フレーム送信器用に値を取得
+        std::tuple<const char*, int, int> getVideoSplitterParams();                     // フレーム分割器用に値を取得
+        std::tuple<std::vector<std::string>, std::vector<int>> getFrameSenderParams();  // 分割フレーム送信器用に値を取得
 };
 
 #endif  /* CONFIG_PARSER_HPP */

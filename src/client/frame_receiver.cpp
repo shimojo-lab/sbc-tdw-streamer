@@ -42,7 +42,7 @@ void FrameReceiver::onTCPConnect(const _sys::error_code &error){
 /* 受信時のコールバック */
 void FrameReceiver::onReceive(const _sys::error_code &error, std::size_t bytes_transferred){
     if(error){
-        std::cerr << "[Error] Receive failed. (" << error.message() << ")" << std::endl;
+        std::cerr << "[Warning] Receive failed. (" << error.message() << ")" << std::endl;
     }else{
         // 受信用バッファからフレームのデータを抽出
         auto data = this->receive_buf.data();
@@ -52,12 +52,12 @@ void FrameReceiver::onReceive(const _sys::error_code &error, std::size_t bytes_t
         }
         std::vector<unsigned char> comp_buf(bytes_buf.c_str(), bytes_buf.c_str()+bytes_buf.length());
         this->queue->enqueue(comp_buf);
+    }
         
         // 受信処理を再開
-        this->receive_buf.consume(bytes_transferred);
-        auto bind = boost::bind(&FrameReceiver::onReceive, this, _ph::error, _ph::bytes_transferred);
-        _asio::async_read_until(this->sock, this->receive_buf, SEPARATOR, bind);
-    }
+    this->receive_buf.consume(bytes_transferred);
+    auto bind = boost::bind(&FrameReceiver::onReceive, this, _ph::error, _ph::bytes_transferred);
+    _asio::async_read_until(this->sock, this->receive_buf, SEPARATOR, bind);
     return;
 }
 

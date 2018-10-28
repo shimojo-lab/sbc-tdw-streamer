@@ -9,7 +9,12 @@
 ConfigParser::ConfigParser(const char *conf_file){
     // 設定ファイルをパース
     _pt::ptree conf;
-    _pt::read_json(conf_file, conf);
+    try{
+        _pt::read_json(conf_file, conf);
+    }catch(...){
+        std::cerr << "[Error] Read config failed." << std::endl;
+        std::exit(EXIT_FAILURE);
+    }
     
     // パラメータを取得
     this->res_x = conf.get_optional<int>("resolution.width").get();

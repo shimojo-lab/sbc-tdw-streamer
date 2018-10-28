@@ -21,17 +21,19 @@ int main(int argc, char* argv[]){
     // 設定ファイルをパース
     ConfigParser parser(argv[1]);
     
-    // フレーム受信器を起動
-    _asio::io_service ios;
-    std::shared_ptr<FrameQueue> queue(std::make_shared<FrameQueue>(32));
-    int port = parser.getFrameReceiverParams();
-    FrameReceiver receiver(ios, queue, port);
-    ios.run();
-    
     // フレーム表示器を起動
     int res_x, res_y, width, height;
     std::tie(res_x, res_y, width, height) = parser.getFrameViewerParams();
+    std::shared_ptr<FrameQueue> queue(std::make_shared<FrameQueue>(32));
     FrameViewer viewer(APP_NAME, res_x, res_y, width, height, queue);
+    
+    // フレーム受信器を起動
+    _asio::io_service ios;
+    int port = parser.getFrameReceiverParams();
+    FrameReceiver receiver(ios, queue, port);
+    ios.run();
+       
+    // フレーム表示を開始
     viewer.start();
     return 0;
 }

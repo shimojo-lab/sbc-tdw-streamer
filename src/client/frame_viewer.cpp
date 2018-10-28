@@ -63,7 +63,7 @@ bool FrameViewer::createWindow(const char* title){
 bool FrameViewer::createRenderer(){
     SDL_Deleter_t deleter;
     this->renderer = smt_renderer_t(
-        SDL_CreateRenderer(this->window.get(), SDL_DRIVER_INDEX, SDL_RENDERER_ACCELERATED),
+        SDL_CreateRenderer(this->window.get(), -1, 0),
         deleter
     );
     if(this->renderer == NULL){
@@ -78,7 +78,7 @@ bool FrameViewer::createRenderer(){
 bool FrameViewer::createTexture(){
     SDL_Deleter_t deleter;
     this->texture = smt_texture_t(
-        SDL_CreateTexture(this->renderer.get(), SDL_PIXELFORMAT_BGRA8888, SDL_TEXTUREACCESS_STREAMING, this->width, this->height),
+        SDL_CreateTexture(this->renderer.get(), SDL_PIXELFORMAT_BGRA8888, SDL_TEXTUREACCESS_TARGET, this->width, this->height),
         deleter
     );
     if(this->texture == NULL){
@@ -87,9 +87,12 @@ bool FrameViewer::createTexture(){
     }
     
     if(SDL_SetRenderTarget(this->renderer.get(), this->texture.get()) != SDL_STATUS_GREEN){
+        std::cerr << "[Error] SDL_RenderTarget failed. (" << SDL_GetError() << ")" << std::endl;
         return false;
     }
     if(SDL_RenderClear(this->renderer.get()) != SDL_STATUS_GREEN){
+        std::cerr << "[Error] SDL_RenderClear failed. (" << SDL_GetError() << ")" << std::endl;
+        return false;
         return false;
     }
     return true;
@@ -104,7 +107,9 @@ cv::Mat FrameViewer::decompressFrame(){
 
 /* フレームを表示するメソッド */
 void FrameViewer::displayFrame(cv::Mat frame){
-    // テクスチャをロック
+cv::imshow("", frame);
+cv::waitKey(50);
+/*    // テクスチャをロック
     unsigned char *pixel_addr;
     int32_t pitch;
     SDL_LockTexture(this->texture.get(), nullptr, reinterpret_cast<void **>(&pixel_addr), &pitch);
@@ -125,12 +130,12 @@ void FrameViewer::displayFrame(cv::Mat frame){
     SDL_RenderCopy(this->renderer.get(), this->texture.get(), NULL, NULL);
     SDL_RenderPresent(this->renderer.get());
     SDL_Delay(10);
-    return;
+*/    return;
 }
 
 /* フレーム表示を開始するメソッド */
 void FrameViewer::start(){
-    for(int i=0; i<100; ++i){
+    for(int i=0; i<10000; ++i){
         this->displayFrame(this->decompressFrame());
     }
     return;

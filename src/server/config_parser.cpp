@@ -9,7 +9,12 @@
 ConfigParser::ConfigParser(const char *conf_file){
     // 設定ファイルをパース
     _pt::ptree conf;
-    _pt::read_json(conf_file, conf);
+    try{
+        _pt::read_json(conf_file, conf);
+    }catch(...){
+        std::cerr << "[Error] Read config failed." << std::endl;
+        std::exit(EXIT_FAILURE);
+    }
     
     // パラメータを取得
     this->video_src = conf.get_optional<std::string>("video_src").get().c_str();
@@ -48,9 +53,9 @@ std::tuple<const char*, int, int> ConfigParser::getVideoSplitterParams(){
 }
 
 /* 分割フレーム送信器用に値を取得 */
-std::tuple<const char*, int> ConfigParser::getFrameSenderParams(int id){
-    const char *ip = this->ip_list[id].c_str();
-    int port = this->port_list[id];
-    return std::forward_as_tuple(ip, port);
+std::tuple<std::vector<std::string>, std::vector<int>> ConfigParser::getFrameSenderParams(){
+    std::vector<std::string> ip_list = this->ip_list;
+    std::vector<int> port_list = this->port_list;
+    return std::forward_as_tuple(ip_list, port_list);
 }
 

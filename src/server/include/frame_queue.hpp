@@ -27,7 +27,7 @@ class FrameQueue{
 };
 
 /* 変数型の定義 */
-using smt_FrameQueue_t = std::shared_ptr<FrameQueue>;
+using smt_fq_t = std::shared_ptr<FrameQueue>;
 
 #endif  /* FRAME_QUEUE_HPP */
 

@@ -21,20 +21,23 @@ namespace _ip = boost::asio::ip;
 namespace _sys = boost::system;
 namespace _ph = boost::asio::placeholders;
 
+/* 変数型の定義 */
+using smt_ios_t = std::shared_ptr<_asio::io_service>;
+
 /* 分割フレーム送信器 */
 class FrameSender{
     private:
-        _asio::io_service &ios;               // BoostのI/Oオブジェクト
+        smt_ios_t ios;                        // BoostのI/Oオブジェクト
         _ip::tcp::socket sock;                // TCPソケット
-        smt_FrameQueue_t queue;               // 分割フレーム用キュー
+        smt_fq_t queue;                       // 分割フレーム用キュー
         const char* ip;                       // 送信先のIP
         std::vector<unsigned char> comp_buf;  // フレーム圧縮用バッファ
     public:
-        FrameSender(_asio::io_service &ios, smt_FrameQueue_t queue);  // コンストラクタ
-        ~FrameSender();                                                // デストラクタ
-        void start(const char *ip, int port);                          // 送信処理を開始
-        void onTCPConnect(const _sys::error_code &error);              // TCP接続時のコールバック
-        std::string compressFrame(cv::Mat &frame);                     // 分割フレームを圧縮
+        FrameSender(smt_ios_t ios, smt_fq_t queue);        // コンストラクタ
+        ~FrameSender();                                    // デストラクタ
+        void start(const char *ip, int port);              // 送信処理を開始
+        void onTCPConnect(const _sys::error_code &error);  // TCP接続時のコールバック
+        std::string compressFrame(cv::Mat &frame);         // 分割フレームを圧縮
         void onSend(const _sys::error_code &error, std::size_t bytes_transferred);  // 分割フレーム送信時のコールバック
 };
 

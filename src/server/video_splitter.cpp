@@ -36,7 +36,7 @@ void VideoSplitter::setVideoParams(){
     // フレームの分割領域とキューを設定
     const int display_num = this->row * this->column;
     this->region_list = std::vector<cv::Rect>(display_num);
-    this->queue_list = std::vector<std::shared_ptr<FrameQueue>>(display_num);
+    this->queue_list = std::vector<smt_fq_t>(display_num);
     for(int y=0; y<this->column; ++y){
         for(int x=0; x<this->row; ++x){
            int id = x + this->row * y;
@@ -48,7 +48,7 @@ void VideoSplitter::setVideoParams(){
 }
 
 /* 分割フレーム用キューのポインタを取得 */
-const smt_FrameQueue_t VideoSplitter::getFrameQueuePtr(const int id){
+const smt_fq_t VideoSplitter::getFrameQueuePtr(const int id){
     return this->queue_list[id];
 }
 
