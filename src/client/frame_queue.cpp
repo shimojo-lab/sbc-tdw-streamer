@@ -1,21 +1,21 @@
-/*******************************
- *       frame_queue.hpp       *
- *    (分割フレーム用キュー)   *
- *******************************/
+/********************************
+ *       frame_queue.hpp        *
+ *    (分割フレーム用キュー)    *
+ ********************************/
 
 #include "frame_queue.hpp"
 
 /* コンストラクタ */
-FrameQueue::FrameQueue(const int max_size):
+FrameQueue::FrameQueue(const std::size_t max_size):
     max_size(max_size)
 {}
-
-/* デストラクタ */
-FrameQueue::~FrameQueue(){}
 
 /* キューにフレームを投入 */
 void FrameQueue::enqueue(const std::vector<unsigned char> &frame){
     boost::unique_lock<boost::mutex> u_lock(this->lock);
+    while(this->queue.size() >= this->max_size){
+        this->cond.wait(u_lock);
+    }
     const bool was_empty = this->queue.empty();
     this->queue.push(frame);
     if(was_empty){
@@ -30,8 +30,11 @@ std::vector<unsigned char> FrameQueue::dequeue(){
     while(this->queue.empty()){
         this->cond.wait(u_lock);
     }
-    std::vector<unsigned char> frame = this->queue.front();
+    const std::vector<unsigned char> frame = this->queue.front();
     this->queue.pop();
+    if(this->queue.size() >= this->max_size){
+        this->cond.notify_one();
+    }
     return frame;
 }
 

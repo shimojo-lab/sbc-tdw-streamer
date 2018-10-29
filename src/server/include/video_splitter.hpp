@@ -27,7 +27,6 @@ class VideoSplitter{
         void setVideoParams();              // 分割時のパラメータを設定
     public:
         VideoSplitter(const char* const video_src, const int row, const int column);  // コンストラクタ
-        ~VideoSplitter();                                // デストラクタ
         const smt_fq_t getFrameQueuePtr(const int id);   // 分割フレーム用キューのポインタを取得
         void start();                                    // フレームの分割を開始
 };

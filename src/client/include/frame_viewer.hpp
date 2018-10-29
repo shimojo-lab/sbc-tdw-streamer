@@ -60,7 +60,6 @@ class FrameViewer{
         void displayFrame(cv::Mat frame);                  // フレームを表示
     public:
         FrameViewer(const char* const title, const int res_x, const int res_y, const int width, const int height, const smt_fq_t queue);  // コンストラクタ
-        ~FrameViewer();  // デストラクタ
         void start();    // フレーム表示を開始
 };
 

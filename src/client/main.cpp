@@ -39,7 +39,7 @@ int main(int argc, char* argv[]){
     return 0;
 }
 
-/* 別スレッド実行用関数 */
+/* 別スレッド実行用の関数 */
 void thread_task(const smt_ios_t ios, const smt_fq_t queue, const int port){
     // 分割フレーム受信器を起動
     FrameReceiver receiver(ios, queue, port);

@@ -22,9 +22,6 @@ VideoSplitter::VideoSplitter(const char* const video_src, const int row, const i
     }
 }
 
-/* デストラクタ */
-VideoSplitter::~VideoSplitter(){}
-
 /* 分割時のパラメータを設定 */
 void VideoSplitter::setVideoParams(){
     // 動画ファイルの情報を取得

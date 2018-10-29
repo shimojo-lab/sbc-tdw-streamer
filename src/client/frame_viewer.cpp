@@ -41,9 +41,6 @@ FrameViewer::FrameViewer(const char* const title, const int res_x, const int res
     }
 }
 
-/* デストラクタ */
-FrameViewer::~FrameViewer(){}
-
 /* SDLウィンドウを初期化 */
 const bool FrameViewer::createWindow(const char* const title){
     sdl_deleter_t deleter;
@@ -106,8 +103,12 @@ cv::Mat FrameViewer::decompressFrame(){
 
 /* フレームを表示するメソッド */
 void FrameViewer::displayFrame(cv::Mat frame){
-cv::imshow("", frame);
-cv::waitKey(50);
+try{
+    cv::imshow("", frame);
+    cv::waitKey(10);
+}catch(...){
+    std::cerr << "jpeg failed." << std::endl;
+}
 /*    // テクスチャをロック
     unsigned char *pixel_addr;
     int32_t pitch;

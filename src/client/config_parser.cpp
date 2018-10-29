@@ -24,9 +24,6 @@ ConfigParser::ConfigParser(const char* const filename){
     this->port = conf.get_optional<int>("port").get();
 }
 
-/* デストラクタ */
-ConfigParser::~ConfigParser(){}
-
 /* フレーム表示器用に値を取得 */
 fv_params_t ConfigParser::getFrameViewerParams(){
     int res_x = this->res_x;

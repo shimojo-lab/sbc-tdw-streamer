@@ -8,28 +8,28 @@
 const char* const SEPARATOR = "--boundary\r\n";  // 受信メッセージのセパレータ
 
 /* コンストラクタ */
-FrameSender::FrameSender(const smt_ios_t ios, const smt_fq_t queue):
+FrameSender::FrameSender(const smt_ios_t ios, const smt_fq_t queue, const char* const ip, const int port, const int protocol):
     ios(ios),
-    sock(*ios),
-    queue(queue)
+    tcp_sock(*ios),
+    udp_sock(*ios, _ip::udp::endpoint(_ip::udp::v4(), port)),
+    queue(queue),
+    ip(ip),
+    port(port),
+    protocol(protocol)
 {}
 
-/* デストラクタ */
-FrameSender::~FrameSender(){}
-
 /* 送信処理を開始 */
-void FrameSender::start(const char* const ip, const int port){
-    this->ip = ip;
-    this->port = port;
+void FrameSender::start(){
+    // TCPで接続
     c_lock(), std::cout << "[Info] Connecting to '" << ip << ":" << port << "'..." << std::endl;
-    const _ip::tcp::endpoint endpoint(_ip::address::from_string(ip), port);
-    const auto bind = boost::bind(&FrameSender::onTCPConnect, this, _ph::error);
-    this->sock.async_connect(endpoint, bind);
+    const _ip::tcp::endpoint endpoint(_ip::address::from_string(this->ip), this->port);
+    const auto bind = boost::bind(&FrameSender::onConnect, this, _ph::error);
+    this->tcp_sock.async_connect(endpoint, bind);
     return;
 }
 
 /* TCP接続時のコールバック */
-void FrameSender::onTCPConnect(const _sys::error_code &error){
+void FrameSender::onConnect(const _sys::error_code &error){
     if(error){
         c_lock(), std::cerr << "[Error] TCP Connection with '" << this->ip << ":" << this->port << "' failed. (" << error.message() << ")" << std::endl;
         return;
@@ -38,33 +38,52 @@ void FrameSender::onTCPConnect(const _sys::error_code &error){
     
     // 分割フレームの送信を開始
     cv::Mat frame = this->queue->dequeue();
-    const auto bind = boost::bind(&FrameSender::onSend, this, _ph::error, _ph::bytes_transferred);
-    _asio::async_write(this->sock, _asio::buffer(this->compressFrame(frame)), bind);
+    const auto bind = boost::bind(&FrameSender::onInitialSend, this, _ph::error, _ph::bytes_transferred);
+    _asio::async_write(this->tcp_sock, _asio::buffer(this->compressFrame(frame)), bind);
     return;
 }
 
-/* 分割フレームを圧縮 */
-std::string FrameSender::compressFrame(cv::Mat &frame){
-    // フレームを圧縮
-    std::vector<int> params = {cv::IMWRITE_JPEG_QUALITY, 95};
-    cv::imencode(".jpg", frame, this->comp_buf, params);
-    
-    // 送信用バイト列を作成
-    std::string bytes_buf(this->comp_buf.begin(), this->comp_buf.end());
-    bytes_buf += SEPARATOR;
-    return bytes_buf;
-}
-
-/* 分割フレーム送信時のコールバック */
-void FrameSender::onSend(const _sys::error_code &error, std::size_t sended_bytes){
+/* 初回メッセージ送信時のコールバック */
+void FrameSender::onInitialSend(const _sys::error_code &error, std::size_t t_bytes){
     if(error){
-        c_lock(), std::cout << "[Error] Send failed. (" << error.message() << ")" << std::endl;
+        c_lock(), std::cout << "[Error] Initial messeage send failed. (" << error.message() << ")" << std::endl;
+        std::exit(EXIT_FAILURE);
     }
     
     // 次番のフレームを送信
     cv::Mat frame = this->queue->dequeue();
-    const auto bind = boost::bind(&FrameSender::onSend, this, _ph::error, _ph::bytes_transferred);
-    _asio::async_write(this->sock, _asio::buffer(this->compressFrame(frame)), bind);
+    if(this->protocol == 0){  // TCPで送信
+        const auto bind = boost::bind(&FrameSender::onTCPSend, this, _ph::error, _ph::bytes_transferred);
+        _asio::async_write(this->tcp_sock, _asio::buffer(this->compressFrame(frame)), bind);
+    }else if(this->protocol == 1){  // UDPで送信
+        
+    }
+    return;
+}
+
+/* TCPでの分割フレーム送信時のコールバック */
+void FrameSender::onTCPSend(const _sys::error_code &error, std::size_t t_bytes){
+    if(error){
+        c_lock(), std::cout << "[Error] TCP send failed. (" << error.message() << ")" << std::endl;
+    }
+    
+    // 次番のフレームを送信
+    cv::Mat frame = this->queue->dequeue();
+    const auto bind = boost::bind(&FrameSender::onTCPSend, this, _ph::error, _ph::bytes_transferred);
+    _asio::async_write(this->tcp_sock, _asio::buffer(this->compressFrame(frame)), bind);
+    return;
+}
+
+/* UDPでの分割フレーム送信時のコールバック */
+void FrameSender::onUDPSend(const _sys::error_code &error, std::size_t t_bytes){
+    if(error){
+        c_lock(), std::cout << "[Error] UDP send failed. (" << error.message() << ")" << std::endl;
+    }
+    
+    // 次番のフレームを送信
+    cv::Mat frame = this->queue->dequeue();
+    const auto bind = boost::bind(&FrameSender::onUDPSend, this, _ph::error, _ph::bytes_transferred);
+    _asio::async_write(this->tcp_sock, _asio::buffer(this->compressFrame(frame)), bind);
     return;
 }
 

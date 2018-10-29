@@ -26,15 +26,16 @@ using smt_ios_t = std::shared_ptr<_asio::io_service>;
 class FrameReceiver{
     private:
         const smt_ios_t ios;           // BoostのI/Oオブジェクト
-        _ip::tcp::socket sock;         // TCPソケット
+        _ip::tcp::socket tcp_sock;     // TCPソケット
+//        _ip::udp::socket udp_sock;     // UDPソケット
         _ip::tcp::acceptor acc;        // TCPメッセージ受信器
         _asio::streambuf receive_buf;  // 受信メッセージ用バッファ
         const smt_fq_t queue;          // 分割フレーム用キュー
     public:
         FrameReceiver(const smt_ios_t ios, const smt_fq_t queue, const int port);  // コンストラクタ
-        ~FrameReceiver();                                                             // デストラクタ
-        void onTCPConnect(const _sys::error_code &error);                             // TCP接続時のコールバック
-        inline void onReceive(const _sys::error_code &error, size_t received_bytes);  // 受信時のコールバック
+        void onConnect(const _sys::error_code &error);                             // TCP接続時のコールバック
+        inline void onTCPReceive(const _sys::error_code &error, size_t received_bytes);  // 受信時のコールバック
+        inline void onUDPReceive(const _sys::error_code &error, size_t received_bytes);  // 受信時のコールバック
 };
 
 #endif  /* FRAME_RECEIVER_HPP */

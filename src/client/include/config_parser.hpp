@@ -24,7 +24,6 @@ class ConfigParser{
         int port;    // 受信用のポート
     public:
         ConfigParser(const char* const filename);  // コンストラクタ
-        ~ConfigParser();                           // デストラクタ
         fv_params_t getFrameViewerParams();        // フレーム表示器用に値を取得
         int getFrameReceiverParams();              // フレーム受信器用に値を取得
 };

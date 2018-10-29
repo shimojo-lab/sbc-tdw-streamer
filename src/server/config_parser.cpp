@@ -34,10 +34,18 @@ ConfigParser::ConfigParser(const char* const filename){
         std::cerr << "[Error] Number of display nodes is invalid." << std::endl;
         std::exit(EXIT_FAILURE);
     }
+    
+    // プロトコルを登録
+    std::string protocol = conf.get_optional<std::string>("protocol").get();
+    if(protocol == "tcp" || protocol == "TCP"){
+        this->protocol = 0;
+    }else if(protocol == "udp" || protocol == "UDP"){
+        this->protocol = 1;
+    }else{
+        std::cerr << "[Error] Protocol is invalid." << std::endl;
+        std::exit(EXIT_FAILURE);
+    }
 }
-
-/* デストラクタ */
-ConfigParser::~ConfigParser(){}
 
 /* 全ディスプレイ数を取得 */
 const int ConfigParser::getDisplayNum(){
@@ -56,6 +64,7 @@ vs_params_t ConfigParser::getVideoSplitterParams(){
 fs_params_t ConfigParser::getFrameSenderParams(){
     std::vector<std::string> ip_list = this->ip_list;
     std::vector<int> port_list = this->port_list;
-    return std::forward_as_tuple(ip_list, port_list);
+    int protocol = this->protocol;
+    return std::forward_as_tuple(ip_list, port_list, protocol);
 }
 
