@@ -1,4 +1,5 @@
 *.mp4
+*.webm
 *.out
 *.o
 sbc_client

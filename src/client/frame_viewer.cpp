@@ -17,7 +17,7 @@ FrameViewer::FrameViewer(const char* const title, const int res_x, const int res
     width(width),
     height(height),
     queue(queue)
-{
+{/*
     // SDLを初期化
     if(SDL_Init(SDL_INIT_VIDEO) != SDL_STATUS_GREEN){
         std::cerr << "[Error] SDL_Init failed. (" << SDL_GetError() << ")" << std::endl;
@@ -38,7 +38,7 @@ FrameViewer::FrameViewer(const char* const title, const int res_x, const int res
     // SDLテクスチャを初期化
     if(!this->createTexture()){
         std::exit(EXIT_FAILURE);
-    }
+    }*/
 }
 
 /* SDLウィンドウを初期化 */

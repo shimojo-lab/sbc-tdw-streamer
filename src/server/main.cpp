@@ -23,19 +23,17 @@ int main(int argc, char *argv[]){
     std::tie(video_src, row, column) = parser.getVideoSplitterParams();
     VideoSplitter splitter(video_src, row, column);
     
-    // 別スレッドで同期制御器を起動
-    const int display_num = parser.getDisplayNum();
-    
-    
     // 別スレッドで分割フレーム送信器を起動
     smt_ios_t ios = std::make_shared<_asio::io_service>();
     std::vector<std::string> ip_list;
     std::vector<int> port_list;
     int protocol;
     std::tie(ip_list, port_list, protocol) = parser.getFrameSenderParams();
+    const int display_num = parser.getDisplayNum();
     std::vector<boost::thread> thread_list(display_num);
+    smt_barrier_t barrier = std::make_shared<boost::barrier>(display_num);
     for(int i=0; i<display_num; ++i){
-        thread_list[i] = boost::thread(thread_task, ios, splitter.getFrameQueuePtr(i), ip_list[i].c_str(), port_list[i], protocol);
+        thread_list[i] = boost::thread(thread_task, ios, splitter.getFrameQueuePtr(i), ip_list[i].c_str(), port_list[i], protocol, barrier);
     }
     
     // フレーム分割器を起動
@@ -51,9 +49,9 @@ int main(int argc, char *argv[]){
 }
 
 /* 別スレッド実行用の関数 */
-void thread_task(const smt_ios_t ios, const smt_fq_t queue, const char* const ip, const int port, const int protocol){
+void thread_task(const smt_ios_t ios, const smt_fq_t queue, const char* const ip, const int port, const int protocol, smt_barrier_t barrier){
     // 分割フレーム送信器を起動
-    FrameSender sender(ios, queue, ip, port, protocol);
+    FrameSender sender(ios, queue, ip, port, protocol, barrier);
     sender.start();
     ios->run();
     return;

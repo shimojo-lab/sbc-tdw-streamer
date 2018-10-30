@@ -11,6 +11,7 @@
 #include <vector>
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
+#include <boost/thread/barrier.hpp>
 #include <opencv2/imgcodecs.hpp>
 
 namespace _asio = boost::asio;
@@ -18,8 +19,9 @@ namespace _ip = boost::asio::ip;
 namespace _sys = boost::system;
 namespace _ph = boost::asio::placeholders;
 
-extern const char* const SEPARATOR;                    // 受信メッセージのセパレータ
-using smt_ios_t = std::shared_ptr<_asio::io_service>;  // io_serviceのsharedポインタ
+extern const char* const SEPARATOR;                     // 受信メッセージのセパレータ
+using smt_ios_t = std::shared_ptr<_asio::io_service>;   // io_serviceのsharedポインタ
+using smt_barrier_t = std::shared_ptr<boost::barrier>;  // barrierのsharedポインタ
 
 /* 分割フレーム送信器 */
 class FrameSender{
@@ -31,9 +33,10 @@ class FrameSender{
         const char* const ip;                 // 送信先のIP
         const int port;                       // 送信先のポート
         const int protocol;                   // 通信プロトコル (0: TCP, 1: UDP)
+        smt_barrier_t barrier;                // 同期バリア
         std::vector<unsigned char> comp_buf;  // フレーム圧縮用バッファ
     public:
-        FrameSender(const smt_ios_t ios, const smt_fq_t queue, const char *ip, const int port, const int protocol);  // コンストラクタ
+        FrameSender(const smt_ios_t ios, const smt_fq_t queue, const char *ip, const int port, const int protocol, smt_barrier_t barrier);  // コンストラクタ
         void start();                                                        // 送信処理を開始
         void onConnect(const _sys::error_code &error);                       // TCP接続時のコールバック
         void onInitialSend(const _sys::error_code &error, std::size_t t_bytes);  // 初回メッセージ送信時のコールバック

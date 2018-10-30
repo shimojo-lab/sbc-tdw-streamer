@@ -8,14 +8,15 @@
 const char* const SEPARATOR = "--boundary\r\n";  // 受信メッセージのセパレータ
 
 /* コンストラクタ */
-FrameSender::FrameSender(const smt_ios_t ios, const smt_fq_t queue, const char* const ip, const int port, const int protocol):
+FrameSender::FrameSender(const smt_ios_t ios, const smt_fq_t queue, const char* const ip, const int port, const int protocol, smt_barrier_t barrier):
     ios(ios),
     tcp_sock(*ios),
     udp_sock(*ios, _ip::udp::endpoint(_ip::udp::v4(), port)),
     queue(queue),
     ip(ip),
     port(port),
-    protocol(protocol)
+    protocol(protocol),
+    barrier(barrier)
 {}
 
 /* 送信処理を開始 */
@@ -70,6 +71,7 @@ void FrameSender::onTCPSend(const _sys::error_code &error, std::size_t t_bytes){
     // 次番のフレームを送信
     cv::Mat frame = this->queue->dequeue();
     const auto bind = boost::bind(&FrameSender::onTCPSend, this, _ph::error, _ph::bytes_transferred);
+    this->barrier->wait();
     _asio::async_write(this->tcp_sock, _asio::buffer(this->compressFrame(frame)), bind);
     return;
 }

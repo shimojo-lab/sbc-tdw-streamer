@@ -1,9 +1,9 @@
 {
     "//": "ヘッドノードの設定",
-    "video_src": "./test.mp4",
+    "video_src": "./4k.webm",
     "layout": {
         "row": 2,
-        "column": 1
+        "column": 2
     },
     "display_node": [
         {
@@ -11,8 +11,16 @@
             "port": 11111
         },
         {
-            "ip": "127.0.0.2",
+            "ip": "127.0.0.1",
             "port": 11112
+        },
+        {
+            "ip": "127.0.0.1",
+            "port": 11113
+        },
+        {
+            "ip": "127.0.0.1",
+            "port": 11114
         }
     ],
     "protocol": "tcp"

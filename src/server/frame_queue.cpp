@@ -13,13 +13,21 @@ FrameQueue::FrameQueue(const std::size_t max_size):
 /* キューにフレームを投入 */
 void FrameQueue::enqueue(const cv::Mat &frame){
     boost::unique_lock<boost::mutex> u_lock(this->lock);
-    while(this->queue.size() >= this->max_size){
+/*    while(this->queue.size() >= this->max_size){
         this->cond.wait(u_lock);
     }
     const bool was_empty = this->queue.empty();
     this->queue.push(frame);
     if(was_empty){
         this->cond.notify_one();
+    }*/
+    if(this->queue.empty()){
+        this->queue.push(frame);
+        this->cond.notify_one();
+    }else{
+        while(this->queue.size() >= this->max_size){
+            this->cond.wait(u_lock);
+        }
     }
     return;
 }
@@ -32,7 +40,7 @@ cv::Mat FrameQueue::dequeue(){
     }
     const cv::Mat frame = this->queue.front();
     this->queue.pop();
-    if(this->queue.size() >= this->max_size){
+    if(this->queue.size() < this->max_size){
         this->cond.notify_one();
     }
     return frame;
