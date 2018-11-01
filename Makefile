@@ -7,6 +7,7 @@ CXX = g++
 CXXFLAGS = -Wall -std=c++11
 SRV_SRC = ./src/server
 CLI_SRC = ./src/client
+UTILS_SRC = ./src/utils
 BIN = ./bin
 CONF = ./conf
 CV2_HDR = /usr/local/include/opencv2
@@ -27,23 +28,29 @@ client: compile_client test_client
 
 # 送信サーバをコンパイル
 .PHONY: compile_server
-compile_server: $(SRV_SRC)/main.o $(SRV_SRC)/config_parser.o $(SRV_SRC)/frame_queue.o $(SRV_SRC)/video_splitter.o $(SRV_SRC)/frame_sender.o 
+compile_server: $(SRV_SRC)/main.o $(UTILS_SRC)/print_with_mutex.o $(SRV_SRC)/config_parser.o $(SRV_SRC)/frame_queue.o $(SRV_SRC)/video_splitter.o $(SRV_SRC)/frontend_server.o $(SRV_SRC)/frame_sender.o 
 	$(CXX) $(CXXFLAGS) $(SRV_LD) -o $(BIN)/sbc_server $^
 
 $(SRV_SRC)/main.o: $(SRV_SRC)/main.cpp
-	$(CXX) $(CXXFLAGS) -I $(SRV_SRC)/include -c -o $@ $<
+	$(CXX) $(CXXFLAGS) -I $(SRV_SRC)/include -I $(UTILS_SRC)/include -c -o $@ $<
+
+$(UTILS_SRC)/print_with_mutex.o: $(UTILS_SRC)/print_with_mutex.cpp
+	$(CXX) $(CXXFLAGS) -I $(UTILS_SRC)/include -c -o $@ $<
 
 $(SRV_SRC)/config_parser.o: $(SRV_SRC)/config_parser.cpp
-	$(CXX) $(CXXFLAGS) -I $(SRV_SRC)/include -c -o $@ $<
+	$(CXX) $(CXXFLAGS) -I $(SRV_SRC)/include -I $(UTILS_SRC)/include -c -o $@ $<
 
 $(SRV_SRC)/frame_queue.o: $(SRV_SRC)/frame_queue.cpp
 	$(CXX) $(CXXFLAGS) -I $(SRV_SRC)/include -c -o $@ $<
 
 $(SRV_SRC)/video_splitter.o: $(SRV_SRC)/video_splitter.cpp
-	$(CXX) $(CXXFLAGS) -I $(SRV_SRC)/include -I $(CV2_HDR) -c -o $@ $<
+	$(CXX) $(CXXFLAGS) -I $(SRV_SRC)/include -I $(UTILS_SRC)/include -I $(CV2_HDR) -c -o $@ $<
+
+$(SRV_SRC)/frontend_server.o: $(SRV_SRC)/frontend_server.cpp
+	$(CXX) $(CXXFLAGS) -I $(SRV_SRC)/include -c -I $(UTILS_SRC)/include -o $@ $<
 
 $(SRV_SRC)/frame_sender.o: $(SRV_SRC)/frame_sender.cpp
-	$(CXX) $(CXXFLAGS) -I $(SRV_SRC)/include -I $(CV2_HDR) -c -o $@ $<
+	$(CXX) $(CXXFLAGS) -I $(SRV_SRC)/include -I $(UTILS_SRC)/include -I $(CV2_HDR) -c -o $@ $<
 
 # 表示クライアントをコンパイル
 .PHONY: compile_client

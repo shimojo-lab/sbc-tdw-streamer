@@ -1,7 +1,7 @@
-/********************************
- *      config_parser.cpp       *
- *   (設定ファイルのパーサー)   *
- ********************************/
+/*******************************
+*      config_parser.cpp       *
+*   (設定ファイルのパーサー)   *
+*******************************/
 
 #include "config_parser.hpp"
 
@@ -12,44 +12,51 @@ ConfigParser::ConfigParser(const char* const filename){
     try{
         _pt::read_json(filename, conf);
     }catch(...){
-        std::cerr << "[Error] Read config failed." << std::endl;
+        print_err("Failed to read config file.", filename);
         std::exit(EXIT_FAILURE);
     }
     
     // パラメータを取得
-    this->video_src = conf.get_optional<std::string>("video_src").get().c_str();
-    this->row = conf.get_optional<int>("layout.row").get();
-    this->column = conf.get_optional<int>("layout.column").get();
-    this->display_num = this->row * this->column;
-    
-    // ディスプレイノードを登録
-    int count = 0;
-    BOOST_FOREACH(_pt::ptree::value_type &child, conf.get_child("display_node")){
-        const _pt::ptree &node = child.second;
-        this->ip_list.push_back(node.get_optional<std::string>("ip").get());
-        this->port_list.push_back(node.get_optional<int>("port").get());
-        ++count;
-    }
-    if(count != this->display_num){
-        std::cerr << "[Error] Number of display nodes is invalid." << std::endl;
-        std::exit(EXIT_FAILURE);
-    }
-    
-    // プロトコルを登録
-    std::string protocol = conf.get_optional<std::string>("protocol").get();
-    if(protocol == "tcp" || protocol == "TCP"){
-        this->protocol = 0;
-    }else if(protocol == "udp" || protocol == "UDP"){
-        this->protocol = 1;
-    }else{
-        std::cerr << "[Error] Protocol is invalid." << std::endl;
+    if(!this->setParams(conf)){
         std::exit(EXIT_FAILURE);
     }
 }
 
-/* 全ディスプレイ数を取得 */
-const int ConfigParser::getDisplayNum(){
-    return this->display_num;
+/* パラメータを取得するメソッド */
+bool ConfigParser::setParams(_pt::ptree& conf){
+    // パラメータを取得
+    this->video_src = conf.get_optional<std::string>("video_src").get().c_str();
+    this->row = conf.get_optional<int>("layout.row").get();
+    this->column = conf.get_optional<int>("layout.column").get();
+    this->sender_port = conf.get_optional<int>("sender_port").get();
+    
+    // ディスプレイノードのIPを取得
+    int count = 0;
+    for(const auto& elem : conf.get_child("display_node")){
+        this->ip_list.push_back(elem.second.data());
+        ++count;
+    }
+    if(count != this->row*this->column){
+        print_err("Number of display nodes is invalid.", std::to_string(count));
+        return false;
+    }
+    
+    // フレーム送信用プロトコルを取得
+    std::string protocol = conf.get_optional<std::string>("protocol").get();
+    if(protocol == "tcp" || protocol == "TCP"){
+        this->protocol = "TCP";
+    }else if(protocol == "udp" || protocol == "UDP"){
+        this->protocol = "UDP";
+    }else{
+        print_err("Invaild protocol is selected.", protocol);
+        return false;
+    }
+    return true;
+}
+
+/* フロントエンドサーバ用に値を取得 */
+int ConfigParser::getFrontendServerParams(){
+    return this->sender_port;
 }
 
 /* フレーム分割器用に値を取得 */
@@ -60,11 +67,11 @@ vs_params_t ConfigParser::getVideoSplitterParams(){
     return std::forward_as_tuple(video_src, row, column);
 }
 
-/* 分割フレーム送信器用に値を取得 */
+/* フレーム送信器用に値を取得 */
 fs_params_t ConfigParser::getFrameSenderParams(){
+    std::string protocol = this->protocol;
+    int sender_port = this->sender_port;
     std::vector<std::string> ip_list = this->ip_list;
-    std::vector<int> port_list = this->port_list;
-    int protocol = this->protocol;
-    return std::forward_as_tuple(ip_list, port_list, protocol);
+    return std::forward_as_tuple(protocol, sender_port, ip_list);
 }
 

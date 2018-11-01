@@ -1,28 +1,14 @@
 {
     "//": "ヘッドノードの設定",
-    "video_src": "./4k.webm",
+    "video_src": "./test/fullhd.mp4",
     "layout": {
-        "row": 2,
-        "column": 2
+        "row": 1,
+        "column": 1
     },
+    "protocol": "tcp",
+    "sender_port": 20000,
     "display_node": [
-        {
-            "ip": "127.0.0.1",
-            "port": 11111
-        },
-        {
-            "ip": "127.0.0.1",
-            "port": 11112
-        },
-        {
-            "ip": "127.0.0.1",
-            "port": 11113
-        },
-        {
-            "ip": "127.0.0.1",
-            "port": 11114
-        }
-    ],
-    "protocol": "tcp"
+        "127.0.0.1"
+    ]
 }
 

@@ -17,8 +17,8 @@ FrameViewer::FrameViewer(const char* const title, const int res_x, const int res
     width(width),
     height(height),
     queue(queue)
-{/*
-    // SDLを初期化
+{
+/*    // SDLを初期化
     if(SDL_Init(SDL_INIT_VIDEO) != SDL_STATUS_GREEN){
         std::cerr << "[Error] SDL_Init failed. (" << SDL_GetError() << ")" << std::endl;
         std::exit(EXIT_FAILURE);
@@ -75,7 +75,7 @@ const bool FrameViewer::createRenderer(){
 const bool FrameViewer::createTexture(){
     sdl_deleter_t deleter;
     this->texture = smt_texture_t(
-        SDL_CreateTexture(this->renderer.get(), SDL_PIXELFORMAT_BGRA8888, SDL_TEXTUREACCESS_TARGET, this->width, this->height),
+        SDL_CreateTexture(this->renderer.get(), SDL_PIXELFORMAT_BGRA8888, SDL_TEXTUREACCESS_STREAMING, this->width, this->height),
         deleter
     );
     if(this->texture == NULL){
@@ -117,6 +117,7 @@ try{
 	// A,R,G,Bの順に輝度値を書き込み
     for(int y=0; y<this->height; ++y){
         cv::Vec3b *data = frame.ptr<cv::Vec3b>(y);
+std::cout << y << std::endl;
         for(int x=0; x<this->width; ++x){
             *pixel_addr++ = SDL_ALPHA_CH;
             *pixel_addr++ = data[x][2];
@@ -129,13 +130,13 @@ try{
     SDL_UnlockTexture(texture.get());
     SDL_RenderCopy(this->renderer.get(), this->texture.get(), NULL, NULL);
     SDL_RenderPresent(this->renderer.get());
-    SDL_Delay(10);
-*/    return;
+    SDL_Delay(10);*/
+    return;
 }
 
 /* フレーム表示を開始するメソッド */
 void FrameViewer::start(){
-    for(int i=0; i<10000; ++i){
+    for(int i=0; i<100000; ++i){
         this->displayFrame(this->decompressFrame());
     }
     return;

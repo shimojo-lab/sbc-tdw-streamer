@@ -21,7 +21,7 @@ int main(int argc, char* argv[]){
     // 分割フレーム表示器を起動
     int res_x, res_y, width, height;
     std::tie(res_x, res_y, width, height) = parser.getFrameViewerParams();
-    smt_fq_t queue = std::make_shared<FrameQueue>(1);
+    smt_fq_t queue = std::make_shared<FrameQueue>(64);
     FrameViewer viewer(APP_NAME, res_x, res_y, width, height, queue);
     
     // 別スレッドで分割フレーム受信器を起動

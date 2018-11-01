@@ -20,12 +20,12 @@ class FrameQueue{
         mutable boost::condition_variable cond;  // 条件変数
     public:
         FrameQueue(const std::size_t max_size);  // コンストラクタ
-        void enqueue(const cv::Mat &frame);      // キューにフレームを投入
+        void enqueue(const cv::Mat& frame);      // キューにフレームを投入
         cv::Mat dequeue();                       // キューからフレームを取り出し
         const std::size_t getSize();             // キュー内のフレーム数を取得
 };
 
-using smt_fq_t = std::shared_ptr<FrameQueue>;  // FrameQueue用のsharedポインタ
+using fq_ptr_t = std::shared_ptr<FrameQueue>;  // FrameQueue用のsharedポインタ
 
 #endif  /* FRAME_QUEUE_HPP */
 
