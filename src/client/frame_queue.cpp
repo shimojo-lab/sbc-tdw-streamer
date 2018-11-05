@@ -11,7 +11,7 @@ FrameQueue::FrameQueue(const std::size_t max_size):
 {}
 
 /* キューにフレームを投入 */
-void FrameQueue::enqueue(const std::vector<unsigned char> &frame){
+void FrameQueue::enqueue(const std::vector<unsigned char>& frame){
     boost::unique_lock<boost::mutex> u_lock(this->lock);
 /*    while(this->queue.size() >= this->max_size){
         this->cond.wait(u_lock);
@@ -34,7 +34,7 @@ void FrameQueue::enqueue(const std::vector<unsigned char> &frame){
 }
 
 /* キューからフレームを取り出し */
-std::vector<unsigned char> FrameQueue::dequeue(){
+const std::vector<unsigned char> FrameQueue::dequeue(){
     boost::unique_lock<boost::mutex> u_lock(this->lock);
     while(this->queue.empty()){
         this->cond.wait(u_lock);

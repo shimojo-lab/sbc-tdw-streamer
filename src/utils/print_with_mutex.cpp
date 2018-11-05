@@ -12,7 +12,7 @@ boost::unique_lock<boost::mutex> console_lock(){
 }
 
 /* 一般メッセージを表示 */
-void print_info(const std::string &msg){
+void print_info(const std::string& msg){
     console_lock(), std::cout << "[Info] "
                               << msg
                               << "."
@@ -21,12 +21,20 @@ void print_info(const std::string &msg){
 }
 
 /* エラーメッセージを表示 */
-void print_err(const std::string &msg, const std::string &err_msg){
+void print_err(const std::string& msg, const std::string& suppl){
     console_lock(), std::cerr << "[Error] "
                               << msg
                               << ". ("
-                              << err_msg
+                              << suppl
                               << ")"
+                              << std::endl;
+    return;
+}
+
+/* デバッグ用メッセージを表示 */
+void print_debug(const std::string& msg){
+    console_lock(), std::cerr << "[Debug] "
+                              << msg
                               << std::endl;
     return;
 }

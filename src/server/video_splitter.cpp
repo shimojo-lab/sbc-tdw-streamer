@@ -6,13 +6,13 @@
 #include "video_splitter.hpp"
 
 /* コンストラクタ */
-VideoSplitter::VideoSplitter(const char* const video_src, const int row, const int column):
+VideoSplitter::VideoSplitter(const std::string video_src, const int row, const int column):
     row(row),
     column(column)
 {
     // 再生する動画を読込み
-    print_info("Opened " + std::string(video_src));
-    this->video = cv::VideoCapture(video_src);
+    print_info("Opened " + video_src);
+    this->video = cv::VideoCapture(video_src.c_str());
     if(!this->video.isOpened()){
         print_err("Failed to open video", video_src);
         std::exit(EXIT_FAILURE);

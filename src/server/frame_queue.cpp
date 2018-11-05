@@ -33,7 +33,7 @@ void FrameQueue::enqueue(const cv::Mat& frame){
 }
 
 /* キューからフレームを取り出し */
-cv::Mat FrameQueue::dequeue(){
+const cv::Mat FrameQueue::dequeue(){
     boost::unique_lock<boost::mutex> u_lock(this->lock);
     while(this->queue.empty()){
         this->cond.wait(u_lock);

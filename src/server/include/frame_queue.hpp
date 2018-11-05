@@ -21,7 +21,7 @@ class FrameQueue{
     public:
         FrameQueue(const std::size_t max_size);  // コンストラクタ
         void enqueue(const cv::Mat& frame);      // キューにフレームを投入
-        cv::Mat dequeue();                       // キューからフレームを取り出し
+        const cv::Mat dequeue();                 // キューからフレームを取り出し
         const std::size_t getSize();             // キュー内のフレーム数を取得
 };
 

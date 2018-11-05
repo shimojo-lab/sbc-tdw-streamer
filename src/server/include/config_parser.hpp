@@ -14,16 +14,16 @@
 #include <boost/optional.hpp>
 
 namespace _pt = boost::property_tree;
-using vs_params_t = std::tuple<const char*, int, int>;
+using vs_params_t = std::tuple<std::string, int, int>;
 using fs_params_t = std::tuple<std::string, int, std::vector<std::string>>;
 
 /* 設定ファイルのパーサー */
 class ConfigParser{
     private:
-        const char *video_src;             // 再生する動画
+        std::string video_src;             // 再生する動画
         int row;                           // ディスプレイの横の枚数
         int column;                        // ディスプレイの縦の枚数
-        int port;                          // フロントエンドサーバ用のポート
+        int frontend_port;                 // フロントエンドサーバ用のポート
         int sender_port;                   // フレーム送信用ポート
         std::string protocol;              // フレーム送信用プロトコル
         std::vector<std::string> ip_list;  // ディスプレイノードのIP

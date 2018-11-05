@@ -1,66 +1,48 @@
-/******************************
- *      frame_viewer.hpp      *
- *    (分割フレーム表示器)    *
- ******************************/
+/*************************
+*    frame_viewer.hpp    *
+*    (フレーム表示器)    *
+*************************/
 
 #ifndef FRAME_VIEWER_HPP
 #define FRAME_VIEWER_HPP
 
 #include "frame_queue.hpp"
-#include <iostream>
-#include <cstdlib>
-#include <SDL2/SDL.h>
-#include <opencv2/core.hpp>
+#include "print_with_mutex.hpp"
+#include "sdl2_wrapper.hpp"
+#include <boost/asio.hpp>
+#include <boost/thread/barrier.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 
-extern const int SDL_STATUS_GREEN;  // SDL正常起動時のステータスコード
-extern const int SDL_DRIVER_INDEX;  // SDLレンダラーのドライバ指定
-extern const int SDL_DRIVER_FLAG;   // SDLレンダラーのフラグ
-extern const int SDL_ALPHA_CH;      // アルファチャンネル値
+namespace _asio = boost::asio;
+namespace _sys = boost::system;
+namespace _ip = boost::asio::ip;
+namespace _ph = boost::asio::placeholders;
+using tcps_ptr_t = std::shared_ptr<_ip::tcp::socket>;
 
-/* SDLオブジェクト削除用の構造体 */
-struct sdl_deleter_t{
-    void operator()(SDL_Window *ptr){
-        if(ptr){
-            SDL_DestroyWindow(ptr);
-        }
-    }
-    void operator()(SDL_Renderer *ptr){
-        if(ptr){
-            SDL_DestroyRenderer(ptr);
-        }
-    }
-    void operator()(SDL_Texture *ptr){
-        if(ptr){
-            SDL_DestroyTexture(ptr);
-        }
-    }
-};
-
-using smt_window_t = std::unique_ptr<SDL_Window, sdl_deleter_t>;      // SDLウィンドウのuniqueポインタ
-using smt_renderer_t = std::unique_ptr<SDL_Renderer, sdl_deleter_t>;  // SDLレンダラーのuniqueポインタ
-using smt_texture_t = std::unique_ptr<SDL_Texture, sdl_deleter_t>;    // SDLテクスチャのuniqueポインタ
+extern const std::string SEPARATOR;
+extern const int SEPARATOR_LEN;
 
 /* 分割フレーム表示部 */
 class FrameViewer{
     private:
-        const int res_x;          // ディスプレイの縦の長さ
-        const int res_y;          // ディスプレイの横の長さ
-        const int width;          // フレームの横の長さ
-        const int height;         // フレームの縦の長さ
-        const smt_fq_t queue;     // 分割フレームキュー
-        smt_window_t window;      // SDLウィンドウ
-        smt_renderer_t renderer;  // SDLレンダラー
-        smt_texture_t texture;    // SDLテクスチャ
-        const bool createWindow(const char* const title);  // SDLウィンドウを初期化
-        const bool createRenderer();                       // SDLレンダラーを初期化
-        const bool createTexture();                        // SDLテクスチャを初期化
-        cv::Mat decompressFrame();                         // フレームを展開
-        void displayFrame(cv::Mat frame);                  // フレームを表示
+        const tcps_ptr_t tcp_sock;  // TCPソケット
+        const fq_ptr_t queue;       // 分割フレームキュー
+        const SDL2Wrapper sdl2;     // SDL2のラッパー
+        const int width;            // フレームの横の長さ
+        const int height;           // フレームの縦の長さ
+        const int frame_num;        // 総フレーム数
+        _asio::streambuf recv_buf;  // 受信メッセージ用バッファ
+        boost::barrier& barrier;    // 同期用バリア
+        
+        void sendSync();    // 同期メッセージを送信
+        void onRecvSync(const _sys::error_code& err, std::size_t t_bytes);  // 同期メッセージ受信時のコールバック
+        void onSendSync(const _sys::error_code&err, std::size_t t_bytes);   // 同期メッセージ送信時のコールバック
+        cv::Mat decompressFrame();                // フレームを展開
+        void displayFrame(const cv::Mat& frame);  // フレームを表示
     public:
-        FrameViewer(const char* const title, const int res_x, const int res_y, const int width, const int height, const smt_fq_t queue);  // コンストラクタ
-        void start();    // フレーム表示を開始
+        FrameViewer(const tcps_ptr_t tcp_sock, const fq_ptr_t queue, const int res_x, const int res_y, const int width, const int height, const int framerate, const int frame_num, boost::barrier& barrier);  // コンストラクタ
+        void run();    // フレーム表示を開始
 };
 
 #endif  /* FRAME_VIEWER_HPP */

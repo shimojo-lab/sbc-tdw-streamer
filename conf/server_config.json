@@ -6,7 +6,10 @@
         "column": 1
     },
     "protocol": "tcp",
-    "sender_port": 20000,
+    "port": {
+        "frontend": 11111,
+        "sender": 20000
+    },
     "display_node": [
         "127.0.0.1"
     ]

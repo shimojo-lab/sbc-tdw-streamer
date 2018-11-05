@@ -1,7 +1,7 @@
-/********************************
- *      config_parser.cpp       *
- *   (設定ファイルのパーサー)   *
- ********************************/
+/*******************************
+*      config_parser.cpp       *
+*   (設定ファイルのパーサー)   *
+*******************************/
 
 #include "config_parser.hpp"
 
@@ -12,16 +12,30 @@ ConfigParser::ConfigParser(const char* const filename){
     try{
         _pt::read_json(filename, conf);
     }catch(...){
-        std::cerr << "[Error] Read config failed." << std::endl;
+        print_err("Failed to read config", std::string(filename));
         std::exit(EXIT_FAILURE);
     }
     
     // パラメータを取得
+    setParams(conf);
+}
+
+/* パラメータを取得 */
+void ConfigParser::setParams(_pt::ptree& conf){
+    this->ip = conf.get_optional<std::string>("head_node.ip").get();
+    this->port = conf.get_optional<int>("head_node.port").get();
     this->res_x = conf.get_optional<int>("resolution.width").get();
     this->res_y = conf.get_optional<int>("resolution.height").get();
     this->width = conf.get_optional<int>("frame.width").get();
     this->height = conf.get_optional<int>("frame.height").get();
-    this->port = conf.get_optional<int>("port").get();
+    return;
+}
+
+/* 接続要求クライアント用に値を取得 */
+rc_params_t ConfigParser::getRequestClientParams(){
+    std::string ip = this->ip;
+    int port = this->port;
+    return std::forward_as_tuple(ip, port);
 }
 
 /* フレーム表示器用に値を取得 */

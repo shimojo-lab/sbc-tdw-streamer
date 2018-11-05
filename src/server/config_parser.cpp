@@ -12,7 +12,7 @@ ConfigParser::ConfigParser(const char* const filename){
     try{
         _pt::read_json(filename, conf);
     }catch(...){
-        print_err("Failed to read config file.", filename);
+        print_err("Failed to read config file", filename);
         std::exit(EXIT_FAILURE);
     }
     
@@ -25,10 +25,11 @@ ConfigParser::ConfigParser(const char* const filename){
 /* パラメータを取得するメソッド */
 bool ConfigParser::setParams(_pt::ptree& conf){
     // パラメータを取得
-    this->video_src = conf.get_optional<std::string>("video_src").get().c_str();
+    this->video_src = conf.get_optional<std::string>("video_src").get();
     this->row = conf.get_optional<int>("layout.row").get();
     this->column = conf.get_optional<int>("layout.column").get();
-    this->sender_port = conf.get_optional<int>("sender_port").get();
+    this->frontend_port = conf.get_optional<int>("port.frontend").get();
+    this->sender_port = conf.get_optional<int>("port.sender").get();
     
     // ディスプレイノードのIPを取得
     int count = 0;
@@ -56,12 +57,12 @@ bool ConfigParser::setParams(_pt::ptree& conf){
 
 /* フロントエンドサーバ用に値を取得 */
 int ConfigParser::getFrontendServerParams(){
-    return this->sender_port;
+    return this->frontend_port;
 }
 
 /* フレーム分割器用に値を取得 */
 vs_params_t ConfigParser::getVideoSplitterParams(){
-    const char *video_src = this->video_src;
+    std::string video_src = this->video_src;
     int row = this->row;
     int column = this->column;
     return std::forward_as_tuple(video_src, row, column);

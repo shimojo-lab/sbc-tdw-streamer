@@ -29,7 +29,7 @@ class VideoSplitter{
         
         void setSplitParams();  // 分割用のパラメータを設定
     public:
-        VideoSplitter(const char* const video_src, const int row, const int column);  // コンストラクタ
+        VideoSplitter(const std::string video_src, const int row, const int column);  // コンストラクタ
         video_params_t getVideoParams();                // 動画の情報を取得
         const fq_ptr_t getFrameQueuePtr(const int id);  // 分割フレーム用キューのポインタを取得
         void start();                                   // フレームの分割を開始

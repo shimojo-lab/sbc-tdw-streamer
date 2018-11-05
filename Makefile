@@ -5,14 +5,14 @@
 
 CXX = g++
 CXXFLAGS = -Wall -std=c++11
-SRV_SRC = ./src/server
-CLI_SRC = ./src/client
-UTILS_SRC = ./src/utils
+SRV = ./src/server
+CLI = ./src/client
+UTILS = ./src/utils
 BIN = ./bin
 CONF = ./conf
 CV2_HDR = /usr/local/include/opencv2
-SRV_LD = -l opencv_core -l opencv_imgcodecs -l opencv_highgui -l opencv_videoio -l boost_system -l boost_thread -l pthread
-CLI_LD = -l opencv_core -l opencv_imgcodecs -l opencv_highgui -l opencv_imgproc -l SDL2 -l boost_system -l boost_thread -l pthread
+SRV_LD = -l opencv_core -l opencv_imgcodecs -l opencv_highgui -l opencv_videoio -l boost_system -l boost_thread
+CLI_LD = -l opencv_core -l opencv_imgcodecs -l opencv_highgui -l opencv_imgproc -l SDL2 -l boost_system -l boost_thread
 
 # 全てのコンパイルとテストを一括実行
 .PHONY: all
@@ -20,57 +20,67 @@ all: server client
 
 # 送信サーバのコンパイルとテスト
 .PHONY: server
-server: compile_server test_server
+server: complie_utils compile_server test_server
 
 # 表示クライアントのコンパイルとテスト
 .PHONY: client
-client: compile_client test_client
+client: compile_utils compile_client test_client
+
+# 共通モジュールをコンパイル
+.PHONY: complie_utils
+compile_utils: $(UTILS)/print_with_mutex.o $(UTILS)/sdl2_wrapper.o
+
+$(UTILS)/print_with_mutex.o: $(UTILS)/print_with_mutex.cpp
+	$(CXX) $(CXXFLAGS) -I $(UTILS)/include -c -o $@ $<
+
+$(UTILS)/sdl2_wrapper.o: $(UTILS)/sdl2_wrapper.cpp
+	$(CXX) $(CXXFLAGS) -I $(UTILS)/include -c -o $@ $<
 
 # 送信サーバをコンパイル
 .PHONY: compile_server
-compile_server: $(SRV_SRC)/main.o $(UTILS_SRC)/print_with_mutex.o $(SRV_SRC)/config_parser.o $(SRV_SRC)/frame_queue.o $(SRV_SRC)/video_splitter.o $(SRV_SRC)/frontend_server.o $(SRV_SRC)/frame_sender.o 
+compile_server: $(SRV)/main.o $(UTILS)/print_with_mutex.o $(SRV)/config_parser.o $(SRV)/frame_queue.o $(SRV)/frontend_server.o $(SRV)/video_splitter.o $(SRV)/frame_sender.o 
 	$(CXX) $(CXXFLAGS) $(SRV_LD) -o $(BIN)/sbc_server $^
 
-$(SRV_SRC)/main.o: $(SRV_SRC)/main.cpp
-	$(CXX) $(CXXFLAGS) -I $(SRV_SRC)/include -I $(UTILS_SRC)/include -c -o $@ $<
+$(SRV)/main.o: $(SRV)/main.cpp
+	$(CXX) $(CXXFLAGS) -I $(SRV)/include -I $(UTILS)/include -c -o $@ $<
 
-$(UTILS_SRC)/print_with_mutex.o: $(UTILS_SRC)/print_with_mutex.cpp
-	$(CXX) $(CXXFLAGS) -I $(UTILS_SRC)/include -c -o $@ $<
+$(SRV)/config_parser.o: $(SRV)/config_parser.cpp
+	$(CXX) $(CXXFLAGS) -I $(SRV)/include -I $(UTILS)/include -c -o $@ $<
 
-$(SRV_SRC)/config_parser.o: $(SRV_SRC)/config_parser.cpp
-	$(CXX) $(CXXFLAGS) -I $(SRV_SRC)/include -I $(UTILS_SRC)/include -c -o $@ $<
+$(SRV)/frame_queue.o: $(SRV)/frame_queue.cpp
+	$(CXX) $(CXXFLAGS) -I $(SRV)/include -c -o $@ $<
 
-$(SRV_SRC)/frame_queue.o: $(SRV_SRC)/frame_queue.cpp
-	$(CXX) $(CXXFLAGS) -I $(SRV_SRC)/include -c -o $@ $<
+$(SRV)/frontend_server.o: $(SRV)/frontend_server.cpp
+	$(CXX) $(CXXFLAGS) -I $(SRV)/include -c -I $(UTILS)/include -o $@ $<
 
-$(SRV_SRC)/video_splitter.o: $(SRV_SRC)/video_splitter.cpp
-	$(CXX) $(CXXFLAGS) -I $(SRV_SRC)/include -I $(UTILS_SRC)/include -I $(CV2_HDR) -c -o $@ $<
+$(SRV)/video_splitter.o: $(SRV)/video_splitter.cpp
+	$(CXX) $(CXXFLAGS) -I $(SRV)/include -I $(UTILS)/include -I $(CV2_HDR) -c -o $@ $<
 
-$(SRV_SRC)/frontend_server.o: $(SRV_SRC)/frontend_server.cpp
-	$(CXX) $(CXXFLAGS) -I $(SRV_SRC)/include -c -I $(UTILS_SRC)/include -o $@ $<
-
-$(SRV_SRC)/frame_sender.o: $(SRV_SRC)/frame_sender.cpp
-	$(CXX) $(CXXFLAGS) -I $(SRV_SRC)/include -I $(UTILS_SRC)/include -I $(CV2_HDR) -c -o $@ $<
+$(SRV)/frame_sender.o: $(SRV)/frame_sender.cpp
+	$(CXX) $(CXXFLAGS) -I $(SRV)/include -I $(UTILS)/include -I $(CV2_HDR) -c -o $@ $<
 
 # 表示クライアントをコンパイル
 .PHONY: compile_client
-compile_client: $(CLI_SRC)/main.o $(CLI_SRC)/config_parser.o $(CLI_SRC)/frame_queue.o $(CLI_SRC)/frame_receiver.o $(CLI_SRC)/frame_viewer.o
+compile_client: $(CLI)/main.o $(UTILS)/print_with_mutex.o $(UTILS)/sdl2_wrapper.o $(CLI)/config_parser.o $(CLI)/frame_queue.o $(CLI)/request_client.o $(CLI)/frame_receiver.o $(CLI)/frame_viewer.o
 	$(CXX) $(CXXFLAGS) $(CLI_LD) -o $(BIN)/sbc_client $^
 
-$(CLI_SRC)/main.o: $(CLI_SRC)/main.cpp
-	$(CXX) $(CXXFLAGS) -I $(CLI_SRC)/include -c -o $@ $<
+$(CLI)/main.o: $(CLI)/main.cpp
+	$(CXX) $(CXXFLAGS) -I $(CLI)/include -I $(UTILS)/include -c -o $@ $<
 
-$(CLI_SRC)/config_parser.o: $(CLI_SRC)/config_parser.cpp
-	$(CXX) $(CXXFLAGS) -I $(CLI_SRC)/include -c -o $@ $<
+$(CLI)/config_parser.o: $(CLI)/config_parser.cpp
+	$(CXX) $(CXXFLAGS) -I $(CLI)/include -I $(UTILS)/include -c -o $@ $<
 
-$(CLI_SRC)/frame_queue.o: $(CLI_SRC)/frame_queue.cpp
-	$(CXX) $(CXXFLAGS) -I $(CLI_SRC)/include -c -o $@ $<
+$(CLI)/frame_queue.o: $(CLI)/frame_queue.cpp
+	$(CXX) $(CXXFLAGS) -I $(CLI)/include -c -o $@ $<
 
-$(CLI_SRC)/frame_receiver.o: $(CLI_SRC)/frame_receiver.cpp
-	$(CXX) $(CXXFLAGS) -I $(CLI_SRC)/include -c -o $@ $<
+$(CLI)/request_client.o: $(CLI)/request_client.cpp
+	$(CXX) $(CXXFLAGS) -I $(CLI)/include -I $(UTILS)/include -c -o $@ $<
 
-$(CLI_SRC)/frame_viewer.o: $(CLI_SRC)/frame_viewer.cpp
-	$(CXX) $(CXXFLAGS) -I $(CLI_SRC)/include -I $(CV2_HDR) -c -o $@ $<
+$(CLI)/frame_receiver.o: $(CLI)/frame_receiver.cpp
+	$(CXX) $(CXXFLAGS) -I $(CLI)/include -I $(UTILS)/include -c -o $@ $<
+
+$(CLI)/frame_viewer.o: $(CLI)/frame_viewer.cpp
+	$(CXX) $(CXXFLAGS) -I $(CLI)/include -I $(UTILS)/include -I $(CV2_HDR) -c -o $@ $<
 
 # 送信サーバを起動
 .PHONY: test_server
@@ -96,6 +106,7 @@ install_client:
 .PHONY: clean
 clean:
 	rm -f $(BIN)/*
-	rm -f $(SRV_SRC)/*.o
-	rm -f $(CLI_SRC)/*.o
+	rm -f $(SRV)/*.o
+	rm -f $(CLI)/*.o
+	rm -f $(UTILS)/*.o
 
