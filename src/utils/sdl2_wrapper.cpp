@@ -74,10 +74,11 @@ const bool SDL2Wrapper::createTexture(){
         return false;
     }
     
-    if(SDL_SetRenderTarget(this->renderer.get(), this->texture.get()) != SDL_STATUS_GREEN){
+/*    if(SDL_SetRenderTarget(this->renderer.get(), this->texture.get()) != SDL_STATUS_GREEN){
         print_err("Failed SDL_RenderTarget", SDL_GetError());
         return false;
-    }
+    }*/
+    
     if(SDL_RenderClear(this->renderer.get()) != SDL_STATUS_GREEN){
         print_err("Failed SDL_RenderClear", SDL_GetError());
         return false;

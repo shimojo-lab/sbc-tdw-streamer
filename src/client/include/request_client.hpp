@@ -14,6 +14,7 @@
 class RequestClient{
     private:
         const ios_ptr_t ios;        // I/Oイベントループ
+        _asio::io_service::strand strand;  // I/O排他制御
         _ip::tcp::socket sock;      // TCPソケット
         _asio::streambuf recv_buf;  // 受信メッセージ用バッファ
         std::string ip;             // ヘッドノードのIP

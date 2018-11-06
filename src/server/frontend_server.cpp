@@ -8,6 +8,7 @@
 /* コンストラクタ */
 FrontendServer::FrontendServer(const ios_ptr_t ios, ConfigParser& parser):
     ios(ios),
+    strand(*ios),
     sock(*ios)
 {
     // TCPメッセージ受信器を初期化
@@ -29,9 +30,9 @@ FrontendServer::FrontendServer(const ios_ptr_t ios, ConfigParser& parser):
     std::tie(this->framerate, this->frame_num) = this->splitter->getVideoParams();
     
     // 接続待機を開始
-    print_info("Launched frontend server at :" + std::to_string(port));
+    print_info("Launched frontend server at ':" + std::to_string(port) + "'");
     const auto bind = boost::bind(&FrontendServer::onConnect, this, _ph::error);
-    this->acc->async_accept(this->sock, bind);
+    this->acc->async_accept(this->sock, this->strand.wrap(bind));
 }
 
 /* TCP接続時のコールバック */
@@ -41,10 +42,10 @@ void FrontendServer::onConnect(const _sys::error_code& err){
     if(err){
         print_err("Failed to accept new display node: " + ip, err.message());
         const auto bind = boost::bind(&FrontendServer::onConnect, this, _ph::error);
-        this->acc->async_accept(this->sock, bind);
+        this->acc->async_accept(this->sock, this->strand.wrap(bind));
         return;
     }
-    print_info("Accepted new display node: " + ip);
+    print_info("Accepted new display node: '" + ip + "'");
     
     // フレーム送信用スレッドを作成
     const std::vector<std::string>::iterator iter = std::find(this->ip_list.begin(), ip_list.end(), ip);
@@ -55,25 +56,24 @@ void FrontendServer::onConnect(const _sys::error_code& err){
     // 接続元に初期化パラメータを送信
     _pt::ptree init_params;
     std::stringstream jsonstream;
-    init_params.add<int>("id", id);
     init_params.add<std::string>("protocol", this->protocol);
     init_params.add<int>("port", this->sender_port);
     init_params.add<int>("framerate", this->framerate);
     init_params.add<int>("frame_num", this->frame_num);
     _pt::write_json(jsonstream, init_params, false);
     const auto bind = boost::bind(&FrontendServer::onSendInit, this, _ph::error, _ph::bytes_transferred, ip, id);
-    _asio::async_write(this->sock, _asio::buffer(jsonstream.str()), bind);
+    std::string bytes_buf = jsonstream.str() + SEPARATOR;
+    _asio::async_write(this->sock, _asio::buffer(bytes_buf), this->strand.wrap(bind));
     ++this->sender_port;
     return;
 }
 
 /* 初期化メッセージ送信時のコールバック */
-void FrontendServer::onSendInit(const _sys::error_code &err, std::size_t t_bytes, std::string ip, std::size_t id){
+void FrontendServer::onSendInit(const _sys::error_code& err, std::size_t t_bytes, std::string ip, std::size_t id){
     // 接続数をカウント
     if(err){
         print_err("Failed to send init message to " + ip, err.message());
-        this->thread_list[id].interrupt();
-        this->thread_list[id].join();
+        std::exit(EXIT_FAILURE);
     }else{
         ++this->connection_num;
     }
@@ -91,7 +91,7 @@ void FrontendServer::onSendInit(const _sys::error_code &err, std::size_t t_bytes
 
 /* 別スレッドでフレーム送信器を起動 */
 void FrontendServer::runFrameSender(const fq_ptr_t queue){
-    FrameSender sender(this->ios, queue, this->sender_port, this->protocol, this->barrier);
+    FrameSender sender(this->ios, this->strand, queue, this->sender_port, this->protocol, this->barrier);
     this->ios->run();
     return;
 }

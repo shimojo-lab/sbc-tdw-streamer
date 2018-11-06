@@ -6,31 +6,23 @@
 #include "config_parser.hpp"
 
 /* コンストラクタ */
-ConfigParser::ConfigParser(const char* const filename){
-    // 設定ファイルをパース
-    _pt::ptree conf;
-    try{
-        _pt::read_json(filename, conf);
-    }catch(...){
-        print_err("Failed to read config file", filename);
-        std::exit(EXIT_FAILURE);
-    }
-    
+ConfigParser::ConfigParser(const std::string filename):
+    BaseConfigParser(filename)
+{
     // パラメータを取得
-    if(!this->setParams(conf)){
+    if(!this->setParams(this->getParsedConfig())){
         std::exit(EXIT_FAILURE);
     }
 }
 
 /* パラメータを取得するメソッド */
-bool ConfigParser::setParams(_pt::ptree& conf){
-    // パラメータを取得
+bool ConfigParser::setParams(const _pt::ptree& conf){
     this->video_src = conf.get_optional<std::string>("video_src").get();
     this->row = conf.get_optional<int>("layout.row").get();
     this->column = conf.get_optional<int>("layout.column").get();
     this->frontend_port = conf.get_optional<int>("port.frontend").get();
     this->sender_port = conf.get_optional<int>("port.sender").get();
-    
+   
     // ディスプレイノードのIPを取得
     int count = 0;
     for(const auto& elem : conf.get_child("display_node")){
@@ -38,7 +30,7 @@ bool ConfigParser::setParams(_pt::ptree& conf){
         ++count;
     }
     if(count != this->row*this->column){
-        print_err("Number of display nodes is invalid.", std::to_string(count));
+        print_err("Number of display nodes is invalid", std::to_string(count));
         return false;
     }
     
@@ -49,7 +41,7 @@ bool ConfigParser::setParams(_pt::ptree& conf){
     }else if(protocol == "udp" || protocol == "UDP"){
         this->protocol = "UDP";
     }else{
-        print_err("Invaild protocol is selected.", protocol);
+        print_err("Invaild protocol is selected", protocol);
         return false;
     }
     return true;

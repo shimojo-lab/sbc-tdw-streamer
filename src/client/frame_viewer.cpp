@@ -6,7 +6,8 @@
 #include "frame_viewer.hpp"
 
 /* コンストラクタ */
-FrameViewer::FrameViewer(const tcps_ptr_t tcp_sock, const fq_ptr_t queue, const int res_x, const int res_y, const int width, const int height, const int framerate, const int frame_num, boost::barrier& barrier):
+FrameViewer::FrameViewer(_asio::io_service::strand& strand, const tcps_ptr_t tcp_sock, const fq_ptr_t queue, const int res_x, const int res_y, const int width, const int height, const int framerate, const int frame_num, boost::barrier& barrier):
+    strand(strand),
     tcp_sock(tcp_sock),
     queue(queue),
     sdl2(res_x, res_y, width, height, framerate),
@@ -21,7 +22,7 @@ void FrameViewer::sendSync(){
     std::string bytes_buf("sync");
     bytes_buf += SEPARATOR;
     const auto bind = boost::bind(&FrameViewer::onSendSync, this, _ph::error, _ph::bytes_transferred);
-    _asio::async_write(*this->tcp_sock, _asio::buffer(bytes_buf), bind);
+    _asio::async_write(*this->tcp_sock, _asio::buffer(bytes_buf), this->strand.wrap(bind));
     return;
 }
 
@@ -49,7 +50,7 @@ void FrameViewer::onRecvSync(const _sys::error_code& err, std::size_t t_bytes){
 void FrameViewer::onSendSync(const _sys::error_code& err, std::size_t t_bytes){
     if(err){
         print_err("Failed to receive sync message", err.message());
-        this->sendSync();
+        this->strand.dispatch(boost::bind(&FrameViewer::sendSync, this));
     }else{
         this->barrier.wait();
     }
@@ -57,7 +58,7 @@ void FrameViewer::onSendSync(const _sys::error_code& err, std::size_t t_bytes){
 }
 
 /* フレームを展開 */
-cv::Mat FrameViewer::decompressFrame(){
+const cv::Mat FrameViewer::decompressFrame(){
     cv::Mat frame = cv::imdecode(this->queue->dequeue(), CV_LOAD_IMAGE_UNCHANGED);
     return frame;
 }
@@ -65,7 +66,7 @@ cv::Mat FrameViewer::decompressFrame(){
 /* フレームを表示 */
 void FrameViewer::displayFrame(const cv::Mat& frame){
     // ディスプレイ間で同期
-    this->sendSync();
+    this->strand.dispatch(boost::bind(&FrameViewer::sendSync, this));
     
     // フレームを表示
     try{

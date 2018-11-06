@@ -28,9 +28,12 @@ client: compile_utils compile_client test_client
 
 # 共通モジュールをコンパイル
 .PHONY: complie_utils
-compile_utils: $(UTILS)/print_with_mutex.o $(UTILS)/sdl2_wrapper.o
+compile_utils: $(UTILS)/print_with_mutex.o $(UTILS)/base_config_parser.o $(UTILS)/sdl2_wrapper.o
 
 $(UTILS)/print_with_mutex.o: $(UTILS)/print_with_mutex.cpp
+	$(CXX) $(CXXFLAGS) -I $(UTILS)/include -c -o $@ $<
+
+$(UTILS)/base_config_parser.o: $(UTILS)/base_config_parser.cpp
 	$(CXX) $(CXXFLAGS) -I $(UTILS)/include -c -o $@ $<
 
 $(UTILS)/sdl2_wrapper.o: $(UTILS)/sdl2_wrapper.cpp
@@ -38,7 +41,7 @@ $(UTILS)/sdl2_wrapper.o: $(UTILS)/sdl2_wrapper.cpp
 
 # 送信サーバをコンパイル
 .PHONY: compile_server
-compile_server: $(SRV)/main.o $(UTILS)/print_with_mutex.o $(SRV)/config_parser.o $(SRV)/frame_queue.o $(SRV)/frontend_server.o $(SRV)/video_splitter.o $(SRV)/frame_sender.o 
+compile_server: $(SRV)/main.o $(UTILS)/print_with_mutex.o $(UTILS)/base_config_parser.o $(SRV)/config_parser.o $(SRV)/frame_queue.o $(SRV)/frontend_server.o $(SRV)/video_splitter.o $(SRV)/frame_sender.o 
 	$(CXX) $(CXXFLAGS) $(SRV_LD) -o $(BIN)/sbc_server $^
 
 $(SRV)/main.o: $(SRV)/main.cpp
@@ -61,7 +64,7 @@ $(SRV)/frame_sender.o: $(SRV)/frame_sender.cpp
 
 # 表示クライアントをコンパイル
 .PHONY: compile_client
-compile_client: $(CLI)/main.o $(UTILS)/print_with_mutex.o $(UTILS)/sdl2_wrapper.o $(CLI)/config_parser.o $(CLI)/frame_queue.o $(CLI)/request_client.o $(CLI)/frame_receiver.o $(CLI)/frame_viewer.o
+compile_client: $(CLI)/main.o $(UTILS)/print_with_mutex.o $(UTILS)/base_config_parser.o $(UTILS)/sdl2_wrapper.o $(CLI)/config_parser.o $(CLI)/frame_queue.o $(CLI)/request_client.o $(CLI)/frame_receiver.o $(CLI)/frame_viewer.o
 	$(CXX) $(CXXFLAGS) $(CLI_LD) -o $(BIN)/sbc_client $^
 
 $(CLI)/main.o: $(CLI)/main.cpp

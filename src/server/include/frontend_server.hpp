@@ -10,13 +10,13 @@
 #include "video_splitter.hpp"
 #include "frame_sender.hpp"
 
-using acc_ptr_t = std::unique_ptr<_ip::tcp::acceptor>;
 using vs_ptr_t = std::unique_ptr<VideoSplitter>;
 
 /* フロントエンドサーバ */
 class FrontendServer{
     private:
         const ios_ptr_t ios;                     // I/Oイベントループ
+        _asio::io_service::strand strand;        // I/O排他制御
         _ip::tcp::socket sock;                   // TCPソケット
         acc_ptr_t acc;                           // TCPメッセージ受信器
         std::string protocol;                    // フレーム送信用プロトコル

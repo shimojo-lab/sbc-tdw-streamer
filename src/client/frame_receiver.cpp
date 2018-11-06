@@ -5,14 +5,12 @@
 
 #include "frame_receiver.hpp"
 
-const std::string SEPARATOR("\r\n");           // 受信メッセージのセパレータ
-const int SEPARATOR_LEN = SEPARATOR.length();  // 受信メッセージのセパレータの長さ
-
 /* コンストラクタ */
-FrameReceiver::FrameReceiver(const ios_ptr_t ios, const tcps_ptr_t tcp_sock, const fq_ptr_t queue, const std::string ip, const int port, const std::string protocol):
+FrameReceiver::FrameReceiver(const ios_ptr_t ios, _asio::io_service::strand& strand, const tcps_ptr_t tcp_sock, const fq_ptr_t queue, const std::string ip, const int port, const std::string protocol):
     ios(ios),
+    strand(strand),
     tcp_sock(tcp_sock),
-    udp_sock(*ios, _ip::udp::endpoint(_ip::udp::v4(), port)),
+    udp_sock(*ios, _ip::udp::endpoint(_ip::udp::v4(), 30000)),
     queue(queue),
     protocol(protocol)
 {
@@ -20,7 +18,7 @@ FrameReceiver::FrameReceiver(const ios_ptr_t ios, const tcps_ptr_t tcp_sock, con
     print_info("Reconnecting to " + ip + ":" + std::to_string(port));
     const _ip::tcp::endpoint endpoint(_ip::address::from_string(ip), port);
     const auto bind = boost::bind(&FrameReceiver::onConnect, this, _ph::error);
-    this->tcp_sock->async_connect(endpoint, bind);
+    this->tcp_sock->async_connect(endpoint, this->strand.wrap(bind));
 }
 
 /* TCP接続時のコールバック関数 */
@@ -34,7 +32,7 @@ void FrameReceiver::onConnect(const _sys::error_code& err){
     // フレーム受信と同期処理を開始
     if(this->protocol == "TCP"){
         const auto bind = boost::bind(&FrameReceiver::onRecvByTCP, this, _ph::error, _ph::bytes_transferred);
-        _asio::async_read_until(*this->tcp_sock, this->tcp_recv_buf, SEPARATOR, bind);
+        _asio::async_read_until(*this->tcp_sock, this->tcp_recv_buf, SEPARATOR, this->strand.wrap(bind));
     }else if(this->protocol == "UDP"){
         const _ip::udp::endpoint endpoint;
         const auto bind = boost::bind(&FrameReceiver::onRecvByUDP, this, _ph::error, _ph::bytes_transferred);
@@ -62,7 +60,7 @@ void FrameReceiver::onRecvByTCP(const _sys::error_code& err, std::size_t t_bytes
     
     // フレーム受信を再開
     const auto bind = boost::bind(&FrameReceiver::onRecvByTCP, this, _ph::error, _ph::bytes_transferred);
-    _asio::async_read_until(*this->tcp_sock, this->tcp_recv_buf, SEPARATOR, bind);
+    _asio::async_read_until(*this->tcp_sock, this->tcp_recv_buf, SEPARATOR, this->strand.wrap(bind));
     return;
 }
 

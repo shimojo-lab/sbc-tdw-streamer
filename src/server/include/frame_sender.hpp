@@ -8,26 +8,18 @@
 
 #include "frame_queue.hpp"
 #include "print_with_mutex.hpp"
+#include "boost_socket.hpp"
 #include <vector>
-#include <boost/asio.hpp>
-#include <boost/bind.hpp>
 #include <boost/thread/barrier.hpp>
 #include <opencv2/imgcodecs.hpp>
 
-namespace _asio = boost::asio;
-namespace _ip = boost::asio::ip;
-namespace _sys = boost::system;
-namespace _ph = boost::asio::placeholders;
-using ios_ptr_t = std::shared_ptr<_asio::io_service>;
 using bar_ptr_t = std::shared_ptr<boost::barrier>;
-
-extern const std::string SEPARATOR;  // 受信メッセージのセパレータ
-extern const int SEPARATOR_LEN;      // 受信メッセージのセパレータの長さ
 
 /* 分割フレーム送信器 */
 class FrameSender{
     private:
         const ios_ptr_t ios;                  // I/Oイベントループ
+        _asio::io_service::strand& strand;    // I/O排他制御
         _ip::tcp::socket tcp_sock;            // TCPソケット
         _ip::udp::socket udp_sock;            // UDPソケット
         _ip::tcp::acceptor acc;               // TCPメッセージ受信器
@@ -46,7 +38,7 @@ class FrameSender{
         void onSendSync(const _sys::error_code& err, std::size_t t_bytes);  // 同期メッセージ送信時のコールバック
         std::string compressFrame(const cv::Mat& frame);                    // 分割フレームを圧縮
     public:
-        FrameSender(const ios_ptr_t ios, const fq_ptr_t queue, const int port, const std::string protocol, const bar_ptr_t barrier);  // コンストラクタ
+        FrameSender(const ios_ptr_t ios, _asio::io_service::strand& strand, const fq_ptr_t queue, const int port, const std::string protocol, const bar_ptr_t barrier);  // コンストラクタ
 
 };
 

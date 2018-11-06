@@ -6,29 +6,29 @@
 #include "config_parser.hpp"
 
 /* コンストラクタ */
-ConfigParser::ConfigParser(const char* const filename){
-    // 設定ファイルをパース
-    _pt::ptree conf;
-    try{
-        _pt::read_json(filename, conf);
-    }catch(...){
-        print_err("Failed to read config", std::string(filename));
+ConfigParser::ConfigParser(const std::string filename):
+    BaseConfigParser(filename)
+{   
+    // パラメータを取得
+    if(!this->setParams(this->getParsedConfig())){
         std::exit(EXIT_FAILURE);
     }
-    
-    // パラメータを取得
-    setParams(conf);
 }
 
 /* パラメータを取得 */
-void ConfigParser::setParams(_pt::ptree& conf){
-    this->ip = conf.get_optional<std::string>("head_node.ip").get();
-    this->port = conf.get_optional<int>("head_node.port").get();
-    this->res_x = conf.get_optional<int>("resolution.width").get();
-    this->res_y = conf.get_optional<int>("resolution.height").get();
-    this->width = conf.get_optional<int>("frame.width").get();
-    this->height = conf.get_optional<int>("frame.height").get();
-    return;
+bool ConfigParser::setParams(const _pt::ptree& conf){
+    try{
+        this->ip = conf.get_optional<std::string>("head_node.ip").get();
+        this->port = conf.get_optional<int>("head_node.port").get();
+        this->res_x = conf.get_optional<int>("resolution.width").get();
+        this->res_y = conf.get_optional<int>("resolution.height").get();
+        this->width = conf.get_optional<int>("frame.width").get();
+        this->height = conf.get_optional<int>("frame.height").get();
+    }catch(...){
+        print_err("Could not get parameter", "Config file is invalid");
+        return false;
+    }
+    return true;
 }
 
 /* 接続要求クライアント用に値を取得 */

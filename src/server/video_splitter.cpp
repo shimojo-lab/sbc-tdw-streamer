@@ -11,7 +11,7 @@ VideoSplitter::VideoSplitter(const std::string video_src, const int row, const i
     column(column)
 {
     // 再生する動画を読込み
-    print_info("Opened " + video_src);
+    print_info("Opened video. (" + video_src + ")");
     this->video = cv::VideoCapture(video_src.c_str());
     if(!this->video.isOpened()){
         print_err("Failed to open video", video_src);

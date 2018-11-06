@@ -5,12 +5,10 @@
 
 #include "frame_sender.hpp"
 
-const std::string SEPARATOR = "\r\n";          // 受信メッセージのセパレータ
-const int SEPARATOR_LEN = SEPARATOR.length();  // 受信メッセージのセパレータの長さ
-
 /* コンストラクタ */
-FrameSender::FrameSender(const ios_ptr_t ios, const fq_ptr_t queue, const int port, const std::string protocol, bar_ptr_t barrier):
+FrameSender::FrameSender(const ios_ptr_t ios, _asio::io_service::strand& strand, const fq_ptr_t queue, const int port, const std::string protocol, bar_ptr_t barrier):
     ios(ios),
+    strand(strand),
     tcp_sock(*ios),
     udp_sock(*ios, _ip::udp::endpoint(_ip::udp::v4(), port)),
     acc(*ios, _ip::tcp::endpoint(_ip::tcp::v4(), port)),
@@ -22,7 +20,7 @@ FrameSender::FrameSender(const ios_ptr_t ios, const fq_ptr_t queue, const int po
     // 接続待機を開始
     print_info("Launched streaming server at :" + std::to_string(port));
     const auto bind = boost::bind(&FrameSender::onConnect, this, _ph::error);
-    this->acc.async_accept(this->tcp_sock, bind);
+    this->acc.async_accept(this->tcp_sock, this->strand.wrap(bind));
 }
 
 /* TCP接続時のコールバック */
@@ -39,7 +37,7 @@ void FrameSender::onConnect(const _sys::error_code& err){
     const cv::Mat frame = this->queue->dequeue();
     if(this->protocol == "TCP"){
         const auto bind = boost::bind(&FrameSender::onSendFrameByTCP, this, _ph::error, _ph::bytes_transferred);
-        _asio::async_write(this->tcp_sock, _asio::buffer(this->compressFrame(frame)), bind);
+        _asio::async_write(this->tcp_sock, _asio::buffer(this->compressFrame(frame)), this->strand.wrap(bind));
     }else if(this->protocol == "UDP"){
         const auto bind = boost::bind(&FrameSender::onSendFrameByUDP, this, _ph::error, _ph::bytes_transferred);
         this->udp_endpoint = _ip::udp::endpoint(_ip::address::from_string(ip), this->udp_port);
@@ -48,7 +46,7 @@ void FrameSender::onConnect(const _sys::error_code& err){
     
     // 同期メッセージ受信を開始
     const auto bind = boost::bind(&FrameSender::onRecvSync, this, _ph::error, _ph::bytes_transferred);
-    _asio::async_read_until(this->tcp_sock, this->recv_buf, SEPARATOR, bind);
+    _asio::async_read_until(this->tcp_sock, this->recv_buf, SEPARATOR, this->strand.wrap(bind));
     return;
 }
 
