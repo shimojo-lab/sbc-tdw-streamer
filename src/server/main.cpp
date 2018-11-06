@@ -21,9 +21,9 @@ int main(int argc, char *argv[]){
     ConfigParser parser(argv[ARGUMENT_INDEX]);
     
     // フロントエンドサーバを起動
-    ios_ptr_t ios = std::make_shared<_asio::io_service>();
+    _ios ios;
     FrontendServer server(ios, parser);
-    ios->run();
+    ios.run();
     return 0;
 }
 

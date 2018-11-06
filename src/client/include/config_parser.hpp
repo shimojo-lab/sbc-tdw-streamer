@@ -21,13 +21,14 @@ class ConfigParser : public BaseConfigParser{
         int res_y;       // ディスプレイの縦の長さ
         int width;       // フレームの横の長さ
         int height;      // フレームの縦の長さ
-        
+    
         bool setParams(const _pt::ptree& conf) override;  // パラメータを取得
+    
     public:
-        ConfigParser(const std::string filename);    // コンストラクタ
-        rc_params_t getRequestClientParams();  // 接続要求クライアント用に値を取得
-        fv_params_t getFrameViewerParams();    // フレーム表示器用に値を取得
-        int getFrameReceiverParams();          // フレーム受信器用に値を取得
+        ConfigParser(const std::string filename);  // コンストラクタ
+        rc_params_t getRequestClientParams();      // 接続要求クライアント用に値を取得
+        fv_params_t getFrameViewerParams();        // フレーム表示器用に値を取得
+        int getFrameReceiverParams();              // フレーム受信器用に値を取得
 };
 
 #endif  /* CONFIG_PARSER_HPP */

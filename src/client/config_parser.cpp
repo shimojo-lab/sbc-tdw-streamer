@@ -10,7 +10,7 @@ ConfigParser::ConfigParser(const std::string filename):
     BaseConfigParser(filename)
 {   
     // パラメータを取得
-    if(!this->setParams(this->getParsedConfig())){
+    if(!this->setParams(this->conf)){
         std::exit(EXIT_FAILURE);
     }
 }

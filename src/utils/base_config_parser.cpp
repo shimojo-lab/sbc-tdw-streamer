@@ -21,8 +21,3 @@ bool BaseConfigParser::setParams(const _pt::ptree& conf){
     return true;
 }
 
-/* パースした設定内容を取得 */
-const _pt::ptree& BaseConfigParser::getParsedConfig(){
-    return this->conf;
-}
-

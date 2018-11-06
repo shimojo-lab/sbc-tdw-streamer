@@ -20,9 +20,9 @@ int main(int argc, char* argv[]){
     ConfigParser parser(argv[ARGUMENT_INDEX]);
     
     // 接続要求クライアントを起動
-    ios_ptr_t ios = std::make_shared<_asio::io_service>();
+    _ios ios;
     RequestClient client(ios, parser);
-    ios->run();
+    ios.run();
     return 0;
 }
 

@@ -37,7 +37,6 @@ void VideoSplitter::setSplitParams(){
            this->queue_list[id] = std::make_shared<FrameQueue>(1);
         }
     }
-    return;
 }
 
 /* 動画の情報を取得 */
@@ -53,7 +52,7 @@ const fq_ptr_t VideoSplitter::getFrameQueuePtr(const int id){
 }
 
 /* フレームの分割を開始 */
-void VideoSplitter::start(){
+void VideoSplitter::run(){
     for(int i=0; i<this->frame_num; ++i){
         // 次番のフレームを分割
         this->video >> this->frame;
@@ -64,6 +63,5 @@ void VideoSplitter::start(){
             }
         }
     }
-    return;
 }
 

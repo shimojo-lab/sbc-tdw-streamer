@@ -7,11 +7,9 @@
 #define MAIN_HPP
 
 #include "request_client.hpp"
-#include "frame_receiver.hpp"
-#include "frame_viewer.hpp"
 
-extern const int ARGUMENT_NUM;      // コマンドライン引数の個数
-extern const int ARGUMENT_INDEX;    // コマンドライン引数の個数
+extern const int ARGUMENT_NUM;    // コマンドライン引数の個数
+extern const int ARGUMENT_INDEX;  // コマンドライン引数の個数
 
 #endif  /* MAIN_HPP */
 

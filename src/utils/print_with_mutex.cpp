@@ -17,7 +17,6 @@ void print_info(const std::string& msg){
                               << msg
                               << "."
                               << std::endl;
-    return;
 }
 
 /* エラーメッセージを表示 */
@@ -28,7 +27,6 @@ void print_err(const std::string& msg, const std::string& suppl){
                               << suppl
                               << ")"
                               << std::endl;
-    return;
 }
 
 /* デバッグ用メッセージを表示 */
@@ -36,6 +34,5 @@ void print_debug(const std::string& msg){
     console_lock(), std::cerr << "[Debug] "
                               << msg
                               << std::endl;
-    return;
 }
 

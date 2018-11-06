@@ -18,6 +18,7 @@ class FrameQueue{
         std::queue<std::vector<unsigned char>> queue;  // キュー
         mutable boost::mutex lock;                     // 排他制御用のロック
         mutable boost::condition_variable cond;        // 条件変数
+    
     public:
         FrameQueue(const std::size_t max_size);                 // コンストラクタ
         void enqueue(const std::vector<unsigned char>& frame);  // キューにフレームを投入

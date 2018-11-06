@@ -18,12 +18,13 @@ namespace _pt = boost::property_tree;
 /* 設定ファイルのパーサーの雛形 */
 class BaseConfigParser{
     private:
-        _pt::ptree conf;  // 設定内容
-        
         virtual bool setParams(const _pt::ptree& conf);  // パラメータを取得
+    
+    protected:
+        _pt::ptree conf;  // 設定内容
+    
     public:
         BaseConfigParser(const std::string filename);  // コンストラクタ
-        const _pt::ptree& getParsedConfig();           // パースした設定内容を取得
 };
 
 #endif  /* BASE_CONFIG_PARSER_HPP */

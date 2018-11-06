@@ -109,6 +109,5 @@ void SDL2Wrapper::renderFrame(cv::Mat& frame){
     SDL_RenderCopy(this->renderer.get(), this->texture.get(), NULL, NULL);
     SDL_RenderPresent(this->renderer.get());
     SDL_Delay(this->view_time);
-    return;
 }
 

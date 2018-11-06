@@ -10,19 +10,24 @@ ConfigParser::ConfigParser(const std::string filename):
     BaseConfigParser(filename)
 {
     // パラメータを取得
-    if(!this->setParams(this->getParsedConfig())){
+    if(!this->setParams(this->conf)){
         std::exit(EXIT_FAILURE);
     }
 }
 
 /* パラメータを取得するメソッド */
 bool ConfigParser::setParams(const _pt::ptree& conf){
-    this->video_src = conf.get_optional<std::string>("video_src").get();
-    this->row = conf.get_optional<int>("layout.row").get();
-    this->column = conf.get_optional<int>("layout.column").get();
-    this->frontend_port = conf.get_optional<int>("port.frontend").get();
-    this->sender_port = conf.get_optional<int>("port.sender").get();
-   
+    try{
+        this->video_src = conf.get_optional<std::string>("video_src").get();
+        this->row = conf.get_optional<int>("layout.row").get();
+        this->column = conf.get_optional<int>("layout.column").get();
+        this->frontend_port = conf.get_optional<int>("port.frontend").get();
+        this->sender_port = conf.get_optional<int>("port.sender").get();
+    }catch(...){
+        print_err("Could not get parameter", "Config file is invalid");
+        return false;
+    }
+    
     // ディスプレイノードのIPを取得
     int count = 0;
     for(const auto& elem : conf.get_child("display_node")){

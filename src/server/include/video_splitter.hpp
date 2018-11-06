@@ -28,11 +28,12 @@ class VideoSplitter{
         cv::Mat frame;                      // 分割前のフレーム
         
         void setSplitParams();  // 分割用のパラメータを設定
+    
     public:
         VideoSplitter(const std::string video_src, const int row, const int column);  // コンストラクタ
         video_params_t getVideoParams();                // 動画の情報を取得
         const fq_ptr_t getFrameQueuePtr(const int id);  // 分割フレーム用キューのポインタを取得
-        void start();                                   // フレームの分割を開始
+        void run();                                     // フレームの分割を開始
 };
 
 #endif  /* VIDEO_SPLITTER_HPP */

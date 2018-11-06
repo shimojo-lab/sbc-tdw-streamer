@@ -24,6 +24,7 @@ class ConfigParser : public BaseConfigParser{
         std::vector<std::string> ip_list;  // ディスプレイノードのIP
         
         bool setParams(const _pt::ptree& conf) override;  // パラメータを取得
+    
     public:
         ConfigParser(const std::string filename);  // コンストラクタ
         int getFrontendServerParams();             // フロントエンドサーバ用に値を取得

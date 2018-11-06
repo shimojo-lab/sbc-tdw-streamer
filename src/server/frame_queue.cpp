@@ -29,7 +29,6 @@ void FrameQueue::enqueue(const cv::Mat& frame){
             this->cond.wait(u_lock);
         }
     }
-    return;
 }
 
 /* キューからフレームを取り出し */

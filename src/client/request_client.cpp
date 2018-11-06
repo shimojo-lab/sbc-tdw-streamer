@@ -6,10 +6,9 @@
 #include "request_client.hpp"
 
 /* コンストラクタ */
-RequestClient::RequestClient(const ios_ptr_t ios, ConfigParser& parser):
+RequestClient::RequestClient(_ios& ios, ConfigParser& parser):
     ios(ios),
-    strand(*ios),
-    sock(*ios)
+    sock(ios)
 {
     // フレーム表示用パラメータを設定
     std::tie(this->res_x, this->res_y, this->width, this->height) = parser.getFrameViewerParams();
@@ -17,31 +16,30 @@ RequestClient::RequestClient(const ios_ptr_t ios, ConfigParser& parser):
     // ヘッドノードにTCP接続
     int port;
     std::tie(this->ip, port) = parser.getRequestClientParams();
-    print_info("Connecting to '" + std::string(this->ip) + ":" + std::to_string(port) + "'");
-    const _ip::tcp::endpoint endpoint(_ip::address::from_string(this->ip), port);
+    print_info("Connecting to " + std::string(this->ip) + ":" + std::to_string(port));
+    const _tcp::endpoint endpoint(_ip::address::from_string(this->ip), port);
     const auto bind = boost::bind(&RequestClient::onConnect, this, _ph::error);
-    this->sock.async_connect(endpoint, this->strand.wrap(bind));
+    this->sock.async_connect(endpoint, bind);
 }
 
 /* TCP接続時のコールバック関数 */
-void RequestClient::onConnect(const _sys::error_code& err){
+void RequestClient::onConnect(const _err& err){
     if(err){
         print_err("Failed to establish TCP connection with head node", err.message());
-        exit(EXIT_FAILURE);
+        return;
     }
     print_info("Established TCP connection with head node");
     
     // 初期化メッセージの受信を開始
     const auto bind = boost::bind(&RequestClient::onRecvInit, this, _ph::error, _ph::bytes_transferred);
-    _asio::async_read_until(this->sock, this->recv_buf, SEPARATOR, this->strand.wrap(bind));
-    return;
+    _asio::async_read_until(this->sock, this->recv_buf, SEPARATOR, bind);
 }
 
 /* 初期化メッセージ受信時のコールバック */
-void RequestClient::onRecvInit(const _sys::error_code& err, std::size_t t_bytes){
+void RequestClient::onRecvInit(const _err& err, size_t t_bytes){
     if(err){
         print_err("Failed to receive init message", err.message());
-        std::exit(EXIT_FAILURE);
+        return;
     }
     print_info("Received init message from head node");
     
@@ -63,21 +61,26 @@ void RequestClient::onRecvInit(const _sys::error_code& err, std::size_t t_bytes)
     const int frame_num = std::stoi(init_params.get_optional<std::string>("frame_num").get());
     
     // 別スレッドでフレーム受信器を起動
-    const tcps_ptr_t tcp_sock = std::make_shared<_ip::tcp::socket>(*(this->ios));
+    _ios::strand strand(this->new_ios);
+    const tcps_ptr_t new_sock = std::make_shared<_tcp::socket>(new_ios);
     const fq_ptr_t queue = std::make_shared<FrameQueue>(1);
-    boost::thread(&RequestClient::runFrameReceiver, this, tcp_sock, queue, port, protocol);
+    boost::thread(&RequestClient::runFrameReceiver, this, strand, new_sock, queue, port, protocol);
     
     // フレーム表示を開始
-    boost::barrier barrier(2);
-    FrameViewer viewer(this->strand, tcp_sock, queue, this->res_x, this->res_y, this->width, this->height, framerate, frame_num, barrier);
-    viewer.run();
-    return;
+    FrameViewer viewer(this->new_ios, strand, new_sock, queue, this->res_x, this->res_y, this->width, this->height, framerate, frame_num);
+    this->new_ios.run();
 }
 
 /* 別スレッドでフレーム受信器を起動 */
-void RequestClient::runFrameReceiver(const tcps_ptr_t tcp_sock, const fq_ptr_t queue, const int port, const std::string protocol){
-    FrameReceiver receiver(this->ios, this->strand, tcp_sock, queue, this->ip, port, protocol);
-    this->ios->run();
-    return;
+void RequestClient::runFrameReceiver(_ios::strand& strand, const tcps_ptr_t sock, const fq_ptr_t queue, const int port, const std::string protocol){
+    if(protocol == "TCP"){
+        TCPFrameReceiver receiver(this->new_ios, strand, sock, queue, this->ip, port);
+    }else if(protocol == "UDP"){
+        //UDPFrameReceiver receiver();
+    }else{
+        print_err("Invalid protocol is selected", protocol);
+        return;
+    }
+    this->new_ios.run();
 }
 
