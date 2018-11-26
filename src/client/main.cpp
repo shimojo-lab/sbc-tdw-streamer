@@ -20,7 +20,7 @@ int main(int argc, char* argv[]){
     ConfigParser parser(argv[ARGUMENT_INDEX]);
     
     // 接続要求クライアントを起動
-    _ios ios;
+    ios_t ios;
     RequestClient client(ios, parser);
     ios.run();
     return 0;

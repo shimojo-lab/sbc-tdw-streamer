@@ -1,7 +1,7 @@
-/*********************************
-*     base_config_parser.hpp     *
-* (設定ファイルのパーサーの雛形) *
-*********************************/
+/***************************************
+*        base_config_parser.hpp        *
+* (設定ファイルのパーサーの基底クラス) *
+***************************************/
 
 #ifndef BASE_CONFIG_PARSER_HPP
 #define BASE_CONFIG_PARSER_HPP
@@ -15,7 +15,7 @@
 
 namespace _pt = boost::property_tree;
 
-/* 設定ファイルのパーサーの雛形 */
+/* 設定ファイルのパーサーの基底クラス */
 class BaseConfigParser{
     private:
         virtual bool setParams(const _pt::ptree& conf);  // パラメータを取得

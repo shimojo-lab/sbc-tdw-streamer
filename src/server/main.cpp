@@ -21,7 +21,7 @@ int main(int argc, char *argv[]){
     ConfigParser parser(argv[ARGUMENT_INDEX]);
     
     // フロントエンドサーバを起動
-    _ios ios;
+    ios_t ios;
     FrontendServer server(ios, parser);
     ios.run();
     return 0;

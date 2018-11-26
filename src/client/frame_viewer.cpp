@@ -6,46 +6,26 @@
 #include "frame_viewer.hpp"
 
 /* コンストラクタ */
-FrameViewer::FrameViewer(_ios& ios, _ios::strand& strand, const tcps_ptr_t sock, const fq_ptr_t queue, const int res_x, const int res_y, const int width, const int height, const int framerate, const int frame_num):
+FrameViewer::FrameViewer(ios_t& ios, tcp_t::socket& sock, const fq_ptr_t queue, const int res_x, const int res_y, const int width, const int height, const int frame_num, const int frame_rate):
     ios(ios),
-    strand(strand),
     sock(sock),
     queue(queue),
-    sdl2(res_x, res_y, width, height, framerate),
+    sdl2(res_x, res_y, width, height, frame_rate),
     width(width),
     height(height),
     frame_num(frame_num)
 {
     // フレーム表示を開始
     this->frame = cv::imdecode(this->queue->dequeue(), CV_LOAD_IMAGE_UNCHANGED);
-    const auto bind = boost::bind(&FrameViewer::sendSync, this);
-    this->strand.post(bind);
-ios.run();
-}
-
-/* 同期メッセージを送信 */
-void FrameViewer::sendSync(){
-print_debug("aaa");
-    std::string bytes_buf("sync");
-    bytes_buf += SEPARATOR;
+    std::string send_msg("sync");
+    send_msg += SEPARATOR;
     const auto bind = boost::bind(&FrameViewer::onSendSync, this, _ph::error, _ph::bytes_transferred);
-    _asio::async_write(*this->sock, _asio::buffer(bytes_buf), this->strand.wrap(bind));
-}
-
-/* 同期メッセージ送信時のコールバック */
-void FrameViewer::onSendSync(const _err& err, size_t t_bytes){
-    if(err){
-        print_err("Failed to send sync message", err.message());
-        return;
-    }
-    
-    // 同期メッセージを受信
-    const auto bind = boost::bind(&FrameViewer::onRecvSync, this, _ph::error, _ph::bytes_transferred);
-    _asio::async_read_until(*this->sock, this->recv_buf, SEPARATOR, this->strand.wrap(bind));
+    _asio::async_write(this->sock, _asio::buffer(send_msg), bind);
+    ios.run();
 }
 
 /* 同期メッセージ受信時のコールバック */
-void FrameViewer::onRecvSync(const _err& err, size_t t_bytes){
+void FrameViewer::onRecvSync(const err_t& err, size_t t_bytes){
     if(err){
         print_err("Failed to receive sync message", err.message());
         return;
@@ -53,9 +33,9 @@ void FrameViewer::onRecvSync(const _err& err, size_t t_bytes){
     
     // 同期メッセージを取得
     const auto data = this->recv_buf.data();
-    std::string bytes_buf(_asio::buffers_begin(data), _asio::buffers_begin(data)+t_bytes);
+    std::string recv_msg(_asio::buffers_begin(data), _asio::buffers_begin(data)+t_bytes);
     for(int i=0; i<SEPARATOR_LEN; ++i){
-        bytes_buf.pop_back();
+        recv_msg.pop_back();
     }
     this->recv_buf.consume(t_bytes);
     
@@ -69,7 +49,21 @@ void FrameViewer::onRecvSync(const _err& err, size_t t_bytes){
     
     // 次番フレームの表示を開始
     this->frame = cv::imdecode(this->queue->dequeue(), CV_LOAD_IMAGE_UNCHANGED);
-    const auto bind = boost::bind(&FrameViewer::sendSync, this);
-    this->strand.post(bind);
+    std::string send_msg("sync");
+    send_msg += SEPARATOR;
+    const auto bind = boost::bind(&FrameViewer::onSendSync, this, _ph::error, _ph::bytes_transferred);
+    _asio::async_write(this->sock, _asio::buffer(send_msg), bind);
+}
+
+/* 同期メッセージ送信時のコールバック */
+void FrameViewer::onSendSync(const err_t& err, size_t t_bytes){
+    if(err){
+        print_err("Failed to send sync message", err.message());
+        return;
+    }
+    
+    // 同期メッセージを受信
+    const auto bind = boost::bind(&FrameViewer::onRecvSync, this, _ph::error, _ph::bytes_transferred);
+    _asio::async_read_until(this->sock, this->recv_buf, SEPARATOR, bind);
 }
 

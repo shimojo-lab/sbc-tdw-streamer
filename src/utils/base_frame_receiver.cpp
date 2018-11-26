@@ -6,9 +6,8 @@
 #include "base_frame_receiver.hpp"
 
 /* コンストラクタ */
-BaseFrameReceiver::BaseFrameReceiver(_ios& ios, _ios::strand& strand, const fq_ptr_t queue):
+BaseFrameReceiver::BaseFrameReceiver(ios_t& ios, const fq_ptr_t queue):
     ios(ios),
-    strand(strand),
     queue(queue)
 {}
 
@@ -16,8 +15,8 @@ BaseFrameReceiver::BaseFrameReceiver(_ios& ios, _ios::strand& strand, const fq_p
 void BaseFrameReceiver::startConnect(const std::string ip, const int port){}
 
 /* TCP接続時のコールバック関数 */
-void BaseFrameReceiver::onConnect(const _err& err){}
+void BaseFrameReceiver::onConnect(const err_t& err){}
 
-/* TCPでのフレーム受信時のコールバック */
-void BaseFrameReceiver::onRecvFrame(const _err& err, size_t t_bytes){}
+/* フレーム受信時のコールバック */
+void BaseFrameReceiver::onRecvFrame(const err_t& err, size_t t_bytes){}
 

@@ -4,7 +4,7 @@
 ##################################
 
 CXX = g++
-CXXFLAGS = -Wall -std=c++11
+CXXFLAGS = -Wall -g -std=c++11
 SRV = ./src/server
 CLI = ./src/client
 UTILS = ./src/utils
@@ -44,7 +44,7 @@ $(UTILS)/sdl2_wrapper.o: $(UTILS)/sdl2_wrapper.cpp
 
 # 送信サーバをコンパイル
 .PHONY: compile_server
-compile_server: $(UTILS)/print_with_mutex.o $(UTILS)/base_config_parser.o $(UTILS)/base_frame_sender.o $(SRV)/config_parser.o $(SRV)/frame_queue.o $(SRV)/frontend_server.o $(SRV)/video_splitter.o $(SRV)/tcp_frame_sender.o $(SRV)/main.o
+compile_server: $(UTILS)/print_with_mutex.o $(UTILS)/base_config_parser.o $(UTILS)/base_frame_sender.o $(SRV)/config_parser.o $(SRV)/frame_queue.o $(SRV)/video_splitter.o $(SRV)/frontend_server.o $(SRV)/tcp_frame_sender.o $(SRV)/viewer_synchronizer.o $(SRV)/main.o
 	$(CXX) $(CXXFLAGS) $(SRV_LD) -o $(BIN)/sbc_server $^
 
 $(SRV)/config_parser.o: $(SRV)/config_parser.cpp
@@ -60,6 +60,9 @@ $(SRV)/video_splitter.o: $(SRV)/video_splitter.cpp
 	$(CXX) $(CXXFLAGS) -I$(SRV)/include -I$(UTILS)/include -I$(CV2_HDR) -c -o $@ $<
 
 $(SRV)/tcp_frame_sender.o: $(SRV)/tcp_frame_sender.cpp
+	$(CXX) $(CXXFLAGS) -I$(SRV)/include -I$(UTILS)/include -c -o $@ $<
+
+$(SRV)/viewer_synchronizer.o: $(SRV)/viewer_synchronizer.cpp
 	$(CXX) $(CXXFLAGS) -I$(SRV)/include -I$(UTILS)/include -c -o $@ $<
 
 $(SRV)/main.o: $(SRV)/main.cpp

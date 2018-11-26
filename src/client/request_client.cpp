@@ -6,7 +6,7 @@
 #include "request_client.hpp"
 
 /* コンストラクタ */
-RequestClient::RequestClient(_ios& ios, ConfigParser& parser):
+RequestClient::RequestClient(ios_t& ios, ConfigParser& parser):
     ios(ios),
     sock(ios)
 {
@@ -17,13 +17,13 @@ RequestClient::RequestClient(_ios& ios, ConfigParser& parser):
     int port;
     std::tie(this->ip, port) = parser.getRequestClientParams();
     print_info("Connecting to " + std::string(this->ip) + ":" + std::to_string(port));
-    const _tcp::endpoint endpoint(_ip::address::from_string(this->ip), port);
+    const tcp_t::endpoint endpoint(_ip::address::from_string(this->ip), port);
     const auto bind = boost::bind(&RequestClient::onConnect, this, _ph::error);
     this->sock.async_connect(endpoint, bind);
 }
 
 /* TCP接続時のコールバック関数 */
-void RequestClient::onConnect(const _err& err){
+void RequestClient::onConnect(const err_t& err){
     if(err){
         print_err("Failed to establish TCP connection with head node", err.message());
         return;
@@ -36,7 +36,7 @@ void RequestClient::onConnect(const _err& err){
 }
 
 /* 初期化メッセージ受信時のコールバック */
-void RequestClient::onRecvInit(const _err& err, size_t t_bytes){
+void RequestClient::onRecvInit(const err_t& err, size_t t_bytes){
     if(err){
         print_err("Failed to receive init message", err.message());
         return;
@@ -52,35 +52,36 @@ void RequestClient::onRecvInit(const _err& err, size_t t_bytes){
     
     // 初期化メッセージをパース
     std::stringstream ss;
-    ss << bytes_buf;
     _pt::ptree init_params;
+    std::string protocol;
+    int port, frame_num, frame_rate;
+    
+    ss << bytes_buf;
     _pt::read_json(ss, init_params);
-    const std::string protocol = init_params.get_optional<std::string>("protocol").get();
-    const int port = std::stoi(init_params.get_optional<std::string>("port").get());
-    const int framerate = std::stoi(init_params.get_optional<std::string>("framerate").get());
-    const int frame_num = std::stoi(init_params.get_optional<std::string>("frame_num").get());
+    protocol = init_params.get_optional<std::string>("protocol").get();
+    port = std::stoi(init_params.get_optional<std::string>("port").get());
+    frame_num = std::stoi(init_params.get_optional<std::string>("frame_num").get());
+    frame_rate = std::stoi(init_params.get_optional<std::string>("frame_rate").get());
     
     // 別スレッドでフレーム受信器を起動
-    _ios::strand strand(this->new_ios);
-    const tcps_ptr_t new_sock = std::make_shared<_tcp::socket>(new_ios);
     const fq_ptr_t queue = std::make_shared<FrameQueue>(1);
-    boost::thread(&RequestClient::runFrameReceiver, this, strand, new_sock, queue, port, protocol);
+    const auto bind = boost::bind(&RequestClient::runFrameReceiver, this, queue, protocol, port);
+    this->recv_thre = boost::thread(bind);
     
     // フレーム表示を開始
-    FrameViewer viewer(this->new_ios, strand, new_sock, queue, this->res_x, this->res_y, this->width, this->height, framerate, frame_num);
-    this->new_ios.run();
+    FrameViewer viewer(this->ios, this->sock, queue, this->res_x, this->res_y, this->width, this->height, frame_num, frame_rate);
 }
 
 /* 別スレッドでフレーム受信器を起動 */
-void RequestClient::runFrameReceiver(_ios::strand& strand, const tcps_ptr_t sock, const fq_ptr_t queue, const int port, const std::string protocol){
+void RequestClient::runFrameReceiver(const fq_ptr_t queue, const std::string protocol, const int port){
+    ios_t ios;
     if(protocol == "TCP"){
-        TCPFrameReceiver receiver(this->new_ios, strand, sock, queue, this->ip, port);
+        TCPFrameReceiver receiver(ios, queue, this->ip, port);
     }else if(protocol == "UDP"){
         //UDPFrameReceiver receiver();
     }else{
         print_err("Invalid protocol is selected", protocol);
         return;
     }
-    this->new_ios.run();
 }
 

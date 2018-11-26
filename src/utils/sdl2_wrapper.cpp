@@ -44,7 +44,16 @@ SDL2Wrapper::SDL2Wrapper(const int res_x, const int res_y, const int width, cons
 /* SDLウィンドウを初期化 */
 const bool SDL2Wrapper::createWindow(const int res_x, const int res_y){
     sdl_deleter_t deleter;
-    this->window = win_ptr_t(SDL_CreateWindow(APP_NAME.c_str(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, res_x, res_y, SDL_WINDOW_FULLSCREEN), deleter);
+    this->window = win_ptr_t(
+        SDL_CreateWindow(APP_NAME.c_str(),
+                         SDL_WINDOWPOS_UNDEFINED,
+                         SDL_WINDOWPOS_UNDEFINED,
+                         res_x,
+                         res_y,
+                         SDL_WINDOW_FULLSCREEN),
+        deleter
+    );
+    
     if(window == NULL){
         print_err("Failed to create SDL window", SDL_GetError());
         return false;
@@ -56,7 +65,13 @@ const bool SDL2Wrapper::createWindow(const int res_x, const int res_y){
 /* SDLレンダラーを初期化 */
 const bool SDL2Wrapper::createRenderer(){
     sdl_deleter_t deleter;
-    this->renderer = ren_ptr_t(SDL_CreateRenderer(this->window.get(), SDL_DRIVER_INDEX, SDL_DRIVER_FLAG), deleter);
+    this->renderer = ren_ptr_t(
+        SDL_CreateRenderer(this->window.get(),
+                           SDL_DRIVER_INDEX,
+                           SDL_DRIVER_FLAG),
+        deleter
+    );
+    
     if(this->renderer == NULL){
         print_err("Failed to create SDL renderer", SDL_GetError());
         return false;
@@ -68,7 +83,15 @@ const bool SDL2Wrapper::createRenderer(){
 /* SDLテクスチャを初期化 */
 const bool SDL2Wrapper::createTexture(){
     sdl_deleter_t deleter;
-    this->texture = tex_ptr_t(SDL_CreateTexture(this->renderer.get(), SDL_PIXELFORMAT_BGRA8888, SDL_TEXTUREACCESS_STREAMING, this->width, this->height), deleter);
+    this->texture = tex_ptr_t(
+        SDL_CreateTexture(this->renderer.get(),
+                          SDL_PIXELFORMAT_BGRA8888,
+                          SDL_TEXTUREACCESS_STREAMING,
+                          this->width,
+                          this->height),
+        deleter
+    );
+    
     if(this->texture == NULL){
         print_err("Failed to create SDL texture", SDL_GetError());
         return false;

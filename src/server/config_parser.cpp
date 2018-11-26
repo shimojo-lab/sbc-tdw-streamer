@@ -53,7 +53,7 @@ bool ConfigParser::setParams(const _pt::ptree& conf){
 }
 
 /* フロントエンドサーバ用に値を取得 */
-int ConfigParser::getFrontendServerParams(){
+int ConfigParser::getFrontendPort(){
     return this->frontend_port;
 }
 

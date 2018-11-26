@@ -6,7 +6,7 @@
 #include "frame_queue.hpp"
 
 /* コンストラクタ */
-FrameQueue::FrameQueue(const std::size_t max_size):
+FrameQueue::FrameQueue(const size_t max_size):
     max_size(max_size)
 {}
 
@@ -46,7 +46,7 @@ const cv::Mat FrameQueue::dequeue(){
 }
 
 /* キュー内のフレーム数を取得 */
-const std::size_t FrameQueue::getSize(){
+const size_t FrameQueue::getSize(){
     boost::unique_lock<boost::mutex> u_lock(this->lock);
     return this->queue.size();
 }

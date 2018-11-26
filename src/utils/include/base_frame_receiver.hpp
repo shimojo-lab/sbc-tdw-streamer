@@ -13,18 +13,16 @@
 /* フレーム受信器の基底クラス */
 class BaseFrameReceiver{
     private:
-        _ios& ios;  // I/Oイベントループ
-        
         virtual void startConnect(const std::string ip, const int port);  // TCP接続待機を開始
-        virtual void onConnect(const _err& err);                          // TCP接続時のコールバック
-        virtual void onRecvFrame(const _err& err, size_t t_bytes);        // フレーム受信時のコールバック
+        virtual void onConnect(const err_t& err);                          // TCP接続時のコールバック
+        virtual void onRecvFrame(const err_t& err, size_t t_bytes);        // フレーム受信時のコールバック
     
     protected:
-        _ios::strand& strand;  // I/O排他制御
+        ios_t& ios;            // I/Oイベントループ
         const fq_ptr_t queue;  // 分割フレーム用キュー
     
     public:
-        BaseFrameReceiver(_ios& ios, _ios::strand& strand, const fq_ptr_t queue);  // コンストラクタ
+        BaseFrameReceiver(ios_t& ios, const fq_ptr_t queue);  // コンストラクタ
 };
 
 #endif  /* BASE_FRAME_RECEIVER_HPP */

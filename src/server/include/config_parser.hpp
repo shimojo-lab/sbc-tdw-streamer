@@ -27,7 +27,7 @@ class ConfigParser : public BaseConfigParser{
     
     public:
         ConfigParser(const std::string filename);  // コンストラクタ
-        int getFrontendServerParams();             // フロントエンドサーバ用に値を取得
+        int getFrontendPort();                     // フロントエンドサーバのポート番号を取得
         vs_params_t getVideoSplitterParams();      // フレーム分割器用に値を取得
         fs_params_t getFrameSenderParams();        // フレーム送信器用に値を取得
 };

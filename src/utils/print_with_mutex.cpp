@@ -31,7 +31,7 @@ void print_err(const std::string& msg, const std::string& suppl){
 
 /* デバッグ用メッセージを表示 */
 void print_debug(const std::string& msg){
-    console_lock(), std::cerr << "[Debug] "
+    console_lock(), std::cout << "[Debug] "
                               << msg
                               << std::endl;
 }

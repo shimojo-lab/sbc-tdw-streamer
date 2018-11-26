@@ -16,9 +16,8 @@
 /* 分割フレーム表示部 */
 class FrameViewer{
     private:
-        _ios& ios;                  // I/Oイベントループ
-        _ios::strand& strand;       // I/O排他制御
-        const tcps_ptr_t sock;      // TCPソケット
+        ios_t& ios;                 // I/Oイベントループ
+        tcp_t::socket& sock;        // TCPソケット
         const fq_ptr_t queue;       // 分割フレームキュー
         const SDL2Wrapper sdl2;     // SDL2のラッパー
         const int width;            // フレームの横の長さ
@@ -27,12 +26,11 @@ class FrameViewer{
         _asio::streambuf recv_buf;  // 受信メッセージ用バッファ
         cv::Mat frame;              // 表示フレーム
         
-        void sendSync();                                   // 同期メッセージを送信
-        void onSendSync(const _err& err, size_t t_bytes);  // 同期メッセージ送信時のコールバック
-        void onRecvSync(const _err& err, size_t t_bytes);  // 同期メッセージ受信時のコールバック
+        void onRecvSync(const err_t& err, size_t t_bytes);  // 同期メッセージ受信時のコールバック
+        void onSendSync(const err_t& err, size_t t_bytes);  // 同期メッセージ送信時のコールバック
     
     public:
-        FrameViewer(_ios& ios, _ios::strand& strand, const tcps_ptr_t sock, const fq_ptr_t queue, const int res_x, const int res_y, const int width, const int height, const int framerate, const int frame_num);  // コンストラクタ
+        FrameViewer(ios_t& ios, tcp_t::socket& sock, const fq_ptr_t queue, const int res_x, const int res_y, const int width, const int height, const int frame_num, const int frame_rate);  // コンストラクタ
 };
 
 #endif  /* FRAME_VIEWER_HPP */

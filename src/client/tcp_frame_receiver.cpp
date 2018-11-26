@@ -6,26 +6,24 @@
 #include "tcp_frame_receiver.hpp"
 
 /* コンストラクタ */
-TCPFrameReceiver::TCPFrameReceiver(_ios& ios, _ios::strand& strand, const tcps_ptr_t sock, const fq_ptr_t queue, const std::string ip, const int port):
-    BaseFrameReceiver(ios, strand, queue),
-    sock(sock)
+TCPFrameReceiver::TCPFrameReceiver(ios_t& ios, const fq_ptr_t queue, const std::string ip, const int port):
+    BaseFrameReceiver(ios, queue),
+    sock(ios)
 {
-    // TCP接続待機を開始
-    const auto bind = boost::bind(&TCPFrameReceiver::startConnect, this, ip, port);
-    this->strand.post(bind);
-ios.run();
+    print_info("Reconnecting to " + ip + ":" + std::to_string(port));
+    this->startConnect(ip, port);
 }
 
 /* TCP接続待機を開始 */
 void TCPFrameReceiver::startConnect(const std::string ip, const int port){
-    print_info("Reconnecting to " + ip + ":" + std::to_string(port));
-    const _tcp::endpoint endpoint(_ip::address::from_string(ip), port);
+    const tcp_t::endpoint endpoint(_ip::address::from_string(ip), port);
     const auto bind = boost::bind(&TCPFrameReceiver::onConnect, this, _ph::error);
-    this->sock->async_connect(endpoint, this->strand.wrap(bind));
+    this->sock.async_connect(endpoint, bind);
+    ios.run(); 
 }
 
-/* TCP接続時のコールバック関数 */
-void TCPFrameReceiver::onConnect(const _err& err){
+/* TCP接続時のコールバック */
+void TCPFrameReceiver::onConnect(const err_t& err){
     if(err){
         print_err("Failed to connect to head node", err.message());
         return;
@@ -34,11 +32,11 @@ void TCPFrameReceiver::onConnect(const _err& err){
     
     // フレーム受信を開始
     const auto bind = boost::bind(&TCPFrameReceiver::onRecvFrame, this, _ph::error, _ph::bytes_transferred);
-    _asio::async_read_until(*this->sock, this->recv_buf, SEPARATOR, this->strand.wrap(bind));
+    _asio::async_read_until(this->sock, this->recv_buf, SEPARATOR, bind);
 }
 
 /* TCPでのフレーム受信時のコールバック */
-void TCPFrameReceiver::onRecvFrame(const _err& err, size_t t_bytes){
+void TCPFrameReceiver::onRecvFrame(const err_t& err, size_t t_bytes){
     if(err){
         print_err("Failed to receive frame", err.message());
         return;
@@ -56,6 +54,6 @@ void TCPFrameReceiver::onRecvFrame(const _err& err, size_t t_bytes){
     
     // フレーム受信を再開
     const auto bind = boost::bind(&TCPFrameReceiver::onRecvFrame, this, _ph::error, _ph::bytes_transferred);
-    _asio::async_read_until(*this->sock, this->recv_buf, SEPARATOR, this->strand.wrap(bind));
+    _asio::async_read_until(this->sock, this->recv_buf, SEPARATOR, bind); 
 }
 
