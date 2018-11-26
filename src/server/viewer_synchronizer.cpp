@@ -4,43 +4,67 @@
 ******************************/
 
 #include "viewer_synchronizer.hpp"
-#include <stdio.h>
+
 /* コンストラクタ */
-ViewerSynchronizer::ViewerSynchronizer(ios_t& ios, std::vector<tcps_ptr_t>& sock_list, tcp_t::acceptor& acc):
+ViewerSynchronizer::ViewerSynchronizer(ios_t& ios, std::vector<tcps_ptr_t>& sock_list):
     ios(ios),
+    strand(ios),
     sock_list(sock_list),
-    acc(acc)
+    display_num(sock_list.size())
 {
-    // 同期用バリアを初期化
-    this->display_num = sock_list.size();
-    this->barrier = std::make_shared<boost::barrier>(this->display_num);
+    // 受信用バッファを初期化
+    this->buf_list = std::vector<buf_ptr_t>(this->display_num);
+    for(int id=0; id<this->display_num; ++id){
+        this->buf_list[id].reset(new _asio::streambuf());
+    }
+    
+    // 同期済ディスプレイ数を初期化
+    this->sync_count = 0;
 }
 
 /* 同期メッセージ受信時のコールバック */
-void ViewerSynchronizer::onRecvSync(const err_t& err, size_t t_bytes, const int i){
+void ViewerSynchronizer::onRecvSync(const err_t& err, size_t t_bytes, const int id){
     if(err){
         print_err("Failed to receive sync message", err.message());
     }
     
+    // 同期メッセージをパース
+    this->buf_list[id]->consume(t_bytes);
+    
     // 全ディスプレイノード間で同期
-    this->barrier->wait();
-    const auto bind = boost::bind(&ViewerSynchronizer::onSendSync, this, _ph::error, _ph::bytes_transferred);
-    _asio::async_write(*this->sock_list[i], _asio::buffer(SEPARATOR), bind);
+    ++this->sync_count;
+    if(this->sync_count == this->display_num){
+        this->sync_count = 0;
+        this->sendSync();
+    }
 }
 
 /* 同期メッセージ送信時のコールバック */
-void ViewerSynchronizer::onSendSync(const err_t& err, size_t t_bytes){
+void ViewerSynchronizer::onSendSync(const err_t& err, size_t t_bytes, const int id){
     if(err){
         print_err("Failed to send sync message", err.message());
     }
-    this->run();
+    
+    // 同期メッセージ受信を再開
+    const auto bind = boost::bind(&ViewerSynchronizer::onRecvSync, this, _ph::error, _ph::bytes_transferred, id);
+    _asio::async_read_until(*this->sock_list[id], *this->buf_list[id], SEPARATOR, bind);
+}
+
+/* 同期メッセージを送信 */
+void ViewerSynchronizer::sendSync(){
+    std::string send_msg("sync");
+    send_msg += SEPARATOR;
+    for(int id=0; id<this->display_num; ++id){
+        const auto bind = boost::bind(&ViewerSynchronizer::onSendSync, this, _ph::error, _ph::bytes_transferred, id);
+        _asio::async_write(*this->sock_list[id], _asio::buffer(send_msg), bind);
+    }
 }
 
 /* 同期メッセージの受信を開始 */
 void ViewerSynchronizer::run(){
-    for(int i=0; i<this->display_num; ++i){
-        const auto bind = boost::bind(&ViewerSynchronizer::onRecvSync, this, _ph::error, _ph::bytes_transferred, i);
-        _asio::async_read_until(*this->sock_list[i], this->recv_buf, SEPARATOR, bind);
+    for(int id=0; id<this->display_num; ++id){
+        const auto bind = boost::bind(&ViewerSynchronizer::onRecvSync, this, _ph::error, _ph::bytes_transferred, id);
+        _asio::async_read_until(*this->sock_list[id], *this->buf_list[id], SEPARATOR, bind);
     }
 }
 

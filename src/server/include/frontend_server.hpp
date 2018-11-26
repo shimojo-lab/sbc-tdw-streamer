@@ -16,6 +16,7 @@ using vs_ptr_t = std::shared_ptr<VideoSplitter>;
 /* フロントエンドサーバ */
 class FrontendServer{
     private:
+int id = 0;
         ios_t& ios;                              // I/Oイベントループ
         tcps_ptr_t sock;                         // TCPソケット
         tcp_t::acceptor acc;                     // TCPメッセージ受信器

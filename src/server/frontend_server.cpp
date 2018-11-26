@@ -44,8 +44,8 @@ void FrontendServer::onConnect(const err_t& err){
     print_info("Accepted new display node: " + ip);
     
     // ディスプレイノードのIDを取得
-    const auto iter = std::find(this->ip_list.begin(), this->ip_list.end(), ip);
-    const size_t id = std::distance(this->ip_list.begin(), iter);
+    //const auto iter = std::find(this->ip_list.begin(), this->ip_list.end(), ip);
+    //const int id = std::distance(this->ip_list.begin(), iter);
     
     // 新規TCPソケットを用意
     this->sock_list[id] = this->sock;
@@ -67,6 +67,7 @@ void FrontendServer::onConnect(const err_t& err){
     std::string bytes_buf = jsonstream.str() + SEPARATOR;
     const auto init_bind = boost::bind(&FrontendServer::onSendInit, this, _ph::error, _ph::bytes_transferred, ip);
     _asio::async_write(*this->sock_list[id], _asio::buffer(bytes_buf), init_bind);
+this->id++;
 }
 
 /* 初期化メッセージ送信時のコールバック */
@@ -121,7 +122,7 @@ void FrontendServer::runVideoSplitter(const vs_ptr_t splitter){
 /* 表示タイミング制御器を起動 */
 void FrontendServer::runViewerSynchronizer(){
     print_info("Launched viewer synchronizer");
-    ViewerSynchronizer synchronizer(this->ios, this->sock_list, this->acc);
+    ViewerSynchronizer synchronizer(this->ios, this->sock_list);
     synchronizer.run();
     this->ios.run();
 }

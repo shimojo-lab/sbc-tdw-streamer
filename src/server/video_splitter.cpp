@@ -40,7 +40,7 @@ void VideoSplitter::setSplitParams(){
         for(int x=0; x<this->row; ++x){
            int id = x + this->row * y;
            this->region_list[id] = cv::Rect(x*width, y*height, width, height);
-           this->queue_list[id] = std::make_shared<FrameQueue>(1);
+           this->queue_list[id] = std::make_shared<FrameQueue>(32);
         }
     }
 }
