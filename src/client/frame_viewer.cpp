@@ -42,7 +42,7 @@ void FrameViewer::onRecvSync(const err_t& err, size_t t_bytes){
     // フレームを表示
     try{
         cv::imshow("", this->frame);
-        cv::waitKey(1);
+        cv::waitKey(33);
     }catch(...){
         print_err("Failed to display frame", "JPEG format error");
     }

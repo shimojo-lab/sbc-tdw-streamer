@@ -9,10 +9,8 @@
 #include "boost_socket.hpp"
 #include "print_with_mutex.hpp"
 #include <atomic>
-#include <boost/thread/barrier.hpp>
 
 using buf_ptr_t = std::unique_ptr<_asio::streambuf>;
-using bar_ptr_t = std::shared_ptr<boost::barrier>;
 
 /* 表示タイミング制御器 */
 class ViewerSynchronizer{

@@ -1,8 +1,8 @@
 {
     "//": "ヘッドノードの設定",
-    "video_src": "./test/fullhd.mp4",
+    "video_src": "./test/nature/fullhd.mp4",
     "layout": {
-        "row": 2,
+        "row": 1,
         "column": 1
     },
     "protocol": "tcp",
@@ -11,8 +11,7 @@
         "sender": 20001
     },
     "display_node": [
-        "127.0.0.1",
-        "127.0.0.1"
+        "192.168.10.56"
     ]
 }
 

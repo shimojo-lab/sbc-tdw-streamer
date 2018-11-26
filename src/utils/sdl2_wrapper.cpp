@@ -21,7 +21,7 @@ SDL2Wrapper::SDL2Wrapper(const int res_x, const int res_y, const int width, cons
         std::exit(EXIT_FAILURE);
     }
     std::atexit(SDL_Quit);
-    
+/*    
     // SDLウィンドウを初期化
     if(!this->createWindow(res_x, res_y)){
         std::exit(EXIT_FAILURE);
@@ -38,7 +38,7 @@ SDL2Wrapper::SDL2Wrapper(const int res_x, const int res_y, const int width, cons
     }
     
     // フレーム表示時間を設定
-    this->view_time = 1000.0 / (double)framerate;
+    this->view_time = 1000.0 / (double)framerate;*/
 }
 
 /* SDLウィンドウを初期化 */

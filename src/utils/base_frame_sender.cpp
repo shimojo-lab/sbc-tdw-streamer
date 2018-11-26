@@ -22,8 +22,8 @@ void BaseFrameSender::onSendFrame(const err_t& err, size_t t_bytes){}
 
 /* フレームを圧縮 */
 const std::string BaseFrameSender::compressFrame(const cv::Mat& frame){
-    std::vector<int> params = {cv::IMWRITE_JPEG_QUALITY, 90};
-    cv::imencode(".jpg", frame, this->comp_buf, params);
+    std::vector<int> params = {cv::IMWRITE_WEBP_QUALITY, 90};
+    cv::imencode(".webp", frame, this->comp_buf, params);
     std::string bytes_buf(this->comp_buf.begin(), this->comp_buf.end());
     bytes_buf += SEPARATOR;
     return bytes_buf;

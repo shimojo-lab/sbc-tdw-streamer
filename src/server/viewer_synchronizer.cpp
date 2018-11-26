@@ -32,11 +32,11 @@ void ViewerSynchronizer::onRecvSync(const err_t& err, size_t t_bytes, const int 
     this->buf_list[id]->consume(t_bytes);
     
     // 全ディスプレイノード間で同期
-    ++this->sync_count;
-    if(this->sync_count == this->display_num){
-        this->sync_count = 0;
+/*    ++this->sync_count;
+    if(this->sync_count.load(std::memory_order_acquire) == this->display_num){
+        this->sync_count = 0;*/
         this->sendSync();
-    }
+//    }
 }
 
 /* 同期メッセージ送信時のコールバック */
