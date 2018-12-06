@@ -1,12 +1,12 @@
 /******************************
-*   tcp_frame_receiver.cpp    *
-*    (TCP版フレーム受信器)    *
+*   udp_frame_receiver.cpp    *
+*    (UDP版フレーム受信器)    *
 ******************************/
 
-#include "tcp_frame_receiver.hpp"
+#include "udp_frame_receiver.hpp"
 
 /* コンストラクタ */
-TCPFrameReceiver::TCPFrameReceiver(ios_t& ios, const fq_ptr_t queue, const std::string ip, const int port):
+UDPFrameReceiver::UDPFrameReceiver(ios_t& ios, const fq_ptr_t queue, const std::string ip, const int port):
     BaseFrameReceiver(ios, queue),
     sock(ios)
 {
@@ -49,7 +49,7 @@ void TCPFrameReceiver::onRecvFrame(const err_t& err, size_t t_bytes){
         bytes_buf.pop_back();
     }
     std::vector<unsigned char> comp_buf(bytes_buf.c_str(), bytes_buf.c_str()+bytes_buf.length());
-    this->queue->enqueue(cv::imdecode(comp_buf, CV_LOAD_IMAGE_UNCHANGED));
+    this->queue->enqueue(comp_buf);
     this->recv_buf.consume(t_bytes);
     
     // フレーム受信を再開

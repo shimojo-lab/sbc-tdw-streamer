@@ -11,15 +11,13 @@
 /* UDP版フレーム送信器 */
 class UDPFrameSender : public BaseFrameSender{
     private:
-        _udp::socket udp_sock;      // UDPソケット
+        tcp_t::socket sock;   // UDPソケット
         
-        void startConnect() override;                                    // TCP接続待機を開始
-        void onConnect(const _err& err) override;                    // TCP接続時のコールバック
-        void onSendFrame(const _err& err, size_t t_bytes) override;  // フレーム送信時のコールバック
-    
+        void startConnect() override;                                 // UDP接続待機を開始
+        void onConnect(const err_t& err) override;                    // TCP接続時のコールバック
+        void onSendFrame(const err_t& err, size_t t_bytes) override;  // フレーム送信時のコールバック
     public:
-        UDPFrameSender(const ios_ptr_t ios, const fq_ptr_t queue, const int port, const bar_ptr_t barrier);  // コンストラクタ
-
+        TCPFrameSender(ios_t& ios, const fq_ptr_t queue, const int port);  // コンストラクタ
 };
 
 #endif  /* UDP_FRAME_SENDER_HPP */

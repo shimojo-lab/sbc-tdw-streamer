@@ -8,10 +8,9 @@
 
 #include "frame_queue.hpp"
 #include "print_with_mutex.hpp"
-#include "boost_socket.hpp"
+#include "socket_utils.hpp"
 #include "sdl2_wrapper.hpp"
 #include <opencv2/highgui.hpp>
-#include <opencv2/imgproc.hpp>
 
 /* 分割フレーム表示部 */
 class FrameViewer{

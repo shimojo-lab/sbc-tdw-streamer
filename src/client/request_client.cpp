@@ -64,7 +64,7 @@ void RequestClient::onRecvInit(const err_t& err, size_t t_bytes){
     frame_rate = std::stoi(init_params.get_optional<std::string>("frame_rate").get());
     
     // 別スレッドでフレーム受信器を起動
-    const fq_ptr_t queue = std::make_shared<FrameQueue>(16);
+    const fq_ptr_t queue = std::make_shared<FrameQueue>(1024);
     const auto bind = boost::bind(&RequestClient::runFrameReceiver, this, queue, protocol, port);
     this->recv_thre = boost::thread(bind);
     

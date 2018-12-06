@@ -6,7 +6,7 @@
 #ifndef BASE_FRAME_RECEIVER_HPP
 #define BASE_FRAME_RECEIVER_HPP
 
-#include "boost_socket.hpp"
+#include "socket_utils.hpp"
 #include "frame_queue.hpp"
 #include "print_with_mutex.hpp"
 

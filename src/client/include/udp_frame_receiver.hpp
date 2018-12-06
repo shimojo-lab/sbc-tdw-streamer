@@ -1,18 +1,15 @@
 /******************************
- *   tcp_frame_receiver.hpp   *
- *   (TCP版フレーム受信器)    *
+ *   udp_frame_receiver.hpp   *
+ *   (UDP版フレーム受信器)    *
  *****************************/
 
-#ifndef TCP_FRAME_RECEIVER_HPP
-#define TCP_FRAME_RECEIVER_HPP
+#ifndef UDP_FRAME_RECEIVER_HPP
+#define UDP_FRAME_RECEIVER_HPP
 
 #include "base_frame_receiver.hpp"
-#include <opencv2/core.hpp>
-#include <opencv2/highgui.hpp>
-#include <opencv2/imgcodecs.hpp>
 
-/* TCP版フレーム受信器 */
-class TCPFrameReceiver : public BaseFrameReceiver{
+/* UDP版フレーム受信器 */
+class UDPFrameReceiver : public BaseFrameReceiver{
     private:
         tcp_t::socket sock;         // TCPソケット
         _asio::streambuf recv_buf;  // TCP受信用バッファ
@@ -22,8 +19,8 @@ class TCPFrameReceiver : public BaseFrameReceiver{
         void onRecvFrame(const err_t& err, size_t t_bytes) override;        // フレーム受信時のコールバック
     
     public:
-        TCPFrameReceiver(ios_t& ios, const fq_ptr_t queue, const std::string ip, const int port);  // コンストラクタ
+        UDPFrameReceiver(ios_t& ios, const fq_ptr_t queue, const std::string ip, const int port);  // コンストラクタ
 };
 
-#endif  /* TCP_FRAME_RECEIVER_HPP */
+#endif  /* UDP_FRAME_RECEIVER_HPP */
 

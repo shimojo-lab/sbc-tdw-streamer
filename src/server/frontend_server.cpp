@@ -6,28 +6,31 @@
 #include "frontend_server.hpp"
 
 /* コンストラクタ */
-FrontendServer::FrontendServer(ios_t& ios, ConfigParser& parser):
+FrontendServer::FrontendServer(ios_t& ios, ConfigParser& parser, const int port):
     ios(ios),
-    acc(ios, tcp_t::endpoint(tcp_t::v4(), parser.getFrontendPort()))
-{
-    // TCPソケットを初期化
+    acc(ios, tcp_t::endpoint(tcp_t::v4(), port))
+{   
+    // パラメータを初期化
+    int sbuf_size, init_quality;
+    std::tie(this->video_src, this->row, this->column, this->sender_port, this->protocol_type, sbuf_size, init_quality, this->ip_list) = parser.getFrontendServerParams();
     this->sock = std::make_shared<tcp_t::socket>(ios);
+    this->sock_list = std::vector<tcps_ptr_t>(this->row * this->column);
+    this->sbuf = std::make_shared<RingBuffer<std::string>>(sbuf_size);
+    this->comp_quality.store(init_quality, std::memory_order_release);
     
-    // フレーム分割器を初期化
-    std::string video_src;
-    int row, column;
-    std::tie(video_src, row, column) = parser.getVideoSplitterParams();
-    this->splitter = std::make_shared<VideoSplitter>(video_src, row, column);
-    
-    // フレーム送信用パラメータを設定
-    this->display_num = row * column;
-    this->sock_list = std::vector<tcps_ptr_t>(display_num);
-    this->sender_thre = std::vector<boost::thread>(display_num);
-    std::tie(this->protocol, this->sender_port, this->ip_list) = parser.getFrameSenderParams();
-    std::tie(this->frame_num, this->frame_rate) = this->splitter->getVideoParams();
+    // 別スレッドでフレーム送信器を起動
+    if(this->protocol_type == 0){
+        print_info("Ready for sending video frames by TCP");
+        this->sender_thre = boost::thread(boost::bind(&FrontendServer::runTCPFrameSender, this));
+    }else if(this->protocol_type == 1){
+        print_info("Ready for sending video frames by UDP");
+        this->sender_thre = boost::thread(boost::bind(&FrontendServer::runUDPFrameSender, this));
+    }else{
+        print_err("Invalid protocol is selected", "Select from TCP or UDP");
+        std::exit(EXIT_FAILURE);
+    }
     
     // 接続待機を開始
-    const int port = parser.getFrontendPort();
     print_info("Launched frontend server at :" + std::to_string(port));
     const auto bind = boost::bind(&FrontendServer::onConnect, this, _ph::error);
     this->acc.async_accept(*this->sock, bind);
@@ -35,7 +38,7 @@ FrontendServer::FrontendServer(ios_t& ios, ConfigParser& parser):
 
 /* TCP接続時のコールバック */
 void FrontendServer::onConnect(const err_t& err){
-    // 接続元を表示 (失敗時は接続待機を再開)
+    // 接続元を表示
     const std::string ip = this->sock->remote_endpoint().address().to_string();
     if(err){
         print_err("Failed to accept new display node: " + ip, err.message());
@@ -44,30 +47,25 @@ void FrontendServer::onConnect(const err_t& err){
     print_info("Accepted new display node: " + ip);
     
     // ディスプレイノードのIDを取得
-    //const auto iter = std::find(this->ip_list.begin(), this->ip_list.end(), ip);
-    //const int id = std::distance(this->ip_list.begin(), iter);
+    const auto iter = std::find(this->ip_list.begin(), this->ip_list.end(), ip);
+    const int id = std::distance(this->ip_list.begin(), iter);
+    
+    // 接続元に初期化メッセージを送信
+    _pt::ptree init_params;
+    std::stringstream jsonstream;
+    init_params.add<int>("id", id);
+    init_params.add<int>("row", this->row);
+    init_params.add<int>("column", this->column);
+    init_params.add<int>("port", this->sender_port);
+    init_params.add<int>("protocol_type", this->protocol_type);
+    _pt::write_json(jsonstream, init_params, false);
+    std::string bytes_buf = jsonstream.str() + MSG_DELIMITER;
+    const auto bind = boost::bind(&FrontendServer::onSendInit, this, _ph::error, _ph::bytes_transferred, ip);
+    _asio::async_write(*this->sock, _asio::buffer(bytes_buf), bind);
     
     // 新規TCPソケットを用意
     this->sock_list[id] = this->sock;
     this->sock = std::make_shared<tcp_t::socket>(this->ios);
-    
-    // フレーム送信スレッドを作成
-    const fq_ptr_t queue = this->splitter->getFrameQueuePtr(id);
-    const auto sender_bind = boost::bind(&FrontendServer::runFrameSender, this, queue);
-    this->sender_thre[id] = boost::thread(sender_bind);
-    
-    // 接続元に初期化パラメータを送信
-    _pt::ptree init_params;
-    std::stringstream jsonstream;
-    init_params.add<std::string>("protocol", this->protocol);
-    init_params.add<int>("port", this->sender_port);
-    init_params.add<int>("frame_num", this->frame_num);
-    init_params.add<double>("frame_rate", this->frame_rate);
-    _pt::write_json(jsonstream, init_params, false);
-    std::string bytes_buf = jsonstream.str() + SEPARATOR;
-    const auto init_bind = boost::bind(&FrontendServer::onSendInit, this, _ph::error, _ph::bytes_transferred, ip);
-    _asio::async_write(*this->sock_list[id], _asio::buffer(bytes_buf), init_bind);
-this->id++;
 }
 
 /* 初期化メッセージ送信時のコールバック */
@@ -77,53 +75,49 @@ void FrontendServer::onSendInit(const err_t& err, size_t t_bytes, const std::str
         print_err("Failed to send init message to " + ip, err.message());
         return;
     }else{
-        ++this->sender_port;
         ++this->connection_num;
     }
     
-    if(this->connection_num != this->display_num){
+    if(this->connection_num < this->row*this->column){
         // 接続待機を再開
         const auto bind = boost::bind(&FrontendServer::onConnect, this, _ph::error);
         this->acc.async_accept(*this->sock, bind);
     }else{
         // 接続待機を終了
-        print_info("Accepted all display nodes");
+        print_info("Finished to accept all display nodes");
         this->sock->close();
         
-        // フレーム分割を開始
-        const auto bind = boost::bind(&FrontendServer::runVideoSplitter, this, this->splitter);
-        this->splitter_thre = boost::thread(bind);
+        // 別スレッドでフレーム圧縮を開始
+        print_info("Started to compress video frames");
+        this->compresser_thre = boost::thread(boost::bind(&FrontendServer::runFrameCompresser, this));
         
-        // 表示タイミング制御を開始
-        print_info("Start playback");
+        // 同スレッドで同期制御を開始
+        print_info("Start playback video");
         this->runViewerSynchronizer();
     }
 }
 
-/* 別スレッドでフレーム送信器を起動 */
-void FrontendServer::runFrameSender(const fq_ptr_t queue){
+/* 別スレッドでTCP版フレーム送信器を起動 */
+void FrontendServer::runTCPFrameSender(){
     ios_t ios;
-    if(this->protocol == "TCP"){
-        TCPFrameSender sender(ios, queue, this->sender_port);
-    }else if(this->protocol == "UDP"){
-        //UDPFrameSender sender(ios, queue, this->sender_port);
-    }else{
-        print_err("Invalid protocol is selected", this->protocol);
-        return;
-    }
+    TCPFrameSender sender(ios, this->sbuf, this->sender_port, this->row*this->column);
 }
 
-/* 別スレッドでフレーム分割器を起動 */
-void FrontendServer::runVideoSplitter(const vs_ptr_t splitter){
-    print_info("Launched video splitter");
-    splitter->run();
+/* 別スレッドでUDP版フレーム送信器を起動 */
+void FrontendServer::runUDPFrameSender(){
+    ios_t ios;
+    //UDPFrameSender sender(ios, this->sender_port, this->sbuf, this->ip_list);
 }
 
-/* 表示タイミング制御器を起動 */
+/* 別スレッドでフレーム圧縮器を起動 */
+void FrontendServer::runFrameCompresser(){
+    FrameCompresser compresser(this->video_src, this->sbuf, 64, this->comp_quality);
+    compresser.run();
+}
+
+/* 同スレッドで同期制御器を起動 */
 void FrontendServer::runViewerSynchronizer(){
-    print_info("Launched viewer synchronizer");
-    ViewerSynchronizer synchronizer(this->ios, this->sock_list);
+    ViewerSynchronizer synchronizer(this->ios, this->sock_list, this->comp_quality);
     synchronizer.run();
-    this->ios.run();
 }
 

@@ -17,34 +17,35 @@ ConfigParser::ConfigParser(const std::string filename):
 
 /* パラメータを取得するメソッド */
 bool ConfigParser::setParams(const _pt::ptree& conf){
+    // 各種パラメータを取得
     try{
         this->video_src = conf.get_optional<std::string>("video_src").get();
         this->row = conf.get_optional<int>("layout.row").get();
         this->column = conf.get_optional<int>("layout.column").get();
         this->frontend_port = conf.get_optional<int>("port.frontend").get();
         this->sender_port = conf.get_optional<int>("port.sender").get();
+        this->sbuf_size = conf.get_optional<int>("send_buf_size").get();
+        this->init_quality = conf.get_optional<int>("init_compression_quality").get();
     }catch(...){
         print_err("Could not get parameter", "Config file is invalid");
         return false;
     }
     
     // ディスプレイノードのIPを取得
-    int count = 0;
     for(const auto& elem : conf.get_child("display_node")){
         this->ip_list.push_back(elem.second.data());
-        ++count;
     }
-    if(count != this->row*this->column){
-        print_err("Number of display nodes is invalid", std::to_string(count));
+    if(int(this->ip_list.size()) != this->row*this->column){
+        print_err("Number of display nodes is invalid", std::to_string(this->ip_list.size()));
         return false;
     }
     
     // フレーム送信用プロトコルを取得
     std::string protocol = conf.get_optional<std::string>("protocol").get();
     if(protocol == "tcp" || protocol == "TCP"){
-        this->protocol = "TCP";
+        this->protocol_type = 0;
     }else if(protocol == "udp" || protocol == "UDP"){
-        this->protocol = "UDP";
+        this->protocol_type = 1;
     }else{
         print_err("Invaild protocol is selected", protocol);
         return false;
@@ -52,24 +53,21 @@ bool ConfigParser::setParams(const _pt::ptree& conf){
     return true;
 }
 
-/* フロントエンドサーバ用に値を取得 */
-int ConfigParser::getFrontendPort(){
+/* フロントエンドサーバのポート番号を取得 */
+int ConfigParser::getFrontendServerPort(){
     return this->frontend_port;
 }
 
-/* フレーム分割器用に値を取得 */
-vs_params_t ConfigParser::getVideoSplitterParams(){
+/* フロントエンドサーバへパラメータ渡し */
+fs_params_t ConfigParser::getFrontendServerParams(){
     std::string video_src = this->video_src;
     int row = this->row;
     int column = this->column;
-    return std::forward_as_tuple(video_src, row, column);
-}
-
-/* フレーム送信器用に値を取得 */
-fs_params_t ConfigParser::getFrameSenderParams(){
-    std::string protocol = this->protocol;
     int sender_port = this->sender_port;
+    int protocol_type = this->protocol_type;
+    int sbuf_size = this->sbuf_size;
+    int init_quality = this->init_quality;
     std::vector<std::string> ip_list = this->ip_list;
-    return std::forward_as_tuple(protocol, sender_port, ip_list);
+    return std::forward_as_tuple(video_src, row, column, sender_port, protocol_type, sbuf_size, init_quality, ip_list);
 }
 

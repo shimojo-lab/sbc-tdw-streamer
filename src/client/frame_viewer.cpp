@@ -48,7 +48,7 @@ void FrameViewer::onRecvSync(const err_t& err, size_t t_bytes){
     }
     
     // 次番フレームの表示を開始
-    this->frame = cv::imdecode(this->queue->dequeue(), CV_LOAD_IMAGE_UNCHANGED);
+    this->frame = this->queue->dequeue();
     std::string send_msg("sync");
     send_msg += SEPARATOR;
     const auto bind = boost::bind(&FrameViewer::onSendSync, this, _ph::error, _ph::bytes_transferred);

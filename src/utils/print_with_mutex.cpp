@@ -6,9 +6,9 @@
 #include "print_with_mutex.hpp"
 
 /* コンソール出力用の排他制御を実行 */
-boost::unique_lock<boost::mutex> console_lock(){
-    static boost::mutex lock;
-    return boost::unique_lock<boost::mutex>(lock);
+std::unique_lock<std::mutex> console_lock(){
+    static std::mutex lock;
+    return std::unique_lock<std::mutex>(lock);
 }
 
 /* 一般メッセージを表示 */

@@ -4,7 +4,7 @@
 ##################################
 
 CXX = g++
-CXXFLAGS = -Wall -g -std=c++11
+CXXFLAGS = -Wall -g -std=c++11 -O3
 SRV = ./src/server
 CLI = ./src/client
 UTILS = ./src/utils
@@ -33,30 +33,24 @@ $(UTILS)/print_with_mutex.o: $(UTILS)/print_with_mutex.cpp
 $(UTILS)/base_config_parser.o: $(UTILS)/base_config_parser.cpp
 	$(CXX) $(CXXFLAGS) -I$(UTILS)/include -c -o $@ $<
 
-$(UTILS)/base_frame_sender.o: $(UTILS)/base_frame_sender.cpp
-	$(CXX) $(CXXFLAGS) -I$(UTILS)/include -I$(SRV)/include -I$(CV2_HDR) -c -o $@ $<
-
-$(UTILS)/base_frame_receiver.o: $(UTILS)/base_frame_receiver.cpp
-	$(CXX) $(CXXFLAGS) -I$(UTILS)/include -I$(CLI)/include -c -o $@ $<
-
 $(UTILS)/sdl2_wrapper.o: $(UTILS)/sdl2_wrapper.cpp
 	$(CXX) $(CXXFLAGS) -I$(UTILS)/include -c -o $@ $<
 
 # 送信サーバをコンパイル
 .PHONY: compile_server
-compile_server: $(UTILS)/print_with_mutex.o $(UTILS)/base_config_parser.o $(UTILS)/base_frame_sender.o $(SRV)/config_parser.o $(SRV)/frame_queue.o $(SRV)/video_splitter.o $(SRV)/frontend_server.o $(SRV)/tcp_frame_sender.o $(SRV)/viewer_synchronizer.o $(SRV)/main.o
+compile_server: $(UTILS)/print_with_mutex.o $(UTILS)/base_config_parser.o $(SRV)/base_frame_sender.o $(SRV)/config_parser.o $(SRV)/frame_compresser.o $(SRV)/frontend_server.o $(SRV)/tcp_frame_sender.o $(SRV)/viewer_synchronizer.o $(SRV)/main.o
 	$(CXX) $(CXXFLAGS) $(SRV_LD) -o $(BIN)/sbc_server $^
 
 $(SRV)/config_parser.o: $(SRV)/config_parser.cpp
 	$(CXX) $(CXXFLAGS) -I$(SRV)/include -I$(UTILS)/include -c -o $@ $<
 
-$(SRV)/frame_queue.o: $(SRV)/frame_queue.cpp
-	$(CXX) $(CXXFLAGS) -I$(SRV)/include -c -o $@ $<
+$(SRV)/base_frame_sender.o: $(SRV)/base_frame_sender.cpp
+	$(CXX) $(CXXFLAGS) -I$(SRV)/include -I$(UTILS)/include -c -o $@ $<
 
 $(SRV)/frontend_server.o: $(SRV)/frontend_server.cpp
 	$(CXX) $(CXXFLAGS) -I$(SRV)/include -I$(UTILS)/include -c -o $@ $<
 
-$(SRV)/video_splitter.o: $(SRV)/video_splitter.cpp
+$(SRV)/frame_compresser.o: $(SRV)/frame_compresser.cpp
 	$(CXX) $(CXXFLAGS) -I$(SRV)/include -I$(UTILS)/include -I$(CV2_HDR) -c -o $@ $<
 
 $(SRV)/tcp_frame_sender.o: $(SRV)/tcp_frame_sender.cpp
@@ -70,16 +64,16 @@ $(SRV)/main.o: $(SRV)/main.cpp
 
 # 表示クライアントをコンパイル
 .PHONY: compile_client
-compile_client: $(UTILS)/print_with_mutex.o $(UTILS)/base_config_parser.o $(UTILS)/base_frame_receiver.o $(UTILS)/sdl2_wrapper.o $(CLI)/config_parser.o $(CLI)/frame_queue.o $(CLI)/request_client.o $(CLI)/tcp_frame_receiver.o $(CLI)/frame_viewer.o $(CLI)/main.o
+compile_client: $(UTILS)/print_with_mutex.o $(UTILS)/base_config_parser.o $(CLI)/base_frame_receiver.o $(UTILS)/sdl2_wrapper.o $(UTILS)/frame_queue.o $(CLI)/config_parser.o $(CLI)/request_client.o $(CLI)/tcp_frame_receiver.o $(CLI)/frame_viewer.o $(CLI)/main.o
 	$(CXX) $(CXXFLAGS) $(CLI_LD) -o $(BIN)/sbc_client $^
 
 $(CLI)/config_parser.o: $(CLI)/config_parser.cpp
 	$(CXX) $(CXXFLAGS) -I$(CLI)/include -I$(UTILS)/include -c -o $@ $<
 
-$(CLI)/frame_queue.o: $(CLI)/frame_queue.cpp
-	$(CXX) $(CXXFLAGS) -I$(CLI)/include -c -o $@ $<
-
 $(CLI)/request_client.o: $(CLI)/request_client.cpp
+	$(CXX) $(CXXFLAGS) -I$(CLI)/include -I$(UTILS)/include -c -o $@ $<
+
+$(CLI)/base_frame_receiver.o: $(CLI)/base_frame_receiver.cpp
 	$(CXX) $(CXXFLAGS) -I$(CLI)/include -I$(UTILS)/include -c -o $@ $<
 
 $(CLI)/tcp_frame_receiver.o: $(CLI)/tcp_frame_receiver.cpp

@@ -8,10 +8,12 @@
     "protocol": "tcp",
     "port": {
         "frontend": 11111,
-        "sender": 20001
+        "sender": 20000
     },
+    "send_buf_size": 128,
+    "init_compression_quality": 90,
     "display_node": [
-        "192.168.10.56"
+        "127.0.0.1"
     ]
 }
 
