@@ -3,7 +3,7 @@
     "video_src": "./test/nature/fullhd.mp4",
     "layout": {
         "row": 1,
-        "column": 2
+        "column": 1
     },
     "protocol": "tcp",
     "port": {
@@ -13,7 +13,6 @@
     "send_buf_size": 32,
     "init_compression_quality": 90,
     "display_node": [
-        "127.0.0.1",
         "127.0.0.1"
     ]
 }

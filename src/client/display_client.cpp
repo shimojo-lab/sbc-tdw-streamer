@@ -71,7 +71,7 @@ void DisplayClient::onRecvInit(const err_t& err, size_t t_bytes){
     
     // フレーム表示器を起動
     print_info("Start playback video");
-    FrameViewer viewer(this->ios, this->sock, this->vbuf, this->res_x, this->res_y);
+    FrameViewer viewer(this->ios, this->sock, this->vbuf, this->res_x, this->res_y, 0.7);
 }
 
 /* 別スレッドでフレーム展開器を起動 */

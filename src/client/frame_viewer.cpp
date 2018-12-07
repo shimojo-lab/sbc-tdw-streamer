@@ -6,10 +6,11 @@
 #include "frame_viewer.hpp"
 
 /* コンストラクタ */
-FrameViewer::FrameViewer(ios_t& ios, tcp_t::socket& sock, const framebuf_ptr_t vbuf, const int res_x, const int res_y):
+FrameViewer::FrameViewer(ios_t& ios, tcp_t::socket& sock, const framebuf_ptr_t vbuf, const int res_x, const int res_y, const double threshold):
     ios(ios),
     sock(sock),
-    vbuf(vbuf)
+    vbuf(vbuf),
+    mem_checker(threshold)
 {
     // フレーム表示を開始
     this->sendSync();
@@ -18,6 +19,7 @@ FrameViewer::FrameViewer(ios_t& ios, tcp_t::socket& sock, const framebuf_ptr_t v
 
 /* 同期メッセージを送信 */
 void FrameViewer::sendSync(){
+this->mem_checker.checkShortage();
     std::string send_msg("sync");
     send_msg += MSG_DELIMITER;
     const auto bind = boost::bind(&FrameViewer::onSendSync, this, _ph::error, _ph::bytes_transferred); 
