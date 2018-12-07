@@ -39,7 +39,7 @@ void TCPFrameReceiver::onConnect(const err_t& err){
 void TCPFrameReceiver::onRecvFrame(const err_t& err, size_t t_bytes){
     if(err){
         print_err("Failed to receive frame", err.message());
-        return;
+        std::exit(EXIT_FAILURE);
     }
     
     // フレームを取得

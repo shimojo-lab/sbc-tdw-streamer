@@ -22,6 +22,7 @@ ViewerSynchronizer::ViewerSynchronizer(ios_t& ios, std::vector<tcps_ptr_t>& sock
 void ViewerSynchronizer::onRecvSync(const err_t& err, size_t t_bytes, const int id){
     if(err){
         print_err("Failed to receive sync message", err.message());
+        std::exit(EXIT_FAILURE);
     }
     
     // 同期メッセージをパース
@@ -40,6 +41,7 @@ void ViewerSynchronizer::onRecvSync(const err_t& err, size_t t_bytes, const int 
 void ViewerSynchronizer::onSendSync(const err_t& err, size_t t_bytes, const int id){
     if(err){
         print_err("Failed to send sync message", err.message());
+        std::exit(EXIT_FAILURE);
     }
     
     // 同期メッセージ受信を再開

@@ -34,7 +34,7 @@ void TCPFrameSender::onConnect(const err_t& err){
     const std::string ip = this->sock->remote_endpoint().address().to_string();
     if(err){
         print_err("Failed TCP connection with " + ip, err.message());
-        return;
+        std::exit(EXIT_FAILURE);
     }else{
         const int count = this->send_count.load(std::memory_order_acquire);
         this->send_count.store(count+1, std::memory_order_release);
@@ -67,8 +67,8 @@ void TCPFrameSender::sendFrame(){
     
     // 全ディスプレイノードへ送信
     const auto bind = boost::bind(&TCPFrameSender::onSendFrame, this, _ph::error, _ph::bytes_transferred);
-    for(int i=0; i<this->display_num; ++i){
-        _asio::async_write(*this->sock_list[i], _asio::buffer(send_msg), bind);
+    for(int id=0; id<this->display_num; ++id){
+        _asio::async_write(*this->sock_list[id], _asio::buffer(send_msg), bind);
     }
 }
 
@@ -76,6 +76,7 @@ void TCPFrameSender::sendFrame(){
 void TCPFrameSender::onSendFrame(const err_t& err, size_t t_bytes){
     if(err){
         print_err("Failed to send frame", err.message());
+        std::exit(EXIT_FAILURE);
     }
     
     // 全送信が完了したら次番フレームを送信

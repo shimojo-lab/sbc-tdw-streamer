@@ -38,7 +38,7 @@ void FrameViewer::displayFrame(){
 void FrameViewer::onRecvSync(const err_t& err, size_t t_bytes){
     if(err){
         print_err("Failed to receive sync message", err.message());
-        return;
+        std::exit(EXIT_FAILURE);
     }
     
     // 同期メッセージを取得
