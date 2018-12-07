@@ -9,6 +9,7 @@
 TCPFrameSender::TCPFrameSender(ios_t& ios, const msgbuf_ptr_t sbuf, const int port, const int display_num):
     BaseFrameSender(ios, sbuf),
     acc(ios, tcp_t::endpoint(tcp_t::v4(), port)),
+    sbuf(sbuf),
     display_num(display_num)
 {
     // ソケットを初期化
@@ -50,6 +51,7 @@ void TCPFrameSender::onConnect(const err_t& err){
         this->acc.async_accept(*this->sock, bind);
     }else{
         // フレーム送信を開始
+        print_info("Ready for streaming video frames");
         this->sock->close();
         this->send_count.store(0, std::memory_order_release);
         this->sendFrame();

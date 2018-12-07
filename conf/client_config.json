@@ -8,9 +8,7 @@
         "width": 1920,
         "height": 1080
     },
-    "frame": {
-        "width": 1920,
-        "height": 1080
-    }
+    "recv_buf_size": 16,
+    "view_buf_size": 16
 }
 

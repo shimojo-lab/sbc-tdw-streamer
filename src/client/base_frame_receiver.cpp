@@ -6,9 +6,9 @@
 #include "base_frame_receiver.hpp"
 
 /* コンストラクタ */
-BaseFrameReceiver::BaseFrameReceiver(ios_t& ios, const fq_ptr_t queue):
+BaseFrameReceiver::BaseFrameReceiver(ios_t& ios, const msgbuf_ptr_t rbuf):
     ios(ios),
-    queue(queue)
+    rbuf(rbuf)
 {}
 
 /* TCP接続待機を開始 */

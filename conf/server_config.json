@@ -2,17 +2,20 @@
     "//": "ヘッドノードの設定",
     "video_src": "./test/nature/fullhd.mp4",
     "layout": {
-        "row": 1,
-        "column": 1
+        "row": 2,
+        "column": 2
     },
     "protocol": "tcp",
     "port": {
         "frontend": 11111,
         "sender": 20000
     },
-    "send_buf_size": 128,
-    "init_compression_quality": 90,
+    "send_buf_size": 32,
+    "init_compression_quality": 30,
     "display_node": [
+        "127.0.0.1",
+        "127.0.0.1",
+        "127.0.0.1",
         "127.0.0.1"
     ]
 }

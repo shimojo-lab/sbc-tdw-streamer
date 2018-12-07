@@ -10,10 +10,13 @@
 #include "print_with_mutex.hpp"
 #include <cstdlib>
 #include <vector>
+#include <tuple>
 #include <atomic>
 #include <opencv2/core.hpp>
 #include <opencv2/videoio.hpp>
 #include <opencv2/highgui.hpp>
+
+using frame_size_t = std::tuple<int, int>;
 
 /* フレーム分割器 */
 class FrameCompresser{
@@ -27,8 +30,9 @@ class FrameCompresser{
         
     public:
         FrameCompresser(const std::string video_src, const msgbuf_ptr_t sbuf, const int cbuf_size, std::atomic<int>& quality);  // コンストラクタ
-        void run();  // フレーム圧縮を開始
+        frame_size_t getFrameSize();  // フレームサイズを取得
+        void run();                   // フレーム圧縮を開始
 };
 
-#endif  /* VIDEO_SPLITTER_HPP */
+#endif  /* FRAME_COMPRESSER_HPP */
 

@@ -17,7 +17,7 @@ class TCPFrameSender : public BaseFrameSender{
         tcps_ptr_t sock;                    // TCPソケット
         tcp_t::acceptor acc;                // TCPメッセージ受信器
         std::vector<tcps_ptr_t> sock_list;  // 接続済TCPソケット
-        msgbuf_ptr_t sbuf;                  // 送信バッファ
+        const msgbuf_ptr_t sbuf;            // 送信バッファ
         const int display_num;              // 全ディスプレイ数
         std::atomic<int> send_count;        // 送信完了数
          

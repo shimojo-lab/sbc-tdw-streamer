@@ -18,6 +18,9 @@ FrontendServer::FrontendServer(ios_t& ios, ConfigParser& parser, const int port)
     this->sbuf = std::make_shared<RingBuffer<std::string>>(sbuf_size);
     this->comp_quality.store(init_quality, std::memory_order_release);
     
+    // 別スレッドでフレーム圧縮器を起動
+    this->compresser_thre = boost::thread(boost::bind(&FrontendServer::runFrameCompresser, this));
+    
     // 別スレッドでフレーム送信器を起動
     if(this->protocol_type == 0){
         print_info("Ready for sending video frames by TCP");
@@ -47,8 +50,8 @@ void FrontendServer::onConnect(const err_t& err){
     print_info("Accepted new display node: " + ip);
     
     // ディスプレイノードのIDを取得
-    const auto iter = std::find(this->ip_list.begin(), this->ip_list.end(), ip);
-    const int id = std::distance(this->ip_list.begin(), iter);
+    //const auto iter = std::find(this->ip_list.begin(), this->ip_list.end(), ip);
+    //const int id = std::distance(this->ip_list.begin(), iter);
     
     // 接続元に初期化メッセージを送信
     _pt::ptree init_params;
@@ -56,6 +59,8 @@ void FrontendServer::onConnect(const err_t& err){
     init_params.add<int>("id", id);
     init_params.add<int>("row", this->row);
     init_params.add<int>("column", this->column);
+    init_params.add<int>("width", this->width);
+    init_params.add<int>("height", this->height); 
     init_params.add<int>("port", this->sender_port);
     init_params.add<int>("protocol_type", this->protocol_type);
     _pt::write_json(jsonstream, init_params, false);
@@ -66,15 +71,16 @@ void FrontendServer::onConnect(const err_t& err){
     // 新規TCPソケットを用意
     this->sock_list[id] = this->sock;
     this->sock = std::make_shared<tcp_t::socket>(this->ios);
+    this->id++;
 }
 
 /* 初期化メッセージ送信時のコールバック */
 void FrontendServer::onSendInit(const err_t& err, size_t t_bytes, const std::string ip){
-    // 接続数をカウント
     if(err){
         print_err("Failed to send init message to " + ip, err.message());
         return;
     }else{
+        // 接続数をカウント
         ++this->connection_num;
     }
     
@@ -86,10 +92,6 @@ void FrontendServer::onSendInit(const err_t& err, size_t t_bytes, const std::str
         // 接続待機を終了
         print_info("Finished to accept all display nodes");
         this->sock->close();
-        
-        // 別スレッドでフレーム圧縮を開始
-        print_info("Started to compress video frames");
-        this->compresser_thre = boost::thread(boost::bind(&FrontendServer::runFrameCompresser, this));
         
         // 同スレッドで同期制御を開始
         print_info("Start playback video");
@@ -112,6 +114,7 @@ void FrontendServer::runUDPFrameSender(){
 /* 別スレッドでフレーム圧縮器を起動 */
 void FrontendServer::runFrameCompresser(){
     FrameCompresser compresser(this->video_src, this->sbuf, 64, this->comp_quality);
+    std::tie(this->width, this->height) = compresser.getFrameSize();
     compresser.run();
 }
 

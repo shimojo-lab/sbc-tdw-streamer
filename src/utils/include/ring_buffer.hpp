@@ -10,6 +10,7 @@
 #include <condition_variable>
 #include <memory>
 #include <boost/circular_buffer.hpp>
+#include <opencv2/core.hpp>
 
 /* リングバッファ */
 template <typename T>
@@ -66,7 +67,7 @@ const int RingBuffer<T>::getSize(){
 }
 
 using msgbuf_ptr_t = std::shared_ptr<RingBuffer<std::string>>;
-using framebuf_ptr_t = std::shared_ptr<RingBuffer<std::string>>;
+using framebuf_ptr_t = std::shared_ptr<RingBuffer<cv::Mat>>;
 
 #endif  /* RING_BUFFER_HPP */
 

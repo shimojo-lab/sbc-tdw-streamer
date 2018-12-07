@@ -20,6 +20,13 @@ FrameCompresser::FrameCompresser(const std::string video_src, const msgbuf_ptr_t
     }
 }
 
+/* フレームサイズを取得 */
+frame_size_t FrameCompresser::getFrameSize(){
+    const int width = this->video.get(CV_CAP_PROP_FRAME_WIDTH);
+    const int height = this->video.get(CV_CAP_PROP_FRAME_HEIGHT);
+    return std::forward_as_tuple(width, height);
+}
+
 /* フレームをJPEG圧縮 */
 std::string FrameCompresser::compressByJPEG(cv::Mat& frame){
     std::vector<int> params = {cv::IMWRITE_JPEG_QUALITY, this->quality};

@@ -22,6 +22,8 @@ class FrontendServer{
         std::string video_src;              // 再生動画のソース
         int row;                            // ディスプレイの横の枚数
         int column;                         // ディスプレイの縦の枚数
+        int width;                          // フレームの幅
+        int height;                         // フレームの高さ
         int sender_port;                    // フレーム送信用ポート
         int protocol_type;                  // フレーム送信用プロトコル
         int connection_num = 0;             // ディスプレイノードの接続数
@@ -30,7 +32,7 @@ class FrontendServer{
         msgbuf_ptr_t sbuf;                  // 送信バッファ
         boost::thread sender_thre;          // フレーム送信スレッド
         boost::thread compresser_thre;      // フレーム圧縮スレッド
-        
+        int id = 0;
         void onConnect(const err_t& err);  // TCP接続時のコールバック
         void onSendInit(const err_t& err, size_t t_bytes, const std::string ip);  // 初期化メッセージ送信時のコールバック
         void runTCPFrameSender();      // 別スレッドでTCP版フレーム送信器を起動
