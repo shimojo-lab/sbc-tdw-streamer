@@ -14,13 +14,9 @@ MemoryChecker::MemoryChecker(const double threshold):
 }
 
 /* メモリ残量不足を判定 */
-bool MemoryChecker::checkShortage(){
+const bool MemoryChecker::checkShortage(){
     sysinfo(&this->info);
     const double used_rate = 1.0 - (double)this->info.freeram / this->total_ram;
-    if(used_rate >= this->threshold){
-        return true;
-    }else{
-        return false;
-    }
+    return (used_rate <= this->threshold);
 }
 

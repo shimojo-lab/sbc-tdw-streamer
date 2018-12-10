@@ -20,7 +20,7 @@ class MemoryChecker{
         
     public:
         MemoryChecker(const double threshold);  // コンストラクタ
-        bool checkShortage();                   // メモリ残量不足を判定
+        const bool checkShortage();             // メモリ残量不足を判定
 };
 
 #endif  /* MEMORY_CHECKER_HPP */

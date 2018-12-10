@@ -1,7 +1,7 @@
-/**************************
- *    ring_buffer.hpp     *
- *    (リングバッファ)    *
- *************************/
+/**********************************
+ *        ring_buffer.hpp         *
+ *  (排他制御付きリングバッファ)  *
+ *********************************/
 
 #ifndef RING_BUFFER_HPP
 #define RING_BUFFER_HPP
@@ -12,34 +12,51 @@
 #include <boost/circular_buffer.hpp>
 #include <opencv2/core.hpp>
 
-/* リングバッファ */
+const int STATIC_BUF = 0;   // 固定サイズのバッファタイプ
+const int DYNAMIC_BUF = 1;  // 可変サイズのバッファタイプ
+
+/* 排他制御付きリングバッファ */
 template <typename T>
 class RingBuffer{
     private:
+        const int type;                        // バッファタイプ
+        const int init_size;                   // 初期バッファサイズ
         boost::circular_buffer<T> buf;         // リングバッファ
         mutable std::mutex lock;               // 排他制御用のロック
         mutable std::condition_variable cond;  // 条件変数
     
     public:
-        RingBuffer(const int buf_size);  // コンストラクタ
-        void push(const T& item);        // キューにフレームを投入
-        const T pop();                   // キューからフレームを取り出し
-        const int getSize();             // キュー内のフレーム数を取得
+        RingBuffer(const int type, const int init_size);  // コンストラクタ
+        void extend();                                    // バッファを拡張
+        void push(const T& item);                         // 末尾にアイテムを投入
+        const T pop();                                    // 先頭からアイテムを取り出し
+        const int getOccupancy();                         // バッファ内のアイテム数を取得
 };
 
 /* コンストラクタ */
 template <typename T>
-RingBuffer<T>::RingBuffer(const int buf_size):
-    buf(buf_size)
+RingBuffer<T>::RingBuffer(const int type, const int init_size):
+    type(type),
+    init_size(init_size),
+    buf(init_size)
 {}
+
+/* バッファを拡張 */
+template <typename T>
+void RingBuffer<T>::extend(){
+    std::unique_lock<std::mutex> u_lock(this->lock);
+    this->buf.set_capacity(this->buf.size()+this->init_size);
+}
 
 /* 末尾にアイテムを投入 */
 template <typename T>
 void RingBuffer<T>::push(const T& item){
-    std::unique_lock<std::mutex> u_lock(this->lock);
-    if(this->buf.full()){
-        this->buf.set_capacity(this->buf.size()*2);
+    // 可変サイズなら必要に応じてサイズ拡張
+    if(this->buf.full() && this->type==DYNAMIC_BUF){
+        this->extend();
     }
+    
+    // アイテムを投入し、バッファ枯渇時のロックを解除
     const bool was_empty = this->buf.empty();
     this->buf.push_back(item);
     if(was_empty){
@@ -47,21 +64,24 @@ void RingBuffer<T>::push(const T& item){
     }
 }
 
-/* 先頭から取り出し */
+/* 先頭からアイテムを取り出し */
 template <typename T>
 const T RingBuffer<T>::pop(){
+    // バッファが枯渇していたら待機
     std::unique_lock<std::mutex> u_lock(this->lock);
     while(this->buf.empty()){
         this->cond.wait(u_lock);
     }
+    
+    // アイテムを取り出し
     const T item = this->buf[0];
     this->buf.pop_front();
     return item;
 }
 
-/* バッファ内フレーム数を取得 */
+/* バッファ内のフレーム数を取得 */
 template <typename T>
-const int RingBuffer<T>::getSize(){
+const int RingBuffer<T>::getOccupancy(){
     std::unique_lock<std::mutex> u_lock(this->lock);
     return this->buf.size();
 }

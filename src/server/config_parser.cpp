@@ -25,7 +25,7 @@ bool ConfigParser::setParams(const _pt::ptree& conf){
         this->frontend_port = conf.get_optional<int>("port.frontend").get();
         this->sender_port = conf.get_optional<int>("port.sender").get();
         this->sbuf_size = conf.get_optional<int>("send_buf_size").get();
-        this->init_quality = conf.get_optional<int>("init_compression_quality").get();
+        this->init_quality = conf.get_optional<int>("init_image_quality").get();
     }catch(...){
         print_err("Could not get parameter", "Config file is invalid");
         return false;

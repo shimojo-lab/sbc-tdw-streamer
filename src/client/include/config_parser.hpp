@@ -17,8 +17,8 @@ class ConfigParser : public BaseConfigParser{
         int port;        // ヘッドノードのフロントエンドポート
         int res_x;       // ディスプレイの横の長さ
         int res_y;       // ディスプレイの縦の長さ
-        int rbuf_size;   // 受信バッファのサイズ
-        int vbuf_size;   // 表示バッファのサイズ
+        int rbuf_size;   // 受信フレームバッファのサイズ
+        int vbuf_size;   // 表示フレームバッファのサイズ
         
         bool setParams(const _pt::ptree& conf) override;  // パラメータを取得
         

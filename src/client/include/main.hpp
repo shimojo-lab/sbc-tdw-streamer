@@ -8,8 +8,8 @@
 
 #include "display_client.hpp"
 
-extern const int ARGUMENT_NUM;    // コマンドライン引数の個数
-extern const int ARGUMENT_INDEX;  // コマンドライン引数の個数
+const int ARGUMENT_NUM = 2;    // コマンドライン引数の個数
+const int ARGUMENT_INDEX = 1;  // コマンドライン引数のインデックス
 
 #endif  /* MAIN_HPP */
 

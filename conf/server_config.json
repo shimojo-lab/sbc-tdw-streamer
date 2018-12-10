@@ -5,13 +5,13 @@
         "row": 1,
         "column": 1
     },
-    "protocol": "udp",
+    "protocol": "tcp",
     "port": {
         "frontend": 11111,
         "sender": 20000
     },
-    "send_buf_size": 32,
-    "init_compression_quality": 90,
+    "send_buf_size": 64,
+    "init_image_quality": 90,
     "display_node": [
         "127.0.0.1"
     ]

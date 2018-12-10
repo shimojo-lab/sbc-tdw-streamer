@@ -9,26 +9,27 @@
 #include "config_parser.hpp"
 #include "tcp_frame_receiver.hpp"
 #include "udp_frame_receiver.hpp"
-#include "frame_decompresser.hpp"
+#include "frame_decoder.hpp"
 #include "frame_viewer.hpp"
+#include <boost/thread.hpp>
 
 /* ディスプレイクライアント */
 class DisplayClient{
     private:
-        ios_t& ios;                       // I/Oイベントループ
-        tcp_t::socket sock;               // TCPソケット
-        _asio::streambuf recv_buf;        // 受信メッセージ用バッファ
-        std::string ip;                   // ヘッドノードのIP
-        int res_x;                        // ディスプレイの横の長さ
-        int res_y;                        // ディスプレイの縦の長さ
-        msgbuf_ptr_t rbuf;                // 受信バッファ
-        framebuf_ptr_t vbuf;              // 表示バッファ
-        boost::thread receiver_thre;      // フレーム受信スレッド
-        boost::thread decompresser_thre;  // フレーム展開スレッド
+        ios_t& ios;                   // I/Oイベントループ
+        tcp_t::socket sock;           // TCPソケット
+        _asio::streambuf recv_buf;    // 受信メッセージ用バッファ
+        std::string ip;               // ヘッドノードのIP
+        int res_x;                    // ディスプレイの横の長さ
+        int res_y;                    // ディスプレイの縦の長さ
+        msgbuf_ptr_t rbuf;            // 受信フレームバッファ
+        framebuf_ptr_t vbuf;          // 表示フレームバッファ
+        boost::thread receiver_thre;  // フレーム受信スレッド
+        boost::thread decoder_thre;   // フレーム展開スレッド
         
-        void onConnect(const err_t& err);                   // TCP接続時のコールバック
+        void onConnect(const err_t& err);                   // ヘッドノード接続時のコールバック
         void onRecvInit(const err_t& err, size_t t_bytes);  // 初期化メッセージ受信時のコールバック
-        void runFrameDecompresser(const int id, const int row, const int column, const int width, const int height);  // 別スレッドでフレーム展開器を起動
+        void runFrameDecoder(const int id, const int row, const int column, const int width, const int height);  // 別スレッドでフレーム展開器を起動
         void runFrameReceiver(const int port, const int protocol_type);  // 別スレッドでフレーム受信器を起動
     
     public:

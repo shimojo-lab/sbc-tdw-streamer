@@ -6,26 +6,28 @@
 #include "tcp_frame_sender.hpp"
 
 /* コンストラクタ */
-TCPFrameSender::TCPFrameSender(ios_t& ios, const msgbuf_ptr_t sbuf, const int port, const int display_num):
-    BaseFrameSender(ios, sbuf),
-    acc(ios, tcp_t::endpoint(tcp_t::v4(), port)),
-    sbuf(sbuf),
-    display_num(display_num)
+TCPFrameSender::TCPFrameSender(ios_t& ios, const msgbuf_ptr_t sbuf, const int port, const int display_num, std::atomic<bool>& send_semaphore):
+    BaseFrameSender(ios, sbuf, display_num, send_semaphore),
+    acc(ios, tcp_t::endpoint(tcp_t::v4(), port))
 {
+    // パラメータを初期化
     this->sock = std::make_shared<tcp_t::socket>(ios);
     this->send_count.store(0, std::memory_order_release);
+    
+    // 送信処理を開始
     print_info("Started TCP frame streaming at :" + std::to_string(port));
     this->run();
 }
 
 /* 送信処理を開始 */
 void TCPFrameSender::run(){
+    // ディスプレイノードからの再接続を受理
     const auto bind = boost::bind(&TCPFrameSender::onConnect, this, _ph::error);
     this->acc.async_accept(*this->sock, bind);
     this->ios.run();
 }
 
-/* TCP接続時のコールバック */
+/* ディスプレイノード接続時のコールバック */
 void TCPFrameSender::onConnect(const err_t& err){
     // 接続元を表示
     const std::string ip = this->sock->remote_endpoint().address().to_string();
@@ -48,7 +50,6 @@ void TCPFrameSender::onConnect(const err_t& err){
         this->acc.async_accept(*this->sock, bind);
     }else{
         // フレーム送信を開始
-        print_info("Ready for streaming video frames");
         this->sock->close();
         this->send_count.store(0, std::memory_order_release);
         this->sendFrame();
@@ -58,8 +59,8 @@ void TCPFrameSender::onConnect(const err_t& err){
 /* フレームを送信 */
 void TCPFrameSender::sendFrame(){
     // 送信メッセージを作成
-    const std::string str_seq = SEQ_DELIMITER + std::to_string(this->sequence_num);
-    const std::string send_msg = this->sbuf->pop() + str_seq + MSG_DELIMITER;
+    const std::string seq = SEC_DELIMITER + std::to_string(this->sequence_num);
+    const std::string send_msg = this->sbuf->pop() + seq + MSG_DELIMITER;
     ++this->sequence_num;
     
     // 全ディスプレイノードへ送信
@@ -81,6 +82,11 @@ void TCPFrameSender::onSendFrame(const err_t& err, size_t t_bytes){
     this->send_count.store(count+1, std::memory_order_release);
     if(this->send_count.load(std::memory_order_acquire) == this->display_num){
         this->send_count.store(0, std::memory_order_release);
+        
+        // 受信側のメモリ残量に応じて送信中断
+        while(!this->send_semaphore.load(std::memory_order_acquire)){
+            std::this_thread::sleep_for(std::chrono::seconds(SEND_WAIT_TIME));
+        }
         this->sendFrame();
     }
 }

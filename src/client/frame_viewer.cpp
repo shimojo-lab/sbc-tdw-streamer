@@ -6,7 +6,7 @@
 #include "frame_viewer.hpp"
 
 /* コンストラクタ */
-FrameViewer::FrameViewer(ios_t& ios, tcp_t::socket& sock, const framebuf_ptr_t vbuf, const int res_x, const int res_y, const double threshold):
+FrameViewer::FrameViewer(ios_t& ios, tcp_t::socket& sock, const framebuf_ptr_t vbuf, const double threshold):
     ios(ios),
     sock(sock),
     vbuf(vbuf),
@@ -19,8 +19,15 @@ FrameViewer::FrameViewer(ios_t& ios, tcp_t::socket& sock, const framebuf_ptr_t v
 
 /* 同期メッセージを送信 */
 void FrameViewer::sendSync(){
-this->mem_checker.checkShortage();
-    std::string send_msg("sync");
+    // メモリ残量を確認
+    std::string send_msg;
+    if(this->mem_checker.checkShortage()){
+        send_msg += std::to_string(CLI_MEM_SAFE);
+    }else{
+        send_msg += std::to_string(CLI_MEM_DANGER);
+    }
+    
+    // メッセージを送信
     send_msg += MSG_DELIMITER;
     const auto bind = boost::bind(&FrameViewer::onSendSync, this, _ph::error, _ph::bytes_transferred); 
     _asio::async_write(this->sock, _asio::buffer(send_msg), bind);
@@ -30,7 +37,7 @@ this->mem_checker.checkShortage();
 void FrameViewer::displayFrame(){
     try{
         cv::imshow("", this->vbuf->pop());
-        cv::waitKey(5);
+        cv::waitKey(1);
     }catch(...){
         print_err("Failed to display frame", "JPEG format error");
     }

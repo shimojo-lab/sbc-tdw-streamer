@@ -15,15 +15,13 @@
 class UDPFrameSender : public BaseFrameSender{
     private:
         udp_t::socket sock;                          // UDPソケット
-        std::vector<udp_t::endpoint> endpoint_list;  // 送信用エンドポイント
-        const int display_num;                       // 全ディスプレイ数
-        std::atomic<int> send_count;                 // 送信完了数
+        std::vector<udp_t::endpoint> endpoint_list;  // 送信エンドポイント
          
         void run() override;                                          // 送信処理を開始
         void sendFrame() override;                                    // フレームを送信
         void onSendFrame(const err_t& err, size_t t_bytes) override;  // フレーム送信時のコールバック
     public:
-        UDPFrameSender(ios_t& ios, const msgbuf_ptr_t sbuf, const int port, const int display_num, std::vector<std::string>& ip_list);  // コンストラクタ
+        UDPFrameSender(ios_t& ios, const msgbuf_ptr_t sbuf, const int port, const int display_num, std::vector<std::string>& ip_list, std::atomic<bool>& send_semaphore);  // コンストラクタ
 };
 
 #endif  /* UDP_FRAME_SENDER_HPP */

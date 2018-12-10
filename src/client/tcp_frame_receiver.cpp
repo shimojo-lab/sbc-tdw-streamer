@@ -10,7 +10,7 @@ TCPFrameReceiver::TCPFrameReceiver(ios_t& ios, const msgbuf_ptr_t rbuf, const st
     BaseFrameReceiver(ios, rbuf),
     sock(ios)
 {
-    print_info("Reconnecting to " + ip + ":" + std::to_string(port));
+    print_info("Ready for receiving TCP stream from " + ip + ":" + std::to_string(port));
     this->run(ip, port);
 }
 

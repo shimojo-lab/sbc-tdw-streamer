@@ -19,6 +19,14 @@ void print_info(const std::string& msg){
                               << std::endl;
 }
 
+/* 一般メッセージを表示 */
+void print_warn(const std::string& msg){
+    console_lock(), std::cout << "[Warning] "
+                              << msg
+                              << "."
+                              << std::endl;
+}
+
 /* エラーメッセージを表示 */
 void print_err(const std::string& msg, const std::string& suppl){
     console_lock(), std::cerr << "[Error] "
@@ -29,10 +37,24 @@ void print_err(const std::string& msg, const std::string& suppl){
                               << std::endl;
 }
 
-/* デバッグ用メッセージを表示 */
+/* デバッグ用メッセージを表示 (文字列用) */
 void print_debug(const std::string& msg){
     console_lock(), std::cout << "[Debug] "
                               << msg
+                              << std::endl;
+}
+
+/* デバッグ用メッセージを表示 (int型変数用) */
+void print_debug(const int& num){
+    console_lock(), std::cout << "[Debug] "
+                              << std::to_string(num)
+                              << std::endl;
+}
+
+/* デバッグ用メッセージを表示 (double型変数用) */
+void print_debug(const double& num){
+    console_lock(), std::cout << "[Debug] "
+                              << std::to_string(num)
                               << std::endl;
 }
 

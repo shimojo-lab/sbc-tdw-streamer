@@ -13,21 +13,21 @@ DisplayClient::DisplayClient(ios_t& ios, ConfigParser& parser):
     // パラメータを設定
     int port, rbuf_size, vbuf_size;
     std::tie(this->ip, port, this->res_x, this->res_y, rbuf_size, vbuf_size) = parser.getDisplayClientParams();
-    this->rbuf = std::make_shared<RingBuffer<std::string>>(rbuf_size);
-    this->vbuf = std::make_shared<RingBuffer<cv::Mat>>(vbuf_size);
+    this->rbuf = std::make_shared<RingBuffer<std::string>>(DYNAMIC_BUF, rbuf_size);
+    this->vbuf = std::make_shared<RingBuffer<cv::Mat>>(DYNAMIC_BUF, vbuf_size);
     
-    // ヘッドノードにTCP接続
-    print_info("Connecting to " + std::string(this->ip) + ":" + std::to_string(port));
+    // ヘッドノードに接続
+    print_info("Connecting to head node (" + std::string(this->ip) + ":" + std::to_string(port) + ")");
     const tcp_t::endpoint endpoint(_ip::address::from_string(this->ip), port);
     const auto bind = boost::bind(&DisplayClient::onConnect, this, _ph::error);
     this->sock.async_connect(endpoint, bind);
 }
 
-/* TCP接続時のコールバック */
+/* ヘッドノード接続時のコールバック */
 void DisplayClient::onConnect(const err_t& err){
     if(err){
         print_err("Failed TCP connection with head node", err.message());
-        return;
+        std::exit(EXIT_FAILURE);
     }
     print_info("Established TCP connection with head node");
     
@@ -67,22 +67,22 @@ void DisplayClient::onRecvInit(const err_t& err, size_t t_bytes){
     this->receiver_thre = boost::thread(boost::bind(&DisplayClient::runFrameReceiver, this, port, protocol_type));
     
     // 別スレッドでフレーム展開器を起動
-    this->decompresser_thre = boost::thread(boost::bind(&DisplayClient::runFrameDecompresser, this, id, row, column, width, height));
+    this->decoder_thre = boost::thread(boost::bind(&DisplayClient::runFrameDecoder, this, id, row, column, width, height));
     
     // フレーム表示器を起動
     print_info("Start playback video");
-    FrameViewer viewer(this->ios, this->sock, this->vbuf, this->res_x, this->res_y, 0.7);
+    FrameViewer viewer(this->ios, this->sock, this->vbuf, 0.7);
 }
 
 /* 別スレッドでフレーム展開器を起動 */
-void DisplayClient::runFrameDecompresser(const int id, const int row, const int column, const int width, const int height){
+void DisplayClient::runFrameDecoder(const int id, const int row, const int column, const int width, const int height){
     const int point_y = int(id / row);
     const int point_x = id - point_y * row;
     const int roi_x = int(width / row);
     const int roi_y = int(height / column);
     const cv::Rect roi(point_x*roi_x, point_y*roi_y, roi_x, roi_y);
-    FrameDecompresser decompresser(this->rbuf, this->vbuf, roi, this->res_x, this->res_y);
-    decompresser.run();
+    FrameDecoder decoder(this->rbuf, this->vbuf, roi, this->res_x, this->res_y);
+    decoder.run();
 }
 
 /* 別スレッドでフレーム受信器を起動 */

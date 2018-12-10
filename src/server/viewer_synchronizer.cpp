@@ -6,26 +6,44 @@
 #include "viewer_synchronizer.hpp"
 
 /* コンストラクタ */
-ViewerSynchronizer::ViewerSynchronizer(ios_t& ios, std::vector<tcps_ptr_t>& sock_list, std::atomic<int>& comp_quality):
+ViewerSynchronizer::ViewerSynchronizer(ios_t& ios, std::vector<tcps_ptr_t>& sock_list, std::atomic<int>& comp_quality, std::atomic<bool>& send_semaphore):
     ios(ios),
     sock_list(sock_list),
     display_num(sock_list.size()),
-    comp_quality(comp_quality)
+    comp_quality(comp_quality),
+    send_semaphore(send_semaphore)
 {
+    // パラメータを初期化
     this->sync_count.store(0, std::memory_order_release);
     for(int id=0; id<this->display_num; ++id){
         this->streambuf_list.push_back(std::make_shared<_asio::streambuf>());
     }
 }
 
+/* 同期メッセージをパース */
+void ViewerSynchronizer::parseSync(std::string& recv_msg){
+    // メモリ残量の情報を取得
+    for(int i=0; i<MSG_DELIMITER_LEN; ++i){
+        recv_msg.pop_back();
+    }
+    const int mem_state = (recv_msg.back()-'0');
+    if(mem_state != int(this->send_semaphore.load(std::memory_order_acquire))){
+        this->send_semaphore.store(bool(mem_state), std::memory_order_release);
+    }
+    recv_msg.pop_back();
+}
+
 /* 同期メッセージ受信時のコールバック */
-void ViewerSynchronizer::onRecvSync(const err_t& err, size_t t_bytes, const int id){
+void ViewerSynchronizer::onRecvSync(const err_t& err, std::size_t t_bytes, const int id){
     if(err){
         print_err("Failed to receive sync message", err.message());
-        std::exit(EXIT_FAILURE);
+        //std::exit(EXIT_FAILURE);
     }
     
     // 同期メッセージをパース
+    const auto data = this->streambuf_list[id]->data();
+    std::string recv_msg(_asio::buffers_begin(data), _asio::buffers_begin(data)+t_bytes);
+    this->parseSync(recv_msg);
     this->streambuf_list[id]->consume(t_bytes);
     
     // 全ディスプレイノード間で同期
@@ -38,10 +56,10 @@ void ViewerSynchronizer::onRecvSync(const err_t& err, size_t t_bytes, const int 
 }
 
 /* 同期メッセージ送信時のコールバック */
-void ViewerSynchronizer::onSendSync(const err_t& err, size_t t_bytes, const int id){
+void ViewerSynchronizer::onSendSync(const err_t& err, std::size_t t_bytes, const int id){
     if(err){
         print_err("Failed to send sync message", err.message());
-        std::exit(EXIT_FAILURE);
+        //std::exit(EXIT_FAILURE);
     }
     
     // 同期メッセージ受信を再開

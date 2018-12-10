@@ -31,7 +31,6 @@ void UDPFrameReceiver::onRecvFrame(const err_t& err, size_t t_bytes){
     // フレームを取得
     const auto data = this->recv_buf.data();
     std::string recv_buf(data, data+t_bytes);
-print_debug(recv_buf);
     for(int i=0; i<MSG_DELIMITER_LEN; ++i){
         recv_buf.pop_back();
     }
