@@ -12,8 +12,7 @@
 /* フレーム送信器の基底クラス */
 class BaseFrameSender{
     private:        
-        virtual void startConnect();                                 // TCP接続待機を開始
-        virtual void onConnect(const err_t& err);                    // TCP接続時のコールバック
+        virtual void run();                                          // 送信処理を開始
         virtual void sendFrame();                                    // フレームを送信
         virtual void onSendFrame(const err_t& err, size_t t_bytes);  // フレーム送信時のコールバック
     

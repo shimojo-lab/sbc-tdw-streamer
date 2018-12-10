@@ -9,7 +9,7 @@
 #include "config_parser.hpp"
 #include "frame_compresser.hpp"
 #include "tcp_frame_sender.hpp"
-//#include "udp_frame_sender.hpp"
+#include "udp_frame_sender.hpp"
 #include "viewer_synchronizer.hpp"
 
 /* フロントエンドサーバ */

@@ -108,7 +108,7 @@ void FrontendServer::runTCPFrameSender(){
 /* 別スレッドでUDP版フレーム送信器を起動 */
 void FrontendServer::runUDPFrameSender(){
     ios_t ios;
-    //UDPFrameSender sender(ios, this->sender_port, this->sbuf, this->ip_list);
+    UDPFrameSender sender(ios, this->sbuf, this->sender_port, this->row*this->column, this->ip_list);
 }
 
 /* 別スレッドでフレーム圧縮器を起動 */

@@ -21,8 +21,8 @@ class TCPFrameSender : public BaseFrameSender{
         const int display_num;              // 全ディスプレイ数
         std::atomic<int> send_count;        // 送信完了数
          
-        void startConnect() override;                                 // TCP接続待機を開始
-        void onConnect(const err_t& err) override;                    // TCP接続時のコールバック
+        void run() override;                                          // 送信処理を開始
+        void onConnect(const err_t& err);                             // 接続時のコールバック
         void sendFrame() override;                                    // フレームを送信
         void onSendFrame(const err_t& err, size_t t_bytes) override;  // フレーム送信時のコールバック
     public:

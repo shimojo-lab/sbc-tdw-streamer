@@ -91,7 +91,7 @@ void DisplayClient::runFrameReceiver(const int port, const int protocol_type){
     if(protocol_type == 0){
         TCPFrameReceiver receiver(ios, this->rbuf, this->ip, port);
     }else if(protocol_type == 1){
-        //UDPFrameReceiver receiver(ios, this->rbuf);
+        UDPFrameReceiver receiver(ios, this->rbuf, port);
     }else{
         print_err("Invalid protocol is selected", "Select from TCP or UDP");
     }

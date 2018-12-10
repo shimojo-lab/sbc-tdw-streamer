@@ -11,18 +11,18 @@ TCPFrameReceiver::TCPFrameReceiver(ios_t& ios, const msgbuf_ptr_t rbuf, const st
     sock(ios)
 {
     print_info("Reconnecting to " + ip + ":" + std::to_string(port));
-    this->startConnect(ip, port);
+    this->run(ip, port);
 }
 
-/* TCP接続待機を開始 */
-void TCPFrameReceiver::startConnect(const std::string ip, const int port){
+/* 受信処理を開始 */
+void TCPFrameReceiver::run(const std::string ip, const int port){
     const tcp_t::endpoint endpoint(_ip::address::from_string(ip), port);
     const auto bind = boost::bind(&TCPFrameReceiver::onConnect, this, _ph::error);
     this->sock.async_connect(endpoint, bind);
     ios.run(); 
 }
 
-/* TCP接続時のコールバック */
+/* 接続時のコールバック */
 void TCPFrameReceiver::onConnect(const err_t& err){
     if(err){
         print_err("Failed TCP connection with head node", err.message());
@@ -35,7 +35,7 @@ void TCPFrameReceiver::onConnect(const err_t& err){
     _asio::async_read_until(this->sock, this->recv_buf, MSG_DELIMITER, bind);
 }
 
-/* TCPでのフレーム受信時のコールバック */
+/* フレーム受信時のコールバック */
 void TCPFrameReceiver::onRecvFrame(const err_t& err, size_t t_bytes){
     if(err){
         print_err("Failed to receive frame", err.message());

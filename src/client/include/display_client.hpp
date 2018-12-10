@@ -8,7 +8,7 @@
 
 #include "config_parser.hpp"
 #include "tcp_frame_receiver.hpp"
-//#include "udp_frame_receiver.hpp"
+#include "udp_frame_receiver.hpp"
 #include "frame_decompresser.hpp"
 #include "frame_viewer.hpp"
 

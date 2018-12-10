@@ -11,11 +11,8 @@ BaseFrameSender::BaseFrameSender(ios_t& ios, const msgbuf_ptr_t sbuf):
     sbuf(sbuf)
 {}
 
-/* TCP接続待機を開始 */
-void BaseFrameSender::startConnect(){}
-
-/* TCP接続時のコールバック */
-void BaseFrameSender::onConnect(const err_t& err){}
+/* 送信処理を開始 */
+void BaseFrameSender::run(){}
 
 /* フレームを送信 */
 void BaseFrameSender::sendFrame(){}

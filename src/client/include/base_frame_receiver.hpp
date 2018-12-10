@@ -13,9 +13,8 @@
 /* フレーム受信器の基底クラス */
 class BaseFrameReceiver{
     private:
-        virtual void startConnect(const std::string ip, const int port);  // TCP接続待機を開始
-        virtual void onConnect(const err_t& err);                         // TCP接続時のコールバック
-        virtual void onRecvFrame(const err_t& err, size_t t_bytes);       // フレーム受信時のコールバック
+        virtual void run(const std::string ip, const int port);      // 受信処理を開始
+        virtual void onRecvFrame(const err_t& err, size_t t_bytes);  // フレーム受信時のコールバック
     
     protected:
         ios_t& ios;               // I/Oイベントループ

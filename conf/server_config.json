@@ -5,7 +5,7 @@
         "row": 1,
         "column": 1
     },
-    "protocol": "tcp",
+    "protocol": "udp",
     "port": {
         "frontend": 11111,
         "sender": 20000

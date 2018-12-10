@@ -12,17 +12,14 @@ TCPFrameSender::TCPFrameSender(ios_t& ios, const msgbuf_ptr_t sbuf, const int po
     sbuf(sbuf),
     display_num(display_num)
 {
-    // ソケットを初期化
     this->sock = std::make_shared<tcp_t::socket>(ios);
     this->send_count.store(0, std::memory_order_release);
-    
-    // 接続待機を開始
     print_info("Started TCP frame streaming at :" + std::to_string(port));
-    this->startConnect();
+    this->run();
 }
 
-/* 接続待機を開始 */
-void TCPFrameSender::startConnect(){
+/* 送信処理を開始 */
+void TCPFrameSender::run(){
     const auto bind = boost::bind(&TCPFrameSender::onConnect, this, _ph::error);
     this->acc.async_accept(*this->sock, bind);
     this->ios.run();
