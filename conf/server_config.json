@@ -10,8 +10,8 @@
         "frontend": 11111,
         "sender": 20000
     },
-    "send_buf_size": 64,
-    "init_image_quality": 90,
+    "send_buf_size": 128,
+    "init_image_quality": 95,
     "display_node": [
         "127.0.0.1"
     ]

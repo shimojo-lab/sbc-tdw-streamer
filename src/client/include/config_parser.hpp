@@ -20,7 +20,7 @@ class ConfigParser : public BaseConfigParser{
         int rbuf_size;   // 受信フレームバッファのサイズ
         int vbuf_size;   // 表示フレームバッファのサイズ
         
-        bool setParams(const _pt::ptree& conf) override;  // パラメータを取得
+        const bool setParams(const _pt::ptree& conf) override;  // パラメータを取得
         
     public:
         ConfigParser(const std::string filename);  // コンストラクタ

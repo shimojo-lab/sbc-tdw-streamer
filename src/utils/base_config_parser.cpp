@@ -17,7 +17,7 @@ BaseConfigParser::BaseConfigParser(const std::string filename){
 }
 
 /* パラメータを設定 */
-bool BaseConfigParser::setParams(const _pt::ptree& conf){
+const bool BaseConfigParser::setParams(const _pt::ptree& conf){
     return true;
 }
 

@@ -6,7 +6,6 @@
 #ifndef MEMORY_CHECKER_HPP
 #define MEMORY_CHECKER_HPP
 
-#include "print_with_mutex.hpp"
 extern "C"{
     #include <sys/sysinfo.h>
 }

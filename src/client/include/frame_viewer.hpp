@@ -26,7 +26,7 @@ class FrameViewer{
         void displayFrame();                                // フレームを表示
         void onRecvSync(const err_t& err, size_t t_bytes);  // 同期メッセージ受信時のコールバック
         void onSendSync(const err_t& err, size_t t_bytes);  // 同期メッセージ送信時のコールバック
-    
+        
     public:
         FrameViewer(ios_t& ios, tcp_t::socket& sock, const framebuf_ptr_t vbuf, const double threshold);  // コンストラクタ
 };

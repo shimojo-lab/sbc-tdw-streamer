@@ -16,7 +16,7 @@ ConfigParser::ConfigParser(const std::string filename):
 }
 
 /* パラメータを取得 */
-bool ConfigParser::setParams(const _pt::ptree& conf){
+const bool ConfigParser::setParams(const _pt::ptree& conf){
     try{
         this->ip = conf.get_optional<std::string>("head_node.ip").get();
         this->port = conf.get_optional<int>("head_node.port").get();

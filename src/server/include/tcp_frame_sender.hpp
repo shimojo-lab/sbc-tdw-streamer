@@ -7,7 +7,6 @@
 #define TCP_FRAME_SENDER_HPP
 
 #include "base_frame_sender.hpp"
-#include "print_with_mutex.hpp"
 
 /* TCP版フレーム送信器 */
 class TCPFrameSender : public BaseFrameSender{

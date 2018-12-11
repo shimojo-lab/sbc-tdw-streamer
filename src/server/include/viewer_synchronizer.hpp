@@ -24,13 +24,13 @@ class ViewerSynchronizer{
         std::atomic<int>& comp_quality;               // フレーム圧縮品質
         std::atomic<bool>& send_semaphore;            // 送信制御セマフォ
         
-        void parseSync(std::string& recv_msg);                                 // 同期メッセージをパース
-        void onRecvSync(const err_t& err, std::size_t t_bytes, const int id);  // 同期メッセージ受信時のコールバック
-        void onSendSync(const err_t& err, std::size_t t_bytes, const int id);  // 同期メッセージ送信時のコールバック
-        void sendSync();                                                       // 同期メッセージを送信
-    
+        void parseSync(std::string& recv_msg);                            // 同期メッセージをパース
+        void onRecvSync(const err_t& err, size_t t_bytes, const int id);  // 同期メッセージ受信時のコールバック
+        void onSendSync(const err_t& err, size_t t_bytes, const int id);  // 同期メッセージ送信時のコールバック
+        void sendSync();                                                  // 同期メッセージを送信
+        
     public:
-        ViewerSynchronizer(ios_t& ios, std::vector<tcps_ptr_t>& sock_list, std::atomic<int>& comp_quality, std::atomic<bool>& send_ready);  // コンストラクタ
+        ViewerSynchronizer(ios_t& ios, std::vector<tcps_ptr_t>& sock_list, std::atomic<int>& comp_quality, std::atomic<bool>& send_semaphore);  // コンストラクタ
         void run();  // 同期メッセージの受信を開始
 };
 

@@ -6,6 +6,7 @@
 #ifndef CONFIG_PARSER_HPP
 #define CONFIG_PARSER_HPP
 
+#include "socket_utils.hpp"
 #include "base_config_parser.hpp"
 #include <vector>
 
@@ -24,11 +25,11 @@ class ConfigParser : public BaseConfigParser{
         int init_quality;                  // 初期圧縮品質
         std::vector<std::string> ip_list;  // ディスプレイノードのIP
         
-        bool setParams(const _pt::ptree& conf) override;  // パラメータを取得
-    
+        const bool setParams(const _pt::ptree& conf) override;  // パラメータを取得
+        
     public:
         ConfigParser(const std::string filename);  // コンストラクタ
-        int getFrontendServerPort();               // フロントエンドサーバのポート番号を取得
+        const int getFrontendServerPort();         // フロントエンドサーバのポート番号を取得
         fs_params_t getFrontendServerParams();     // フロントエンドサーバへパラメータ渡し
 };
 

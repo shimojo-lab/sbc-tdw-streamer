@@ -18,7 +18,7 @@ namespace _pt = boost::property_tree;
 /* 設定ファイルのパーサーの基底クラス */
 class BaseConfigParser{
     private:
-        virtual bool setParams(const _pt::ptree& conf);  // パラメータを取得
+        virtual const bool setParams(const _pt::ptree& conf);  // パラメータを取得
     
     protected:
         _pt::ptree conf;  // 設定内容

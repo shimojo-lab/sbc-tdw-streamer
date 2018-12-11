@@ -16,7 +16,7 @@ ConfigParser::ConfigParser(const std::string filename):
 }
 
 /* パラメータを取得するメソッド */
-bool ConfigParser::setParams(const _pt::ptree& conf){
+const bool ConfigParser::setParams(const _pt::ptree& conf){
     // 各種パラメータを取得
     try{
         this->video_src = conf.get_optional<std::string>("video_src").get();
@@ -41,11 +41,11 @@ bool ConfigParser::setParams(const _pt::ptree& conf){
     }
     
     // フレーム送信用プロトコルを取得
-    std::string protocol = conf.get_optional<std::string>("protocol").get();
+    const std::string protocol = conf.get_optional<std::string>("protocol").get();
     if(protocol == "tcp" || protocol == "TCP"){
-        this->protocol_type = 0;
+        this->protocol_type = TCP_STREAMING_FLAG;
     }else if(protocol == "udp" || protocol == "UDP"){
-        this->protocol_type = 1;
+        this->protocol_type = UDP_STREAMING_FLAG;
     }else{
         print_err("Invaild protocol is selected", protocol);
         return false;
@@ -54,7 +54,7 @@ bool ConfigParser::setParams(const _pt::ptree& conf){
 }
 
 /* フロントエンドサーバのポート番号を取得 */
-int ConfigParser::getFrontendServerPort(){
+const int ConfigParser::getFrontendServerPort(){
     return this->frontend_port;
 }
 
@@ -64,7 +64,7 @@ fs_params_t ConfigParser::getFrontendServerParams(){
     int row = this->row;
     int column = this->column;
     int sender_port = this->sender_port;
-    int protocol_type = this->protocol_type;
+    int  protocol_type = this->protocol_type;
     int sbuf_size = this->sbuf_size;
     int init_quality = this->init_quality;
     std::vector<std::string> ip_list = this->ip_list;

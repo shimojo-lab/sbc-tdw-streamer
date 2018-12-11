@@ -33,7 +33,7 @@ void DisplayClient::onConnect(const err_t& err){
     
     // 初期化メッセージの受信を開始
     const auto bind = boost::bind(&DisplayClient::onRecvInit, this, _ph::error, _ph::bytes_transferred);
-    _asio::async_read_until(this->sock, this->recv_buf, MSG_DELIMITER, bind);
+    _asio::async_read_until(this->sock, this->stream_buf, MSG_DELIMITER, bind);
 }
 
 /* 初期化メッセージ受信時のコールバック */
@@ -45,7 +45,7 @@ void DisplayClient::onRecvInit(const err_t& err, size_t t_bytes){
     print_info("Received init message from head node");
     
     // 初期化メッセージをパース
-    const auto data = this->recv_buf.data();
+    const auto data = this->stream_buf.data();
     std::string bytes_buf(_asio::buffers_begin(data), _asio::buffers_begin(data)+t_bytes);
     for(int i=0; i<MSG_DELIMITER_LEN; ++i){
         bytes_buf.pop_back();
@@ -64,10 +64,12 @@ void DisplayClient::onRecvInit(const err_t& err, size_t t_bytes){
     protocol_type = std::stoi(init_params.get_optional<std::string>("protocol_type").get());
     
     // 別スレッドでフレーム受信器を起動
-    this->receiver_thre = boost::thread(boost::bind(&DisplayClient::runFrameReceiver, this, port, protocol_type));
+    this->recv_thre = boost::thread(boost::bind(&DisplayClient::runFrameReceiver, this, port, protocol_type));
     
     // 別スレッドでフレーム展開器を起動
-    this->decoder_thre = boost::thread(boost::bind(&DisplayClient::runFrameDecoder, this, id, row, column, width, height));
+    for(int i=0; i<8; ++i){
+        this->dec_thre_list.push_back(boost::thread(boost::bind(&DisplayClient::runFrameDecoder, this, id, row, column, width, height)));
+    }
     
     // フレーム表示器を起動
     print_info("Start playback video");
@@ -88,9 +90,9 @@ void DisplayClient::runFrameDecoder(const int id, const int row, const int colum
 /* 別スレッドでフレーム受信器を起動 */
 void DisplayClient::runFrameReceiver(const int port, const int protocol_type){
     ios_t ios;
-    if(protocol_type == 0){
+    if(protocol_type == TCP_STREAMING_FLAG){
         TCPFrameReceiver receiver(ios, this->rbuf, this->ip, port);
-    }else if(protocol_type == 1){
+    }else if(protocol_type == UDP_STREAMING_FLAG){
         UDPFrameReceiver receiver(ios, this->rbuf, port);
     }else{
         print_err("Invalid protocol is selected", "Select from TCP or UDP");

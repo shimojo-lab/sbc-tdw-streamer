@@ -22,6 +22,8 @@ using acc_ptr_t = std::shared_ptr<tcp_t::acceptor>;
 using udp_t = _ip::udp;
 using err_t = boost::system::error_code;
 
+const int TCP_STREAMING_FLAG = 0;                      // TCPフレーム送受信のフラグ
+const int UDP_STREAMING_FLAG = 1;                      // UDPフレーム送受信のフラグ
 const std::string MSG_DELIMITER = "--boundary\r\n";    // 送受信メッセージのデリミタ
 const int MSG_DELIMITER_LEN = MSG_DELIMITER.length();  // 送受信メッセージのデリミタ長
 

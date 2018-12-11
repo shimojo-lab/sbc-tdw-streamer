@@ -15,7 +15,7 @@ FrontendServer::FrontendServer(ios_t& ios, ConfigParser& parser, const int front
     std::tie(this->video_src, this->row, this->column, this->sender_port, this->protocol_type, sbuf_size, init_quality, this->ip_list) = parser.getFrontendServerParams();
     this->sock = std::make_shared<tcp_t::socket>(ios);
     this->sock_list = std::vector<tcps_ptr_t>(this->row * this->column);
-    this->sbuf = std::make_shared<RingBuffer<std::string>>(STATIC_BUF, sbuf_size);
+    this->sbuf = std::make_shared<RingBuffer<std::string>>(DYNAMIC_BUF, sbuf_size);
     this->comp_quality.store(init_quality, std::memory_order_release);
     this->send_semaphore.store(true, std::memory_order_release);
     
@@ -45,7 +45,11 @@ void FrontendServer::onConnect(const err_t& err){
     
     // 接続元のIDを取得
     const auto iter = std::find(this->ip_list.begin(), this->ip_list.end(), ip);
-    const int id = std::distance(this->ip_list.begin(), iter);
+    const size_t id = std::distance(this->ip_list.begin(), iter);
+    if(id == this->ip_list.size()){
+        print_err("This display node is registered in config file", ip);
+        std::exit(EXIT_FAILURE);
+    }
     
     // 接続元に初期化メッセージを送信
     _pt::ptree init_params;
@@ -58,9 +62,9 @@ void FrontendServer::onConnect(const err_t& err){
     init_params.add<int>("port", this->sender_port);
     init_params.add<int>("protocol_type", this->protocol_type);
     _pt::write_json(jsonstream, init_params, false);
-    std::string bytes_buf = jsonstream.str() + MSG_DELIMITER;
+    const std::string init_msg = jsonstream.str() + MSG_DELIMITER;
     const auto bind = boost::bind(&FrontendServer::onSendInit, this, _ph::error, _ph::bytes_transferred, ip);
-    _asio::async_write(*this->sock, _asio::buffer(bytes_buf), bind);
+    _asio::async_write(*this->sock, _asio::buffer(init_msg), bind);
     
     // 新規TCPソケットを用意
     this->sock_list[id] = this->sock;
@@ -94,9 +98,9 @@ void FrontendServer::onSendInit(const err_t& err, size_t t_bytes, const std::str
 /* 別スレッドでフレーム送信器を起動 */
 void FrontendServer::runFrameSender(){
     ios_t ios;
-    if(this->protocol_type == 0){
+    if(this->protocol_type == TCP_STREAMING_FLAG){
         TCPFrameSender sender(ios, this->sbuf, this->sender_port, this->row*this->column, this->send_semaphore);
-    }else if(this->protocol_type == 1){
+    }else if(this->protocol_type == UDP_STREAMING_FLAG){
         UDPFrameSender sender(ios, this->sbuf, this->sender_port, this->row*this->column, this->ip_list, this->send_semaphore);
     }else{
         print_err("Invalid protocol is selected", "Select from TCP or UDP");

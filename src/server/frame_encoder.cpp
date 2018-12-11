@@ -6,11 +6,11 @@
 #include "frame_encoder.hpp"
 
 /* コンストラクタ */
-FrameEncoder::FrameEncoder(const std::string video_src, const msgbuf_ptr_t sbuf, const int cbuf_size, std::atomic<int>& quality):
+FrameEncoder::FrameEncoder(const std::string video_src, const msgbuf_ptr_t sbuf, const int cbuf_size, std::atomic<int>& comp_quality):
     sbuf(sbuf),
     cbuf(cbuf_size),
-    enc_params(2),
-    quality(quality)
+    enc_params(ENC_PARAMS_NUM),
+    comp_quality(comp_quality)
 {
     // 再生動画を読込み
     print_info("Opened playback video. (" + video_src + ")");
@@ -29,9 +29,9 @@ frame_size_t FrameEncoder::getFrameSize(){
 }
 
 /* フレームをJPEG圧縮 */
-std::string FrameEncoder::compressByJPEG(cv::Mat& frame){
+const std::string FrameEncoder::compressByJPEG(cv::Mat& frame){
     this->enc_params[0] = cv::IMWRITE_JPEG_QUALITY;
-    this->enc_params[1] = this->quality;
+    this->enc_params[1] = this->comp_quality.load(std::memory_order_acquire);
     cv::imencode(".jpg", frame, this->cbuf, this->enc_params);
     std::string bytes_frame(this->cbuf.begin(), this->cbuf.end());
     return bytes_frame;

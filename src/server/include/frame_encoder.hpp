@@ -18,7 +18,8 @@
 
 using frame_size_t = std::tuple<int, int>;
 
-const int INIT_CBUF_SIZE = 1024;
+const int INIT_CBUF_SIZE = 1024;  // 圧縮用バッファの初期サイズ
+const int ENC_PARAMS_NUM = 2;     // 符号化時のパラメータ数
 
 /* フレーム符号化器 */
 class FrameEncoder{
@@ -27,12 +28,12 @@ class FrameEncoder{
         msgbuf_ptr_t sbuf;                // 送信フレームバッファ
         std::vector<unsigned char> cbuf;  // フレーム圧縮用バッファ
         std::vector<int> enc_params;      // フレーム圧縮パラメータ
-        std::atomic<int>& quality;        // フレーム圧縮品質
+        std::atomic<int>& comp_quality;   // フレーム圧縮品質
         
-        std::string compressByJPEG(cv::Mat& frame);  // フレームをJPEG圧縮
+        const std::string compressByJPEG(cv::Mat& frame);  // フレームをJPEG圧縮
         
     public:
-        FrameEncoder(const std::string video_src, const msgbuf_ptr_t sbuf, const int cbuf_size, std::atomic<int>& quality);  // コンストラクタ
+        FrameEncoder(const std::string video_src, const msgbuf_ptr_t sbuf, const int cbuf_size, std::atomic<int>& comp_quality);  // コンストラクタ
         frame_size_t getFrameSize();  // フレームサイズを取得
         void run();                   // フレーム符号化を開始
 };

@@ -7,7 +7,6 @@
 #define UDP_FRAME_SENDER_HPP
 
 #include "base_frame_sender.hpp"
-#include "print_with_mutex.hpp"
 #include <vector>
 #include <atomic>
 
