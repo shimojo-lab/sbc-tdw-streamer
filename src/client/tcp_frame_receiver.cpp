@@ -32,7 +32,7 @@ void TCPFrameReceiver::onConnect(const err_t& err){
     
     // フレーム受信を開始
     const auto bind = boost::bind(&TCPFrameReceiver::onRecvFrame, this, _ph::error, _ph::bytes_transferred);
-    _asio::async_read_until(this->sock, this->recv_buf, MSG_DELIMITER, bind);
+    _asio::async_read_until(this->sock, this->stream_buf, MSG_DELIMITER, bind);
 }
 
 /* フレーム受信時のコールバック */
@@ -43,16 +43,16 @@ void TCPFrameReceiver::onRecvFrame(const err_t& err, size_t t_bytes){
     }
     
     // フレームを取得
-    const auto data = this->recv_buf.data();
+    const auto data = this->stream_buf.data();
     std::string recv_msg(_asio::buffers_begin(data), _asio::buffers_begin(data)+t_bytes);
     for(int i=0; i<MSG_DELIMITER_LEN; ++i){
         recv_msg.pop_back();
     }
     this->rbuf->push(recv_msg);
-    this->recv_buf.consume(t_bytes);
+    this->stream_buf.consume(t_bytes);
     
     // フレーム受信を再開
     const auto bind = boost::bind(&TCPFrameReceiver::onRecvFrame, this, _ph::error, _ph::bytes_transferred);
-    _asio::async_read_until(this->sock, this->recv_buf, MSG_DELIMITER, bind); 
+    _asio::async_read_until(this->sock, this->stream_buf, MSG_DELIMITER, bind); 
 }
 

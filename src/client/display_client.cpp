@@ -12,7 +12,7 @@ DisplayClient::DisplayClient(ios_t& ios, ConfigParser& parser):
 {
     // パラメータを設定
     int port, rbuf_size, vbuf_size;
-    std::tie(this->ip, port, this->res_x, this->res_y, rbuf_size, vbuf_size) = parser.getDisplayClientParams();
+    std::tie(this->ip, port, this->res_x, this->res_y, rbuf_size, vbuf_size, this->fb_dev) = parser.getDisplayClientParams();
     this->rbuf = std::make_shared<RingBuffer<std::string>>(DYNAMIC_BUF, rbuf_size);
     this->vbuf = std::make_shared<RingBuffer<cv::Mat>>(DYNAMIC_BUF, vbuf_size);
     
@@ -67,13 +67,13 @@ void DisplayClient::onRecvInit(const err_t& err, size_t t_bytes){
     this->recv_thre = boost::thread(boost::bind(&DisplayClient::runFrameReceiver, this, port, protocol_type));
     
     // 別スレッドでフレーム展開器を起動
-    for(int i=0; i<8; ++i){
+    for(int i=0; i<1; ++i){
         this->dec_thre_list.push_back(boost::thread(boost::bind(&DisplayClient::runFrameDecoder, this, id, row, column, width, height)));
     }
     
     // フレーム表示器を起動
     print_info("Start playback video");
-    FrameViewer viewer(this->ios, this->sock, this->vbuf, 0.7);
+    FrameViewer viewer(this->ios, this->sock, this->vbuf, 0.7, this->fb_dev);
 }
 
 /* 別スレッドでフレーム展開器を起動 */

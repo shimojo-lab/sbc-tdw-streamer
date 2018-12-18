@@ -17,7 +17,7 @@ UDPFrameReceiver::UDPFrameReceiver(ios_t& ios, const msgbuf_ptr_t rbuf, const in
 /* 受信処理を開始 */
 void UDPFrameReceiver::run(const std::string ip, const int port){
     const auto bind = boost::bind(&UDPFrameReceiver::onRecvFrame, this, _ph::error, _ph::bytes_transferred);
-    this->sock.async_receive_from(_asio::buffer(this->recv_buf), this->endpoint, bind);
+    this->sock.async_receive_from(_asio::buffer(this->stream_buf), this->endpoint, bind);
     ios.run();
 }
 
@@ -29,15 +29,15 @@ void UDPFrameReceiver::onRecvFrame(const err_t& err, size_t t_bytes){
     }
     
     // フレームを取得
-    const auto data = this->recv_buf.data();
-    std::string recv_buf(data, data+t_bytes);
+    const auto data = this->stream_buf.data();
+    std::string recv_msg(data, data+t_bytes);
     for(int i=0; i<MSG_DELIMITER_LEN; ++i){
-        recv_buf.pop_back();
+        recv_msg.pop_back();
     }
-    this->rbuf->push(recv_buf);
+    this->rbuf->push(recv_msg);
     
     // フレーム受信を再開
     const auto bind = boost::bind(&UDPFrameReceiver::onRecvFrame, this, _ph::error, _ph::bytes_transferred);
-    this->sock.async_receive_from(_asio::buffer(this->recv_buf), this->endpoint, bind); 
+    this->sock.async_receive_from(_asio::buffer(this->stream_buf), this->endpoint, bind); 
 }
 

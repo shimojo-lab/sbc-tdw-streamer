@@ -11,9 +11,9 @@
         "sender": 20000
     },
     "send_buf_size": 128,
-    "init_image_quality": 95,
+    "init_image_quality": 90,
     "display_node": [
-        "127.0.0.1"
+        "192.168.10.56"
     ]
 }
 

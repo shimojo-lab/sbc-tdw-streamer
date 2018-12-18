@@ -11,16 +11,28 @@
 #include "ring_buffer.hpp"
 #include "print_with_mutex.hpp"
 #include "memory_checker.hpp"
-#include <opencv2/highgui.hpp>
+extern "C"{
+    #include <fcntl.h>
+    #include <unistd.h>
+    #include <linux/fb.h>
+    #include <sys/types.h>
+    #include <sys/ioctl.h>
+    #include <sys/mman.h>
+}
+
+const int FB_ALPHA = 255;  // アルファチャンネル値
 
 /* フレーム表示器 */
 class FrameViewer{
     private:
-        ios_t& ios;                 // I/Oイベントループ
-        tcp_t::socket& sock;        // TCPソケット
-        const framebuf_ptr_t vbuf;  // 表示バッファ
-        MemoryChecker mem_checker;  // メモリ残量確認器
-        _asio::streambuf recv_buf;  // 受信メッセージ用バッファ
+        ios_t& ios;                   // I/Oイベントループ
+        tcp_t::socket& sock;          // TCPソケット
+        _asio::streambuf stream_buf;  // TCP受信用バッファ
+        const framebuf_ptr_t vbuf;    // 表示バッファ
+        int fb;                       // フレームバッファ
+        int fb_len;                   // フレームバッファのサイズ
+        char *fb_ptr;                 // フレームバッファの先頭
+        MemoryChecker mem_checker;    // メモリ残量確認器
         
         void sendSync();                                    // 同期メッセージを送信
         void displayFrame();                                // フレームを表示
@@ -28,7 +40,7 @@ class FrameViewer{
         void onSendSync(const err_t& err, size_t t_bytes);  // 同期メッセージ送信時のコールバック
         
     public:
-        FrameViewer(ios_t& ios, tcp_t::socket& sock, const framebuf_ptr_t vbuf, const double threshold);  // コンストラクタ
+        FrameViewer(ios_t& ios, tcp_t::socket& sock, const framebuf_ptr_t vbuf, const double threshold, const std::string fb_dev);  // コンストラクタ
 };
 
 #endif  /* FRAME_VIEWER_HPP */

@@ -12,9 +12,9 @@
 /* UDP版フレーム受信器 */
 class UDPFrameReceiver : public BaseFrameReceiver{
     private:
-        udp_t::socket sock;                 // UDPソケット
-        udp_t::endpoint endpoint;           // UDPエンドポイント
-        boost::array<char, 2048> recv_buf;  // 受信用バッファ
+        udp_t::socket sock;                   // UDPソケット
+        udp_t::endpoint endpoint;             // UDPエンドポイント
+        boost::array<char, 2048> stream_buf;  // UDP受信用バッファ
         
         void run(const std::string ip, const int port) override;      // 受信処理を開始
         void onRecvFrame(const err_t& err, size_t t_bytes) override;  // フレーム受信時のコールバック

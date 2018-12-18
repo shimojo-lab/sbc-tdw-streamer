@@ -11,8 +11,8 @@
 /* TCP版フレーム受信器 */
 class TCPFrameReceiver : public BaseFrameReceiver{
     private:
-        tcp_t::socket sock;         // TCPソケット
-        _asio::streambuf recv_buf;  // TCP受信用バッファ
+        tcp_t::socket sock;           // TCPソケット
+        _asio::streambuf stream_buf;  // TCP受信用バッファ
         
         void run(const std::string ip, const int port) override;      // 受信処理を開始
         void onConnect(const err_t& err);                             // 接続時のコールバック
