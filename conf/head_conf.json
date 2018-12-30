@@ -1,0 +1,24 @@
+{
+    "//": "ヘッドノードの設定",
+    "video_src": "./test/nature/fullhd.mp4",
+    "layout": {
+        "column": 1,
+        "row": 1
+    },
+    "resolution": {
+        "width": 1920,
+        "height": 1080
+    },
+    "port": {
+        "frontend_server": 11111,
+        "frame_streamer": 20000
+    },
+    "compression": {
+        "buffer_size": 16,
+        "init_quality": 90
+    },
+    "display_node": [
+        "192.168.10.56"
+    ]
+}
+

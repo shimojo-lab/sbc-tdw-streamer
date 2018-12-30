@@ -5,113 +5,107 @@
 
 CXX = g++
 CXXFLAGS = -Wall -std=c++11 -O3
-SRV = ./src/server
-CLI = ./src/client
-UTILS = ./src/utils
-BIN = ./bin
-CONF = ./conf
-CV2_HDR = /usr/local/include/opencv2
-SRV_LD = -lopencv_core -lopencv_imgcodecs -lopencv_highgui -lopencv_videoio -lboost_system -lboost_thread
-CLI_LD = -lopencv_core -lopencv_imgcodecs -lopencv_highgui -lopencv_imgproc -lboost_system -lboost_thread -lpthread
+HEAD = $(PWD)/src/head
+DISP = $(PWD)/src/display
+COMN = $(PWD)/src/common
+CONF = $(PWD)/conf
+BIN = $(PWD)/bin
+CV_HDR = /usr/local/include/opencv2
+HEAD_LDFLAGS = -lboost_system -lboost_thread -lpthread -lturbojpeg \
+               -lopencv_core -lopencv_imgcodecs -lopencv_imgproc -lopencv_videoio
+DISP_LDFLAGS = -lboost_system -lboost_thread -lpthread -lturbojpeg \
+               -lopencv_core -lopencv_imgcodecs -lopencv_highgui -lopencv_imgproc
 
-# 全てコンパイル
+# 全てビルド
 .PHONY: all
-all: compile_server compile_client
+all: build_common build_head build_display
 
-# ヘッドノードでのコンパイルとテスト
-.PHONY: server
-server: compile_server test_server
+# ヘッドノードでのビルドとテスト
+.PHONY: head
+head: build_common build_head test_head
 
-# ディスプレイノードでのコンパイルとテスト
-.PHONY: client
-client: compile_client test_client
+# ディスプレイノードでのビルドとテスト
+.PHONY: display
+display: build_common build_display test_display
 
-# utilsのソースのコンパイル
-.PHONY: compile_utils
-compile_utils: $(UTILS)/print_with_mutex.o $(UTILS)/base_config_parser.o
+# 共通モジュールのビルド
+.PHONY: build_common
+build_common: $(COMN)/mutex_logger.o $(COMN)/base_config_parser.o
 
-$(UTILS)/print_with_mutex.o: $(UTILS)/print_with_mutex.cpp
-	$(CXX) $(CXXFLAGS) -I$(UTILS)/include -c -o $@ $<
+$(COMN)/mutex_logger.o: $(COMN)/mutex_logger.cpp
+	$(CXX) $(CXXFLAGS) -I$(COMN)/include -c -o $@ $<
 
-$(UTILS)/base_config_parser.o: $(UTILS)/base_config_parser.cpp
-	$(CXX) $(CXXFLAGS) -I$(UTILS)/include -c -o $@ $<
+$(COMN)/base_config_parser.o: $(COMN)/base_config_parser.cpp
+	$(CXX) $(CXXFLAGS) -I$(COMN)/include -c -o $@ $<
 
-# ヘッドノード側プログラムをコンパイル
-.PHONY: compile_server
-compile_server: $(UTILS)/print_with_mutex.o $(UTILS)/base_config_parser.o $(SRV)/base_frame_sender.o $(SRV)/config_parser.o $(SRV)/frame_encoder.o $(SRV)/tcp_frame_sender.o $(SRV)/udp_frame_sender.o $(SRV)/viewer_synchronizer.o $(SRV)/frontend_server.o $(SRV)/main.o
-	$(CXX) $(CXXFLAGS) $(SRV_LD) -o $(BIN)/sbc_server $^
+# ヘッドノード用プログラムをビルド
+.PHONY: build_head
+build_head: $(COMN)/mutex_logger.o $(COMN)/base_config_parser.o $(HEAD)/config_parser.o \
+            $(HEAD)/frame_encoder.o $(HEAD)/frame_sender.o $(HEAD)/sync_manager.o \
+            $(HEAD)/frontend_server.o $(HEAD)/main.o
+	$(CXX) $(HEAD_LDFLAGS) -o $(BIN)/head_server $^
 
-$(SRV)/base_frame_sender.o: $(SRV)/base_frame_sender.cpp
-	$(CXX) $(CXXFLAGS) -I$(SRV)/include -I$(UTILS)/include -c -o $@ $<
+$(HEAD)/config_parser.o: $(HEAD)/config_parser.cpp
+	$(CXX) $(CXXFLAGS) -I$(HEAD)/include -I$(COMN)/include -c -o $@ $<
 
-$(SRV)/config_parser.o: $(SRV)/config_parser.cpp
-	$(CXX) $(CXXFLAGS) -I$(SRV)/include -I$(UTILS)/include -c -o $@ $<
+$(HEAD)/frame_encoder.o: $(HEAD)/frame_encoder.cpp
+	$(CXX) $(CXXFLAGS) -I$(HEAD)/include -I$(COMN)/include -I$(CV_HDR) -c -o $@ $<
 
-$(SRV)/frame_encoder.o: $(SRV)/frame_encoder.cpp
-	$(CXX) $(CXXFLAGS) -I$(SRV)/include -I$(UTILS)/include -I$(CV2_HDR) -c -o $@ $<
+$(HEAD)/frame_sender.o: $(HEAD)/frame_sender.cpp
+	$(CXX) $(CXXFLAGS) -I$(HEAD)/include -I$(COMN)/include -c -o $@ $<
 
-$(SRV)/tcp_frame_sender.o: $(SRV)/tcp_frame_sender.cpp
-	$(CXX) $(CXXFLAGS) -I$(SRV)/include -I$(UTILS)/include -c -o $@ $<
+$(HEAD)/sync_manager.o: $(HEAD)/sync_manager.cpp
+	$(CXX) $(CXXFLAGS) -I$(HEAD)/include -I$(COMN)/include -c -o $@ $<
 
-$(SRV)/udp_frame_sender.o: $(SRV)/udp_frame_sender.cpp
-	$(CXX) $(CXXFLAGS) -I$(SRV)/include -I$(UTILS)/include -c -o $@ $<
+$(HEAD)/frontend_server.o: $(HEAD)/frontend_server.cpp
+	$(CXX) $(CXXFLAGS) -I$(HEAD)/include -I$(COMN)/include -c -o $@ $<
 
-$(SRV)/viewer_synchronizer.o: $(SRV)/viewer_synchronizer.cpp
-	$(CXX) $(CXXFLAGS) -I$(SRV)/include -I$(UTILS)/include -c -o $@ $<
+$(HEAD)/main.o: $(HEAD)/main.cpp
+	$(CXX) $(CXXFLAGS) -I$(HEAD)/include -I$(COMN)/include -c -o $@ $<
 
-$(SRV)/frontend_server.o: $(SRV)/frontend_server.cpp
-	$(CXX) $(CXXFLAGS) -I$(SRV)/include -I$(UTILS)/include -c -o $@ $<
+# ディスプレイノード用プログラムをビルド
+.PHONY: build_display
+build_display: $(COMN)/mutex_logger.o $(COMN)/base_config_parser.o $(DISP)/config_parser.o \
+               $(DISP)/memory_checker.o $(DISP)/frame_receiver.o $(DISP)/frame_decoder.o \
+               $(DISP)/frame_viewer.o $(DISP)/display_client.o $(DISP)/main.o
+	$(CXX) $(DISP_LDFLAGS) -o $(BIN)/display_client $^
 
-$(SRV)/main.o: $(SRV)/main.cpp
-	$(CXX) $(CXXFLAGS) -I$(SRV)/include -I$(UTILS)/include -c -o $@ $<
+$(DISP)/config_parser.o: $(DISP)/config_parser.cpp
+	$(CXX) $(CXXFLAGS) -I$(DISP)/include -I$(COMN)/include -c -o $@ $<
 
-# ディスプレイノード側プログラムをコンパイル
-.PHONY: compile_client
-compile_client: $(UTILS)/print_with_mutex.o $(UTILS)/base_config_parser.o $(CLI)/base_frame_receiver.o $(CLI)/config_parser.o $(CLI)/memory_checker.o $(CLI)/tcp_frame_receiver.o $(CLI)/udp_frame_receiver.o $(CLI)/frame_decoder.o $(CLI)/frame_viewer.o $(CLI)/display_client.o $(CLI)/main.o
-	$(CXX) $(CXXFLAGS) $(CLI_LD) -o $(BIN)/sbc_client $^
+$(DISP)/memory_checker.o: $(DISP)/memory_checker.cpp
+	$(CXX) $(CXXFLAGS) -I$(DISP)/include -c -o $@ $<
 
-$(CLI)/base_frame_receiver.o: $(CLI)/base_frame_receiver.cpp
-	$(CXX) $(CXXFLAGS) -I$(CLI)/include -I$(UTILS)/include -c -o $@ $<
+$(DISP)/frame_receiver.o: $(DISP)/frame_receiver.cpp
+	$(CXX) $(CXXFLAGS) -I$(DISP)/include -I$(COMN)/include -c -o $@ $<
 
-$(CLI)/config_parser.o: $(CLI)/config_parser.cpp
-	$(CXX) $(CXXFLAGS) -I$(CLI)/include -I$(UTILS)/include -c -o $@ $<
+$(DISP)/frame_decoder.o: $(DISP)/frame_decoder.cpp
+	$(CXX) $(CXXFLAGS) -I$(DISP)/include -I$(COMN)/include -I$(CV_HDR) -c -o $@ $<
 
-$(CLI)/memory_checker.o: $(CLI)/memory_checker.cpp
-	$(CXX) $(CXXFLAGS) -I$(CLI)/include -c -o $@ $<
+$(DISP)/frame_viewer.o: $(DISP)/frame_viewer.cpp
+	$(CXX) $(CXXFLAGS) -I$(DISP)/include -I$(COMN)/include -I$(CV_HDR) -c -o $@ $<
 
-$(CLI)/tcp_frame_receiver.o: $(CLI)/tcp_frame_receiver.cpp
-	$(CXX) $(CXXFLAGS) -I$(CLI)/include -I$(UTILS)/include -c -o $@ $<
+$(DISP)/display_client.o: $(DISP)/display_client.cpp
+	$(CXX) $(CXXFLAGS) -I$(DISP)/include -I$(COMN)/include -c -o $@ $<
 
-$(CLI)/udp_frame_receiver.o: $(CLI)/udp_frame_receiver.cpp
-	$(CXX) $(CXXFLAGS) -I$(CLI)/include -I$(UTILS)/include -c -o $@ $<
+$(DISP)/main.o: $(DISP)/main.cpp
+	$(CXX) $(CXXFLAGS) -I$(DISP)/include -I$(COMN)/include -c -o $@ $<
 
-$(CLI)/frame_decoder.o: $(CLI)/frame_decoder.cpp
-	$(CXX) $(CXXFLAGS) -I$(CLI)/include -I$(UTILS)/include -I$(CV2_HDR) -c -o $@ $<
+# ヘッドノード用プログラムを起動
+.PHONY: test_head
+test_head:
+	$(BIN)/head_server $(CONF)/head_conf.json
 
-$(CLI)/frame_viewer.o: $(CLI)/frame_viewer.cpp
-	$(CXX) $(CXXFLAGS) -I$(CLI)/include -I$(UTILS)/include -I$(CV2_HDR) -c -o $@ $<
-
-$(CLI)/display_client.o: $(CLI)/display_client.cpp
-	$(CXX) $(CXXFLAGS) -I$(CLI)/include -I$(UTILS)/include -c -o $@ $<
-
-$(CLI)/main.o: $(CLI)/main.cpp
-	$(CXX) $(CXXFLAGS) -I$(CLI)/include -I$(UTILS)/include -c -o $@ $<
-
-# ヘッドノード側プログラムを起動
-.PHONY: test_server
-test_server:
-	$(BIN)/sbc_server $(CONF)/server_config.json
-
-# ディスプレイノード側プログラムを起動
-.PHONY: test_client
-test_client:
-	$(BIN)/sbc_client $(CONF)/client_config.json
+# ディスプレイノード用プログラムを起動
+.PHONY: test_display
+test_display:
+	LD_LIBRARY_PATH=$(COMN) $(BIN)/display_client $(CONF)/display_conf.json
 
 # 実行ファイルを全消去
 .PHONY: clean
 clean:
 	rm -f $(BIN)/*
-	rm -f $(SRV)/*.o
-	rm -f $(CLI)/*.o
-	rm -f $(UTILS)/*.o
+	rm -f $(HEAD)/*.o
+	rm -f $(DISP)/*.o
+	rm -f $(COMN)/*.o
 
