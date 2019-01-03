@@ -4,6 +4,8 @@
 **************************/
 
 #include "frame_encoder.hpp"
+#include <fstream>
+#include <iostream>
 
 /* コンストラクタ */
 FrameEncoder::FrameEncoder(const std::string video_src, const int column, const int row,
@@ -71,7 +73,7 @@ void FrameEncoder::setResizeParams(const int column, const int row, const int wi
 }
 
 /* フレームをリサイズ */
-void FrameEncoder::resize(cv::Mat video_frame){
+void FrameEncoder::resize(cv::Mat& video_frame){
     // アスペクト比を維持して拡大
     cv::resize(video_frame, video_frame, cv::Size(), this->ratio, this->ratio, CV_INTER_LINEAR);
     
@@ -96,7 +98,7 @@ void FrameEncoder::encode(const int sampling_type, const int quality){
         const int tj_stat = tjCompress2(handle,
                                         raw_frame.data,
                                         raw_frame.cols,
-                                        raw_frame.cols*raw_frame.channels(),
+                                        raw_frame.cols*FRAME_COLORS,
                                         raw_frame.rows,
                                         TJPF_RGB,
                                         &jpeg_frame,
@@ -106,10 +108,10 @@ void FrameEncoder::encode(const int sampling_type, const int quality){
                                         TJ_COMPRESS_FLAG
         );
         if(tj_stat != 0){
-            const char *err_msg = tjGetErrorStr();
-            print_warn("JPEG compression failed", std::string(err_msg));
+            const std::string err_msg(tjGetErrorStr());
+            print_warn("JPEG compression failed", err_msg);
         }else{
-            std::string jpeg_frame_bytes = reinterpret_cast<const char*>(jpeg_frame);
+            std::string jpeg_frame_bytes(jpeg_frame, jpeg_frame+jpeg_size);
             this->send_bufs[i]->push(jpeg_frame_bytes);
         }
     }
@@ -119,7 +121,7 @@ void FrameEncoder::encode(const int sampling_type, const int quality){
 void FrameEncoder::run(){
     while(true){
         cv::Mat video_frame;
-        const int sampling_type_ = TJSAMP_444;
+        const int sampling_type_ = TJSAMP_422;
         const int quality_ = this->quality.load(std::memory_order_acquire);
         try{
             this->video >> video_frame;

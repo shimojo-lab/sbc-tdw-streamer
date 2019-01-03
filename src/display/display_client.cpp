@@ -17,6 +17,11 @@ DisplayClient::DisplayClient(_asio::io_service& ios, ConfigParser& parser):
     this->rbuf = std::make_shared<RingBuffer<std::string>>(STATIC_BUF, rbuf_size);
     this->vbuf = std::make_shared<RingBuffer<cv::Mat>>(STATIC_BUF, vbuf_size);
     
+    // 別スレッドでフレーム展開器を起動
+    for(int i=0; i<this->dec_thre_num; ++i){
+        this->dec_thres.push_back(boost::thread(boost::bind(&DisplayClient::runFrameDecoder, this)));
+    }
+    
     // ヘッドノードに接続
     this->sock.async_connect(_ip::tcp::endpoint(_ip::address::from_string(this->ip), port),
                              boost::bind(&DisplayClient::onConnect, this, _ph::error)
@@ -64,13 +69,7 @@ void DisplayClient::onRecvInit(const err_t& err, size_t t_bytes){
     // 別スレッドでフレーム受信器を起動
     this->recv_thre = boost::thread(boost::bind(&DisplayClient::runFrameReceiver, this, port));
     
-    // 別スレッドでフレーム展開器を起動
-    for(int i=0; i<this->dec_thre_num; ++i){
-        this->dec_thres.push_back(boost::thread(boost::bind(&DisplayClient::runFrameDecoder, this)));
-    }
-    
     // フレーム表示器を起動
-    print_info("Start playback video");
     FrameViewer viewer(this->ios, this->sock, this->vbuf, 0.7, this->fb_dev);
 }
 

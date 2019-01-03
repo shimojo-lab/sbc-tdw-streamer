@@ -50,10 +50,10 @@ void FrameDecoder::decode(){
                   jpeg_size,
                   raw_frame,
                   frame_w,
-                  0,
+                  frame_w*FRAME_COLORS,
                   frame_h,
                   TJPF_BGR,
-                  0
+                  TJFLAG_FASTDCT
     );
     cv::Mat mat_raw_frame(frame_w, frame_h, CV_8UC3, raw_frame);
     this->vbuf->push(mat_raw_frame);

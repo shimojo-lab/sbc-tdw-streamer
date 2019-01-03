@@ -49,12 +49,12 @@ const bool FrameViewer::openFramebuffer(const std::string fb_dev){
     }
     
     // フレームバッファをメモリ上にマッピング
-    this->fb_ptr = (char*)mmap(NULL,
-                               this->fb_len,
-                               PROT_READ|PROT_WRITE,
-                               MAP_SHARED,
-                               this->fb,
-                               0
+    this->fb_ptr = (unsigned char*)mmap(NULL,
+                                        this->fb_len,
+                                        PROT_READ|PROT_WRITE,
+                                        MAP_SHARED,
+                                        this->fb,
+                                        0
     );
     if(fb_ptr == MAP_FAILED){
         print_err("Failed to open framebuffer", "mmap falied");
@@ -65,37 +65,38 @@ const bool FrameViewer::openFramebuffer(const std::string fb_dev){
 
 /* フレームバッファをクリア */
 void FrameViewer::clearFrame(){
-    char *cur_fb_ptr = this->fb_ptr;
+    unsigned char *cur_fb_ptr = this->fb_ptr;
     try{
         for(int i=0; i<this->fb_len; ++i){
-            *cur_fb_ptr++ = DEF_COLOR_VALUE;
-            *cur_fb_ptr++ = DEF_COLOR_VALUE;
-            *cur_fb_ptr++ = DEF_COLOR_VALUE;
-            *cur_fb_ptr++ = DEF_COLOR_VALUE;
+            *cur_fb_ptr = DEF_COLOR_VALUE;
+            ++cur_fb_ptr;
         }
     }catch(...){
-        print_warn("Failed to clear frame", "failed to write in framebuffer");
+        print_err("Failed to clear frame", "unable to write on framebuffer");
+        std::exit(EXIT_FAILURE);
     }
 }
 
 /* フレームを表示 */
 void FrameViewer::displayFrame(){
-    char *cur_fb_ptr = this->fb_ptr;
-    cv::Mat frame = this->vbuf->pop();
+    cv::Mat raw_frame = this->vbuf->pop();
+    unsigned char *cur_fb_ptr = this->fb_ptr;
     cv::Vec3b *src;
     try{
-        for(int y=0; y<frame.rows; ++y){
-            src = frame.ptr<cv::Vec3b>(y);
-            for(int x=0; x<frame.cols; ++x){
-                *cur_fb_ptr++ = src[x][0];
-                *cur_fb_ptr++ = src[x][1];
-                *cur_fb_ptr++ = src[x][2];
-                ++cur_fb_ptr;
+        for(int y=0; y<raw_frame.rows; ++y){
+            src = raw_frame.ptr<cv::Vec3b>(y);
+            for(int x=0; x<raw_frame.cols; ++x){
+                *cur_fb_ptr = src[x][0];
+                *++cur_fb_ptr = src[x][1];
+                *++cur_fb_ptr = src[x][2];
+                cur_fb_ptr += 2;
             }
         }
+        msync(this->fb_ptr, this->fb_len, MS_INVALIDATE);
     }catch(...){
         print_warn("Failed to display frame", "failed to write in framebuffer");
     }
+    delete[] raw_frame.data;
 }
 
 /* 同期メッセージを送信 */

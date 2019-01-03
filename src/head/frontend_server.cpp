@@ -25,7 +25,7 @@ FrontendServer::FrontendServer(_asio::io_service& ios, ConfigParser& parser, con
     this->send_semaphore.store(true, std::memory_order_release);
     this->send_bufs = std::vector<jpegbuf_ptr_t>(display_num);
     for(int id=0; id<this->display_num; ++id){
-        this->send_bufs[id] = std::make_shared<RingBuffer<std::string>>(STATIC_BUF, buf_size);
+        this->send_bufs[id] = std::make_shared<RingBuffer<std::string>>(DYNAMIC_BUF, buf_size);
     }
     
     // 別スレッドでフレーム符号化器を起動

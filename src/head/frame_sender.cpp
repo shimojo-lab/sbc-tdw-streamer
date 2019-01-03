@@ -34,7 +34,8 @@ void FrameSender::run(){
 /* フレームを送信 */
 void FrameSender::sendFrame(){
     for(int id=0; id<this->display_num; ++id){    
-        const std::string param = PARAM_DELIMITER + std::to_string(this->frame_num);
+//        const std::string param = PARAM_DELIMITER + std::to_string(this->frame_num);
+        const std::string param = "";
         const std::string send_msg = this->send_bufs[id]->pop() + param + MSG_DELIMITER;
         _asio::async_write(*this->socks[id],
                            _asio::buffer(send_msg),

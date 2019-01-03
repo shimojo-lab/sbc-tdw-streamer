@@ -31,7 +31,7 @@ class FrameViewer{
         const matbuf_ptr_t vbuf;      // 表示フレームバッファ
         int fb;                       // フレームバッファ
         int fb_len;                   // フレームバッファのサイズ
-        char *fb_ptr;                 // フレームバッファの先頭
+        unsigned char *fb_ptr;        // フレームバッファの先頭
         MemoryChecker mem_checker;    // メモリ残量確認器
         
         const bool openFramebuffer(const std::string fb_dev);  // フレームバッファをオープン
@@ -40,7 +40,7 @@ class FrameViewer{
         void sendSync();                                       // 同期メッセージを送信
         void onRecvSync(const err_t& err, size_t t_bytes);     // 同期メッセージ受信時のコールバック
         void onSendSync(const err_t& err, size_t t_bytes);     // 同期メッセージ送信時のコールバック
-        
+    
     public:
         FrameViewer(_asio::io_service& ios, _ip::tcp::socket& sock,  // コンストラクタ
                     const matbuf_ptr_t vbuf, const double threshold, const std::string fb_dev);

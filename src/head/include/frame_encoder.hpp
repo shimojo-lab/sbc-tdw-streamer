@@ -37,7 +37,7 @@ class FrameEncoder{
         void setResizeParams(const int column, const int row,  // リサイズ用パラメータを設定
                              const int width, const int height,
                              const int frame_w, const int frame_h);
-        void resize(cv::Mat video_frame);                         // フレームをリサイズ
+        void resize(cv::Mat& video_frame);                        // フレームをリサイズ
         void encode(const int sampling_type, const int quality);  // フレームをJPEGで符号化
     
     public:

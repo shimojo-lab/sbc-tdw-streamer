@@ -15,10 +15,10 @@
     },
     "compression": {
         "buffer_size": 16,
-        "init_quality": 90
+        "init_quality": 75
     },
     "display_node": [
-        "127.0.0.1"
+        "192.168.10.56"
     ]
 }
 
