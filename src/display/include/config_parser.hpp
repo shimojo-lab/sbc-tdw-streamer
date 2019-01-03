@@ -9,7 +9,7 @@
 #include "base_config_parser.hpp"
 
 using dc_params_t = std::tuple<
-    std::string, int, , std::string, int, int
+    std::string, int, std::string, int, int, int
 >;
 
 /* 設定ファイルのパーサ */
@@ -20,6 +20,7 @@ class ConfigParser : public BaseConfigParser{
         std::string fb_dev;  // フレームバッファのデバイスファイル
         int rbuf_size;       // 受信フレームバッファのサイズ
         int vbuf_size;       // 表示フレームバッファのサイズ
+        int dec_thre_num;    // フレーム展開スレッド数
         
         const bool readParams(const _pt::ptree& conf) override;  // パラメータを読み込み
         

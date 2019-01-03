@@ -9,19 +9,23 @@
 #include "mutex_logger.hpp"
 #include "ring_buffer.hpp"
 #include <vector>
-#include <opencv2/core.hpp>
-#include <opencv2/highgui.hpp>
-#include <opencv2/imgcodecs.hpp>
+extern "C"{
+    #include <turbojpeg.h>
+}
 
 /* フレーム展開器 */
 class FrameDecoder{
     private:
-        const msgbuf_ptr_t rbuf;    // 受信バッファ
-        const framebuf_ptr_t vbuf;  // 表示バッファ
-     
+        const tjhandle handle;     // JPEGデコーダ
+        const jpegbuf_ptr_t rbuf;  // 受信フレームバッファ
+        const matbuf_ptr_t vbuf;   // 表示フレームバッファ
+         
+        void decode();  // フレームを展開
+    
     public:
-        FrameDecoder(const msgbuf_ptr_t rbuf, const framebuf_ptr_t vbuf);  // コンストラクタ
-        void run();  // フレーム展開を開始
+        FrameDecoder(const jpegbuf_ptr_t rbuf, const matbuf_ptr_t vbuf);  // コンストラクタ
+        ~FrameDecoder();  // デストラクタ
+        void run();       // フレーム展開を開始
 };
 
 #endif  /* FRAME_DECODER_HPP */

@@ -6,7 +6,7 @@
 #include "frame_viewer.hpp"
 
 /* コンストラクタ */
-FrameViewer::FrameViewer(_asio::io_service& ios, tcp_t::socket& sock, const framebuf_ptr_t vbuf,
+FrameViewer::FrameViewer(_asio::io_service& ios, _ip::tcp::socket& sock, const matbuf_ptr_t vbuf,
                          const double threshold, const std::string fb_dev):
     ios(ios),
     sock(sock),
@@ -45,18 +45,22 @@ const bool FrameViewer::openFramebuffer(const std::string fb_dev){
         this->fb_len = var.yres_virtual * fix.line_length;
     }else{
         print_err("Failed to get framebuffer size", "ioctl failed");
+        return false;
     }
     
     // フレームバッファをメモリ上にマッピング
-    this->fb_ptr = (char*)mmap(NULL, this->fb_len, PROT_READ|PROT_WRITE, MAP_SHARED, this->fb, 0);
+    this->fb_ptr = (char*)mmap(NULL,
+                               this->fb_len,
+                               PROT_READ|PROT_WRITE,
+                               MAP_SHARED,
+                               this->fb,
+                               0
+    );
     if(fb_ptr == MAP_FAILED){
         print_err("Failed to open framebuffer", "mmap falied");
         return false;
-    }else{
-        return true;
     }
-    
-    
+    return true;
 }
 
 /* フレームバッファをクリア */
@@ -64,10 +68,10 @@ void FrameViewer::clearFrame(){
     char *cur_fb_ptr = this->fb_ptr;
     try{
         for(int i=0; i<this->fb_len; ++i){
-            *cur_fb_ptr++ = DEF_PIXEL_VALUE;
-            *cur_fb_ptr++ = DEF_PIXEL_VALUE;
-            *cur_fb_ptr++ = DEF_PIXEL_VALUE;
-            *cur_fb_ptr++ = DEF_PIXEL_VALUE;
+            *cur_fb_ptr++ = DEF_COLOR_VALUE;
+            *cur_fb_ptr++ = DEF_COLOR_VALUE;
+            *cur_fb_ptr++ = DEF_COLOR_VALUE;
+            *cur_fb_ptr++ = DEF_COLOR_VALUE;
         }
     }catch(...){
         print_warn("Failed to clear frame", "failed to write in framebuffer");
@@ -86,7 +90,7 @@ void FrameViewer::displayFrame(){
                 *cur_fb_ptr++ = src[x][0];
                 *cur_fb_ptr++ = src[x][1];
                 *cur_fb_ptr++ = src[x][2];
-                *++cur_fb_ptr;
+                ++cur_fb_ptr;
             }
         }
     }catch(...){

@@ -20,7 +20,7 @@ extern "C"{
     #include <sys/mman.h>
 }
 
-const int DEF_PIXEL_VALUE = 0;  // デフォルトの輝度値
+const int DEF_COLOR_VALUE = 0;  // デフォルトの輝度値
 
 /* フレーム表示器 */
 class FrameViewer{
@@ -28,13 +28,13 @@ class FrameViewer{
         _asio::io_service& ios;       // I/Oイベントループ
         _ip::tcp::socket& sock;       // TCPソケット
         _asio::streambuf stream_buf;  // ストリームバッファ
-        const framebuf_ptr_t vbuf;    // 表示フレームバッファ
+        const matbuf_ptr_t vbuf;      // 表示フレームバッファ
         int fb;                       // フレームバッファ
         int fb_len;                   // フレームバッファのサイズ
         char *fb_ptr;                 // フレームバッファの先頭
         MemoryChecker mem_checker;    // メモリ残量確認器
         
-        const bool openFrameBuffer(const std::string fb_dev);  // フレームバッファをオープン
+        const bool openFramebuffer(const std::string fb_dev);  // フレームバッファをオープン
         void clearFrame();                                     // フレームバッファをクリア
         void displayFrame();                                   // フレームを表示
         void sendSync();                                       // 同期メッセージを送信
@@ -43,7 +43,7 @@ class FrameViewer{
         
     public:
         FrameViewer(_asio::io_service& ios, _ip::tcp::socket& sock,  // コンストラクタ
-                    const framebuf_ptr_t vbuf, const double threshold, const std::string fb_dev);
+                    const matbuf_ptr_t vbuf, const double threshold, const std::string fb_dev);
         ~FrameViewer();  // デストラクタ
 };
 

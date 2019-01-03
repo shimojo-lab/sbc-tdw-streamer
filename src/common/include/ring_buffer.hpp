@@ -14,6 +14,7 @@
 const int STATIC_BUF = 0;       // 固定サイズのバッファタイプ
 const int DYNAMIC_BUF = 1;      // 可変サイズのバッファタイプ
 const int BUF_FRONT_INDEX = 0;  // バッファの先頭のインデックス
+const int FRAME_COLORS = 3;     // フレームの色チャネル数
 
 /* 排他制御付きリングバッファ */
 template <typename T>
@@ -80,6 +81,7 @@ const int RingBuffer<T>::getItemNum(){
 }
 
 using jpegbuf_ptr_t = std::shared_ptr<RingBuffer<std::string>>;
+using matbuf_ptr_t = std::shared_ptr<RingBuffer<cv::Mat>>;
 
 #endif  /* RING_BUFFER_HPP */
 

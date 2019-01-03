@@ -4,10 +4,9 @@
         "ip": "127.0.0.1",
         "port": 11111
     },
-    "display": {
-        "framebuffer_device": "/dev/fb0",
-        "recv_buffer_size": 16,
-        "view_buffer_size": 16
-    }
+    "framebuffer_device": "/dev/fb0",
+    "recv_buffer_size": 16,
+    "view_buffer_size": 16,
+    "decode_threads": 1
 }
 

@@ -99,7 +99,7 @@ test_head:
 # ディスプレイノード用プログラムを起動
 .PHONY: test_display
 test_display:
-	LD_LIBRARY_PATH=$(COMN) $(BIN)/display_client $(CONF)/display_conf.json
+	$(BIN)/display_client $(CONF)/display_conf.json
 
 # 実行ファイルを全消去
 .PHONY: clean

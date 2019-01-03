@@ -12,9 +12,10 @@ DisplayClient::DisplayClient(_asio::io_service& ios, ConfigParser& parser):
 {
     // パラメータを設定
     int port, rbuf_size, vbuf_size;
-    std::tie(this->ip, port, this->fb_dev, rbuf_size, vbuf_size) = parser.getDisplayClientParams();
-    this->rbuf = std::make_shared<RingBuffer<std::string>>(DYNAMIC_BUF, rbuf_size);
-    this->vbuf = std::make_shared<RingBuffer<cv::Mat>>(DYNAMIC_BUF, vbuf_size);
+    std::tie(this->ip, port, this->fb_dev, rbuf_size, vbuf_size,
+             this->dec_thre_num) = parser.getDisplayClientParams();
+    this->rbuf = std::make_shared<RingBuffer<std::string>>(STATIC_BUF, rbuf_size);
+    this->vbuf = std::make_shared<RingBuffer<cv::Mat>>(STATIC_BUF, vbuf_size);
     
     // ヘッドノードに接続
     this->sock.async_connect(_ip::tcp::endpoint(_ip::address::from_string(this->ip), port),
@@ -54,7 +55,7 @@ void DisplayClient::onRecvInit(const err_t& err, size_t t_bytes){
     }
     std::stringstream ss;
     _pt::ptree init_params;
-    int id, row, column, width, height, port, protocol_type;
+    int id, port;
     ss << bytes_buf;
     _pt::read_json(ss, init_params);
     id = std::stoi(init_params.get_optional<std::string>("id").get());
@@ -64,7 +65,7 @@ void DisplayClient::onRecvInit(const err_t& err, size_t t_bytes){
     this->recv_thre = boost::thread(boost::bind(&DisplayClient::runFrameReceiver, this, port));
     
     // 別スレッドでフレーム展開器を起動
-    for(int i=0; i<1; ++i){
+    for(int i=0; i<this->dec_thre_num; ++i){
         this->dec_thres.push_back(boost::thread(boost::bind(&DisplayClient::runFrameDecoder, this)));
     }
     
@@ -75,13 +76,13 @@ void DisplayClient::onRecvInit(const err_t& err, size_t t_bytes){
 
 /* 別スレッドでフレーム展開器を起動 */
 void DisplayClient::runFrameDecoder(){
-    FrameDecoder decoder(this->rbuf, this->vbuf, roi, this->res_x, this->res_y);
+    FrameDecoder decoder(this->rbuf, this->vbuf);
     decoder.run();
 }
 
 /* 別スレッドでフレーム受信器を起動 */
 void DisplayClient::runFrameReceiver(const int port){
     _asio::io_service ios;
-    FrameReceiver receiver(ios, this->rbuf, this->ip, port);
+    FrameReceiver receiver(ios, this->ip, port, this->rbuf);
 }
 

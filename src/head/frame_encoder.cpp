@@ -16,8 +16,8 @@ FrameEncoder::FrameEncoder(const std::string video_src, const int column, const 
 {
     // JPEGエンコーダを初期化
     if(this->handle == NULL){
-        const char* err_msg = tjGetErrorStr();
-        print_err("Failed to init JPEG compresser", std::string(err_msg));
+        std::string err_msg(tjGetErrorStr());
+        print_err("Failed to init JPEG encoder", err_msg);
         std::exit(EXIT_FAILURE);
     }
     

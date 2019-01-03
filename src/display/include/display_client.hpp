@@ -7,8 +7,7 @@
 #define DISPLAY_CLIENT_HPP
 
 #include "config_parser.hpp"
-#include "tcp_frame_receiver.hpp"
-#include "udp_frame_receiver.hpp"
+#include "frame_receiver.hpp"
 #include "frame_decoder.hpp"
 #include "frame_viewer.hpp"
 #include <boost/thread.hpp>
@@ -20,10 +19,11 @@ class DisplayClient{
         _ip::tcp::socket sock;                 // TCPソケット
         _asio::streambuf stream_buf;           // ストリームバッファ
         std::string ip;                        // ヘッドノードのIP
-        msgbuf_ptr_t rbuf;                     // 受信フレームバッファ
-        framebuf_ptr_t vbuf;                   // 表示フレームバッファ
+        jpegbuf_ptr_t rbuf;                    // 受信フレームバッファ
+        matbuf_ptr_t vbuf;                     // 表示フレームバッファ
         std::string fb_dev;                    // フレームバッファのデバイスファイル
         boost::thread recv_thre;               // フレーム受信スレッド
+        int dec_thre_num;                      // フレーム展開スレッド数
         std::vector<boost::thread> dec_thres;  // フレーム展開スレッド
         
         void onConnect(const err_t& err);                   // ヘッドノード接続時のコールバック
