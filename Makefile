@@ -12,7 +12,7 @@ CONF = $(PWD)/conf
 BIN = $(PWD)/bin
 CV_HDR = /usr/local/include/opencv2
 HEAD_LDFLAGS = -lboost_system -lboost_thread -lpthread -lturbojpeg \
-               -lopencv_core -lopencv_imgcodecs -lopencv_imgproc -lopencv_videoio
+               -lopencv_core -lopencv_imgcodecs -lopencv_imgproc -lopencv_videoio 
 DISP_LDFLAGS = -lboost_system -lboost_thread -lpthread -lturbojpeg \
                -lopencv_core -lopencv_imgcodecs -lopencv_highgui -lopencv_imgproc
 

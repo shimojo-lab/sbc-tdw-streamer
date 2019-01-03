@@ -42,11 +42,11 @@ FrameEncoder::~FrameEncoder(){
 
 /* リサイズ用パラメータを設定 */
 void FrameEncoder::setResizeParams(const int column, const int row, const int width, const int height,
-                              const int frame_w, const int frame_h){
+                                   const int frame_w, const int frame_h){
     // リサイズフレーム背景を設定
     const int bg_w = column * width;
     const int bg_h = row * height;
-    this->background = cv::Mat::zeros(bg_w, bg_h, CV_8UC3);
+    this->bg_frame = cv::Mat::zeros(bg_h, bg_w, CV_8UC3);
     
     // リサイズ倍率を設定
     const int x_ratio = (int)((double)bg_w / (double)frame_w);
@@ -56,8 +56,8 @@ void FrameEncoder::setResizeParams(const int column, const int row, const int wi
     // リサイズフレームのパディングを設定
     const int resize_w = frame_w * this->ratio;
     const int resize_h = frame_h * this->ratio;
-    const int paste_x = (int)((bg_w-resize_w) / 2.0);
-    const int paste_y = (int)((bg_h-resize_h) / 2.0);
+    const int paste_x = (int)((double)(bg_w-resize_w) / 2.0);
+    const int paste_y = (int)((double)(bg_h-resize_h) / 2.0);
     this->roi = cv::Rect(paste_x, paste_y, resize_w, resize_h);
     
     // ディスプレイノードの担当領域を設定
@@ -77,7 +77,7 @@ void FrameEncoder::resize(cv::Mat video_frame){
     
     // 背景と重ねてパディング
     cv::Mat resized_frame;
-    resized_frame.copyTo(this->background);
+    this->bg_frame.copyTo(resized_frame);
     cv::Mat paste_area(resized_frame, this->roi);
     video_frame.copyTo(paste_area);
     
@@ -109,8 +109,8 @@ void FrameEncoder::encode(const int sampling_type, const int quality){
             const char *err_msg = tjGetErrorStr();
             print_warn("JPEG compression failed", std::string(err_msg));
         }else{
-            std::string str_jpeg_frame = reinterpret_cast<const char*>(jpeg_frame);
-            this->send_bufs[i]->push(str_jpeg_frame);
+            std::string jpeg_frame_bytes = reinterpret_cast<const char*>(jpeg_frame);
+            this->send_bufs[i]->push(jpeg_frame_bytes);
         }
     }
 }

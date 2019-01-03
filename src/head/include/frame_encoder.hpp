@@ -26,7 +26,7 @@ class FrameEncoder{
         const tjhandle handle;                  // JPEGエンコーダ
         cv::VideoCapture video;                 // 再生動画
         const int display_num;                  // 全ディスプレイ数
-        cv::Mat background;                     // リサイズフレームの背景
+        cv::Mat bg_frame;                       // リサイズフレームの背景
         int ratio;                              // リサイズ倍率
         cv::Rect roi;                           // リサイズフレームの貼り付け位置
         std::atomic<int>& quality;              // 量子化品質係数
