@@ -11,6 +11,7 @@
 #include "socket_utils.hpp"
 #include "sync_utils.hpp"
 #include "memory_checker.hpp"
+#include <cstring>
 extern "C"{
     #include <fcntl.h>
     #include <unistd.h>
@@ -28,7 +29,7 @@ class FrameViewer{
         _asio::io_service& ios;       // I/Oイベントループ
         _ip::tcp::socket& sock;       // TCPソケット
         _asio::streambuf stream_buf;  // ストリームバッファ
-        const matbuf_ptr_t vbuf;      // 表示フレームバッファ
+        const ucharbuf_ptr_t vbuf;    // 表示フレームバッファ
         int fb;                       // フレームバッファ
         int fb_len;                   // フレームバッファのサイズ
         unsigned char *fb_ptr;        // フレームバッファの先頭
@@ -43,7 +44,7 @@ class FrameViewer{
     
     public:
         FrameViewer(_asio::io_service& ios, _ip::tcp::socket& sock,  // コンストラクタ
-                    const matbuf_ptr_t vbuf, const double threshold, const std::string fb_dev);
+                    const ucharbuf_ptr_t vbuf, const double threshold, const std::string fb_dev);
         ~FrameViewer();  // デストラクタ
 };
 

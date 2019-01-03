@@ -81,7 +81,7 @@ const int RingBuffer<T>::getItemNum(){
 }
 
 using jpegbuf_ptr_t = std::shared_ptr<RingBuffer<std::string>>;
-using matbuf_ptr_t = std::shared_ptr<RingBuffer<cv::Mat>>;
+using ucharbuf_ptr_t = std::shared_ptr<RingBuffer<unsigned char*>>;
 
 #endif  /* RING_BUFFER_HPP */
 

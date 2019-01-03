@@ -7,7 +7,7 @@
 #include <chrono>
 
 /* コンストラクタ */
-FrameDecoder::FrameDecoder(const jpegbuf_ptr_t rbuf, const matbuf_ptr_t vbuf):
+FrameDecoder::FrameDecoder(const jpegbuf_ptr_t rbuf, const ucharbuf_ptr_t vbuf):
     handle(tjInitDecompress()),
     rbuf(rbuf),
     vbuf(vbuf)
@@ -52,11 +52,10 @@ void FrameDecoder::decode(){
                   frame_w,
                   frame_w*FRAME_COLORS,
                   frame_h,
-                  TJPF_BGR,
+                  TJPF_RGB,
                   TJFLAG_FASTDCT
     );
-    cv::Mat mat_raw_frame(frame_w, frame_h, CV_8UC3, raw_frame);
-    this->vbuf->push(mat_raw_frame);
+    this->vbuf->push(raw_frame);
 }
 
 /* フレーム展開を開始 */
@@ -64,10 +63,10 @@ void FrameDecoder::run(){
     while(true){
 //const auto start = std::chrono::system_clock::now();
         try{
+            this->decode();
         }catch(...){
             print_warn("Failed to get new video frame", "JPEG decode error");
         }
-            this->decode();
 //const auto end = std::chrono::system_clock::now();
 //double elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count();
 //print_debug(elapsed);

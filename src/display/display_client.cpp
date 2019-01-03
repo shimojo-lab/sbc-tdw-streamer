@@ -15,7 +15,7 @@ DisplayClient::DisplayClient(_asio::io_service& ios, ConfigParser& parser):
     std::tie(this->ip, port, this->fb_dev, rbuf_size, vbuf_size,
              this->dec_thre_num) = parser.getDisplayClientParams();
     this->rbuf = std::make_shared<RingBuffer<std::string>>(STATIC_BUF, rbuf_size);
-    this->vbuf = std::make_shared<RingBuffer<cv::Mat>>(STATIC_BUF, vbuf_size);
+    this->vbuf = std::make_shared<RingBuffer<unsigned char*>>(STATIC_BUF, vbuf_size);
     
     // 別スレッドでフレーム展開器を起動
     for(int i=0; i<this->dec_thre_num; ++i){

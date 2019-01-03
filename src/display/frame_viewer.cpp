@@ -6,7 +6,7 @@
 #include "frame_viewer.hpp"
 
 /* コンストラクタ */
-FrameViewer::FrameViewer(_asio::io_service& ios, _ip::tcp::socket& sock, const matbuf_ptr_t vbuf,
+FrameViewer::FrameViewer(_asio::io_service& ios, _ip::tcp::socket& sock, const ucharbuf_ptr_t vbuf,
                          const double threshold, const std::string fb_dev):
     ios(ios),
     sock(sock),
@@ -65,12 +65,9 @@ const bool FrameViewer::openFramebuffer(const std::string fb_dev){
 
 /* フレームバッファをクリア */
 void FrameViewer::clearFrame(){
-    unsigned char *cur_fb_ptr = this->fb_ptr;
     try{
-        for(int i=0; i<this->fb_len; ++i){
-            *cur_fb_ptr = DEF_COLOR_VALUE;
-            ++cur_fb_ptr;
-        }
+        std::memset(this->fb_ptr, DEF_COLOR_VALUE, this->fb_len);
+        msync(this->fb_ptr, this->fb_len, MS_INVALIDATE);
     }catch(...){
         print_err("Failed to clear frame", "unable to write on framebuffer");
         std::exit(EXIT_FAILURE);
@@ -79,24 +76,14 @@ void FrameViewer::clearFrame(){
 
 /* フレームを表示 */
 void FrameViewer::displayFrame(){
-    cv::Mat raw_frame = this->vbuf->pop();
-    unsigned char *cur_fb_ptr = this->fb_ptr;
-    cv::Vec3b *src;
+    unsigned char *raw_frame = this->vbuf->pop();
     try{
-        for(int y=0; y<raw_frame.rows; ++y){
-            src = raw_frame.ptr<cv::Vec3b>(y);
-            for(int x=0; x<raw_frame.cols; ++x){
-                *cur_fb_ptr = src[x][0];
-                *++cur_fb_ptr = src[x][1];
-                *++cur_fb_ptr = src[x][2];
-                cur_fb_ptr += 2;
-            }
-        }
+        std::memcpy(this->fb_ptr, (const char*)raw_frame, this->fb_len);
         msync(this->fb_ptr, this->fb_len, MS_INVALIDATE);
     }catch(...){
-        print_warn("Failed to display frame", "failed to write in framebuffer");
+        print_warn("Failed to display frame", "unable to write on framebuffer");
     }
-    delete[] raw_frame.data;
+    delete[] raw_frame;
 }
 
 /* 同期メッセージを送信 */

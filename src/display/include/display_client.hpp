@@ -20,7 +20,7 @@ class DisplayClient{
         _asio::streambuf stream_buf;           // ストリームバッファ
         std::string ip;                        // ヘッドノードのIP
         jpegbuf_ptr_t rbuf;                    // 受信フレームバッファ
-        matbuf_ptr_t vbuf;                     // 表示フレームバッファ
+        ucharbuf_ptr_t vbuf;                   // 表示フレームバッファ
         std::string fb_dev;                    // フレームバッファのデバイスファイル
         boost::thread recv_thre;               // フレーム受信スレッド
         int dec_thre_num;                      // フレーム展開スレッド数

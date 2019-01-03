@@ -16,14 +16,14 @@ extern "C"{
 /* フレーム展開器 */
 class FrameDecoder{
     private:
-        const tjhandle handle;     // JPEGデコーダ
-        const jpegbuf_ptr_t rbuf;  // 受信フレームバッファ
-        const matbuf_ptr_t vbuf;   // 表示フレームバッファ
+        const tjhandle handle;      // JPEGデコーダ
+        const jpegbuf_ptr_t rbuf;   // 受信フレームバッファ
+        const ucharbuf_ptr_t vbuf;  // 表示フレームバッファ
          
         void decode();  // フレームを展開
     
     public:
-        FrameDecoder(const jpegbuf_ptr_t rbuf, const matbuf_ptr_t vbuf);  // コンストラクタ
+        FrameDecoder(const jpegbuf_ptr_t rbuf, const ucharbuf_ptr_t vbuf);  // コンストラクタ
         ~FrameDecoder();  // デストラクタ
         void run();       // フレーム展開を開始
 };
