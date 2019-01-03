@@ -9,7 +9,6 @@
 #include <mutex>
 #include <condition_variable>
 #include <boost/circular_buffer.hpp>
-#include <opencv2/core.hpp>
 
 const int STATIC_BUF = 0;       // 固定サイズのバッファタイプ
 const int DYNAMIC_BUF = 1;      // 可変サイズのバッファタイプ
