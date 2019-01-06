@@ -46,14 +46,14 @@ void print_debug(const std::string& msg){
                               << std::endl;
 }
 
-/* デバッグ用メッセージを表示 (int型変数用) */
+/* デバッグ用メッセージを表示 (int型用) */
 void print_debug(const int& num){
     console_lock(), std::cout << "[Debug] "
                               << std::to_string(num)
                               << std::endl;
 }
 
-/* デバッグ用メッセージを表示 (double型変数用) */
+/* デバッグ用メッセージを表示 (double型用) */
 void print_debug(const double& num){
     console_lock(), std::cout << "[Debug] "
                               << std::to_string(num)

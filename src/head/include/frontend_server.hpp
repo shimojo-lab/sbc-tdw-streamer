@@ -19,17 +19,16 @@ class FrontendServer{
         sock_ptr_t sock;                       // TCPソケット
         _ip::tcp::acceptor acc;                // TCPアクセプタ
         std::vector<sock_ptr_t> socks;         // 接続済TCPソケット
-        std::string video_src;                 // 再生動画のソース
-        int row;                               // ディスプレイの横の枚数
-        int column;                            // ディスプレイの縦の枚数
+        int display_num;                       // 全ディスプレイ数
         int width;                             // ディスプレイの横の画素数
         int height;                            // ディスプレイの縦の画素数
-        int display_num;                       // 全ディスプレイ数
         int fs_port;                           // フロントエンドサーバ用ポート
         int stream_port;                       // フレーム送信用ポート
+        int recvbuf_size;                      // 受信フレームバッファのサイズ
+        int dec_thre_num;                      // フレーム展開スレッドの数
         int connected_num = 0;                 // 接続済ディスプレイノード数
-        std::atomic<int> quality;              // 量子化品質係数
-        std::atomic<bool> send_semaphore;      // フレーム送信制御フラグ
+        std::atomic<int> sampling_type;        // クロマサブサンプリングの形式
+        std::atomic<int> quality;              // JPEG品質係数
         std::vector<std::string> ip_addrs;     // ディスプレイノードのIP
         std::vector<jpegbuf_ptr_t> send_bufs;  // 送信フレームバッファ
         boost::thread send_thre;               // フレーム送信スレッド
@@ -39,7 +38,8 @@ class FrontendServer{
         void onConnect(const err_t& err);  // ディスプレイノード接続時のコールバック
         void onSendInit(const err_t& err,  // 初期化メッセージ送信時のコールバック
                         size_t t_bytes, const std::string ip);
-        void runFrameEncoder();            // 別スレッドでフレーム符号化器を起動
+        void runFrameEncoder(const std::string video_src,  // 別スレッドでフレーム符号化器を起動
+                             const int column, const int row, const int width, const int height);
         void runFrameSender();             // 別スレッドでフレーム送信器を起動
         void runSyncManager();             // 同スレッドで同期制御器を起動
     

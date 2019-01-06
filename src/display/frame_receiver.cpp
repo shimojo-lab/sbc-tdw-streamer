@@ -48,9 +48,8 @@ void FrameReceiver::onRecvFrame(const err_t& err, size_t t_bytes){
         // フレームを取得
         const auto data = this->stream_buf.data();
         std::string recv_msg(_asio::buffers_begin(data), _asio::buffers_begin(data)+t_bytes);
-        for(int i=0; i<MSG_DELIMITER_LEN; ++i){
-            recv_msg.pop_back();
-        }
+        const int iter = recv_msg.length() - MSG_DELIMITER_LEN;
+        recv_msg.erase(iter);
         this->rbuf->push(recv_msg);
         this->stream_buf.consume(t_bytes);
     }

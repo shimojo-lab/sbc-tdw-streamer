@@ -11,16 +11,8 @@ DisplayClient::DisplayClient(_asio::io_service& ios, ConfigParser& parser):
     sock(ios)
 {
     // パラメータを設定
-    int port, rbuf_size, vbuf_size;
-    std::tie(this->ip, port, this->fb_dev, rbuf_size, vbuf_size,
-             this->dec_thre_num) = parser.getDisplayClientParams();
-    this->rbuf = std::make_shared<RingBuffer<std::string>>(STATIC_BUF, rbuf_size);
-    this->vbuf = std::make_shared<RingBuffer<unsigned char*>>(STATIC_BUF, vbuf_size);
-    
-    // 別スレッドでフレーム展開器を起動
-    for(int i=0; i<this->dec_thre_num; ++i){
-        this->dec_thres.push_back(boost::thread(boost::bind(&DisplayClient::runFrameDecoder, this)));
-    }
+    int port;
+    std::tie(this->ip, port, this->fb_dev, this->tty_dev) = parser.getDisplayClientParams();
     
     // ヘッドノードに接続
     this->sock.async_connect(_ip::tcp::endpoint(_ip::address::from_string(this->ip), port),
@@ -54,34 +46,47 @@ void DisplayClient::onRecvInit(const err_t& err, size_t t_bytes){
     
     // 初期化メッセージをパース
     const auto data = this->stream_buf.data();
-    std::string bytes_buf(_asio::buffers_begin(data), _asio::buffers_begin(data)+t_bytes);
-    for(int i=0; i<MSG_DELIMITER_LEN; ++i){
-        bytes_buf.pop_back();
-    }
+    std::string params_bytes(_asio::buffers_begin(data), _asio::buffers_begin(data)+t_bytes);
+    const int iter = params_bytes.length() - MSG_DELIMITER_LEN;
+    params_bytes.erase(iter);
     std::stringstream ss;
-    _pt::ptree init_params;
-    int id, port;
-    ss << bytes_buf;
-    _pt::read_json(ss, init_params);
-    id = std::stoi(init_params.get_optional<std::string>("id").get());
-    port = std::stoi(init_params.get_optional<std::string>("port").get());
+    _pt::ptree params;
+    ss << params_bytes;
+    _pt::read_json(ss, params);
+    const int width = std::stoi(params.get_optional<std::string>("width").get());
+    const int height = std::stoi(params.get_optional<std::string>("height").get());
+    const int stream_port = std::stoi(params.get_optional<std::string>("stream_port").get());
+    const int recvbuf_size = std::stoi(params.get_optional<std::string>("recvbuf_size").get());
+    const int dec_thre_num = std::stoi(params.get_optional<std::string>("dec_thre_num").get());
     
     // 別スレッドでフレーム受信器を起動
-    this->recv_thre = boost::thread(boost::bind(&DisplayClient::runFrameReceiver, this, port));
+    const jpegbuf_ptr_t recv_buf = std::make_shared<RingBuffer<std::string>>(STATIC_BUF, recvbuf_size);
+    this->recv_thre = boost::thread(boost::bind(&DisplayClient::runFrameReceiver, this,
+                                                stream_port, recv_buf)
+    );
     
-    // フレーム表示器を起動
-    FrameViewer viewer(this->ios, this->sock, this->vbuf, 0.7, this->fb_dev);
-}
-
-/* 別スレッドでフレーム展開器を起動 */
-void DisplayClient::runFrameDecoder(){
-    FrameDecoder decoder(this->rbuf, this->vbuf);
-    decoder.run();
+    // 別スレッドでフレーム展開器を起動
+    const rawbuf_ptr_t view_buf = std::make_shared<ViewerFramebuffer>(this->fb_dev, width, height,
+                                                                      dec_thre_num+1, this->tty_dev);
+    for(int i=0; i<dec_thre_num; ++i){
+        this->dec_thres.push_back(boost::thread(boost::bind(&DisplayClient::runFrameDecoder, this,
+                                                            recv_buf, view_buf))
+        );
+    }
+    
+    // 同スレッドでフレーム表示器を起動
+    FrameViewer viewer(this->ios, this->sock, recv_buf, view_buf);
 }
 
 /* 別スレッドでフレーム受信器を起動 */
-void DisplayClient::runFrameReceiver(const int port){
+void DisplayClient::runFrameReceiver(const int stream_port, const jpegbuf_ptr_t recv_buf){
     _asio::io_service ios;
-    FrameReceiver receiver(ios, this->ip, port, this->rbuf);
+    FrameReceiver receiver(ios, this->ip, stream_port, recv_buf);
+}
+
+/* 別スレッドでフレーム展開器を起動 */
+void DisplayClient::runFrameDecoder(const jpegbuf_ptr_t recv_buf, const rawbuf_ptr_t view_buf){
+    FrameDecoder decoder(recv_buf, view_buf);
+    decoder.run();
 }
 

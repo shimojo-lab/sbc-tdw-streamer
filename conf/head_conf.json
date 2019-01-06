@@ -1,6 +1,6 @@
 {
     "//": "ヘッドノードの設定",
-    "video_src": "/home/kazuya/sbc_tdw_streamer/test/nature/fullhd.mp4",
+    "video_src": "/home/kazuya/sbc_tdw_streamer/test/mmd.mp4",
     "layout": {
         "column": 1,
         "row": 1
@@ -13,9 +13,14 @@
         "frontend_server": 11111,
         "frame_streamer": 20000
     },
+    "buffer": {
+        "send_buffer_size": 16,
+        "receive_buffer_size": 16
+    },
     "compression": {
-        "buffer_size": 16,
-        "init_quality": 90
+        "init_subsampling_type": "yuv444",
+        "init_jpeg_quality": 90,
+        "jpeg_decoder_num": 1
     },
     "display_node": [
         "192.168.10.56"

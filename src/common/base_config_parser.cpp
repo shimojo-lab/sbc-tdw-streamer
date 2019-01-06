@@ -21,3 +21,15 @@ const bool BaseConfigParser::readParams(const _pt::ptree& conf){
     return true;
 }
 
+/* パラメータを取得 (文字列用) */
+const std::string BaseConfigParser::getStrParam(const std::string key){
+    const std::string param = this->conf.get_optional<std::string>(key).get();
+    return param;
+}
+
+/* パラメータを取得 (int型用) */
+const int BaseConfigParser::getIntParam(const std::string key){
+    const int param = this->conf.get_optional<int>(key).get();
+    return param;
+}
+

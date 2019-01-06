@@ -7,12 +7,12 @@
 
 /* コンストラクタ */
 SyncManager::SyncManager(_asio::io_service& ios, std::vector<sock_ptr_t>& socks,
-                         std::atomic<int>& quality, std::atomic<bool>& send_semaphore):
+                         std::atomic<int>& sampling_type, std::atomic<int>& quality):
     ios(ios),
     socks(socks),
     display_num(socks.size()),
-    quality(quality),
-    send_semaphore(send_semaphore)
+    sampling_type(sampling_type),
+    quality(quality)
 {
     // パラメータを初期化
     this->sync_count.store(0, std::memory_order_release);
@@ -23,15 +23,9 @@ SyncManager::SyncManager(_asio::io_service& ios, std::vector<sock_ptr_t>& socks,
 
 /* 同期メッセージをパース */
 void SyncManager::parseSync(std::string& recv_msg){
-    // メモリ残量の情報を取得
-    for(int i=0; i<MSG_DELIMITER_LEN; ++i){
-        recv_msg.pop_back();
-    }
-    const int mem_state = recv_msg.back() - '0';
-    if(mem_state != int(this->send_semaphore.load(std::memory_order_acquire))){
-        this->send_semaphore.store(bool(mem_state), std::memory_order_release);
-    }
-    recv_msg.pop_back();
+    // を取得
+    const int iter = recv_msg.length() - MSG_DELIMITER_LEN;
+    recv_msg.erase(iter);
 }
 
 /* 同期メッセージ受信時のコールバック */

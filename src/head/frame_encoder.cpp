@@ -9,10 +9,11 @@
 
 /* コンストラクタ */
 FrameEncoder::FrameEncoder(const std::string video_src, const int column, const int row,
-                           const int width, const int height, std::atomic<int>& quality,
-                           std::vector<jpegbuf_ptr_t>& send_bufs):
+                           const int width, const int height, std::atomic<int>& sampling_type,
+                           std::atomic<int>& quality, std::vector<jpegbuf_ptr_t>& send_bufs):
     handle(tjInitCompress()),
     display_num(column*row),
+    sampling_type(sampling_type),
     quality(quality),
     send_bufs(send_bufs)
 {
@@ -105,11 +106,11 @@ void FrameEncoder::encode(const int sampling_type, const int quality){
                                         &jpeg_size,
                                         sampling_type,
                                         quality,
-                                        TJ_COMPRESS_FLAG
+                                        TJFLAG_FASTDCT
         );
         if(tj_stat != 0){
             const std::string err_msg(tjGetErrorStr());
-            print_warn("JPEG compression failed", err_msg);
+            print_warn("JPEG encode failed", err_msg);
         }else{
             std::string jpeg_frame_bytes(jpeg_frame, jpeg_frame+jpeg_size);
             this->send_bufs[i]->push(jpeg_frame_bytes);
@@ -121,14 +122,14 @@ void FrameEncoder::encode(const int sampling_type, const int quality){
 void FrameEncoder::run(){
     while(true){
         cv::Mat video_frame;
-        const int sampling_type_ = TJSAMP_422;
-        const int quality_ = this->quality.load(std::memory_order_acquire);
+        const int cur_sampling_type = this->sampling_type.load(std::memory_order_acquire);
+        const int cur_quality = this->quality.load(std::memory_order_acquire);
         try{
             this->video >> video_frame;
             this->resize(video_frame);
-            this->encode(sampling_type_, quality_);
+            this->encode(cur_sampling_type, cur_quality);
         }catch(...){
-            print_err("Failed to get video frame", "Video ended");
+            print_err("Could not get video frame", "Video ended");
             break;
         }
     }

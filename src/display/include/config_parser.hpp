@@ -9,18 +9,16 @@
 #include "base_config_parser.hpp"
 
 using dc_params_t = std::tuple<
-    std::string, int, std::string, int, int, int
+    std::string, int, std::string, std::string
 >;
 
 /* 設定ファイルのパーサ */
 class ConfigParser : public BaseConfigParser{
     private:
-        std::string ip;      // ヘッドノードのIP
-        int port;            // ヘッドノードのポート
-        std::string fb_dev;  // フレームバッファのデバイスファイル
-        int rbuf_size;       // 受信フレームバッファのサイズ
-        int vbuf_size;       // 表示フレームバッファのサイズ
-        int dec_thre_num;    // フレーム展開スレッド数
+        std::string ip;       // ヘッドノードのIP
+        int port;             // ヘッドノードのポート
+        std::string fb_dev;   // フレームバッファのデバイスファイル
+        std::string tty_dev;  // 端末デバイスのデバイスファイル
         
         const bool readParams(const _pt::ptree& conf) override;  // パラメータを読み込み
         

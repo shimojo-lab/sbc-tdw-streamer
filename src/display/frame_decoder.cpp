@@ -7,10 +7,10 @@
 #include <chrono>
 
 /* コンストラクタ */
-FrameDecoder::FrameDecoder(const jpegbuf_ptr_t rbuf, const ucharbuf_ptr_t vbuf):
+FrameDecoder::FrameDecoder(const jpegbuf_ptr_t recv_buf, const rawbuf_ptr_t view_buf):
     handle(tjInitDecompress()),
-    rbuf(rbuf),
-    vbuf(vbuf)
+    recv_buf(recv_buf),
+    view_buf(view_buf)
 {
     // JPEGデコータを起動
     if(this->handle == NULL){
@@ -29,8 +29,11 @@ FrameDecoder::~FrameDecoder(){
 /* フレームを複号 */
 void FrameDecoder::decode(){
     // フレームを取り出し
-    const std::string jpeg_frame_bytes = this->rbuf->pop();
-    unsigned long jpeg_size = (unsigned long)jpeg_frame_bytes.length();
+    std::string jpeg_frame_bytes = this->recv_buf->pop();
+    const int iter = jpeg_frame_bytes.length() - VIEWBUF_ID_LEN;
+    const int id = std::stoi(jpeg_frame_bytes.substr(iter));
+    jpeg_frame_bytes.erase(iter);
+    const unsigned long jpeg_size = (unsigned long)jpeg_frame_bytes.length();
     std::vector<unsigned char> jpeg_frame(jpeg_frame_bytes.c_str(), jpeg_frame_bytes.c_str()+jpeg_size);
     
     // JPEGのヘッダを読み込み
@@ -44,18 +47,19 @@ void FrameDecoder::decode(){
     );
     
     // フレームを複号
-    unsigned char *raw_frame = new unsigned char[frame_w*frame_h*FRAME_COLORS];
     tjDecompress2(this->handle,
                   jpeg_frame.data(),
                   jpeg_size,
-                  raw_frame,
+                  this->view_buf->getFramebuffer(id),
                   frame_w,
                   frame_w*FRAME_COLORS,
                   frame_h,
                   TJPF_RGB,
-                  TJFLAG_FASTDCT
+                  TJFLAG_FASTDCT|TJFLAG_FASTUPSAMPLE
     );
-    this->vbuf->push(raw_frame);
+    
+    // 表示フレームバッファに反映
+    this->view_buf->activateFramebuffer();
 }
 
 /* フレーム展開を開始 */

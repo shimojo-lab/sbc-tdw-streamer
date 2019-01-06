@@ -8,6 +8,7 @@
 
 #include "mutex_logger.hpp"
 #include "ring_buffer.hpp"
+#include "sync_utils.hpp"
 #include <vector>
 #include <atomic>
 #include <cstdlib>
@@ -18,8 +19,6 @@ extern "C"{
     #include <turbojpeg.h>
 }
 
-const int TJ_COMPRESS_FLAG = 0;  // TurboJPEGの関数に渡すフラグ
-
 /* フレーム符号化器 */
 class FrameEncoder{
     private:
@@ -29,6 +28,7 @@ class FrameEncoder{
         cv::Mat bg_frame;                       // リサイズフレームの背景
         int ratio;                              // リサイズ倍率
         cv::Rect roi;                           // リサイズフレームの貼り付け位置
+        std::atomic<int>& sampling_type;        // クロマサブサンプリング形式
         std::atomic<int>& quality;              // 量子化品質係数
         std::vector<cv::Rect> regions;          // ディスプレイノードの担当領域
         std::vector<cv::Mat> raw_frames;        // ディスプレイノード毎の生フレーム
@@ -42,8 +42,8 @@ class FrameEncoder{
     
     public:
         FrameEncoder(const std::string video_src, const int column, const int row, // コンストラクタ
-                     const int width, const int height, std::atomic<int>& quality,
-                     std::vector<jpegbuf_ptr_t>& send_bufs);
+                     const int width, const int height, std::atomic<int>& sampling_type,
+                     std::atomic<int>& quality, std::vector<jpegbuf_ptr_t>& send_bufs);
         ~FrameEncoder();  // デストラクタ
         void run();       // フレーム符号化を開始
 };

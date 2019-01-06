@@ -9,7 +9,6 @@
 #include "mutex_logger.hpp"
 #include "ring_buffer.hpp"
 #include "socket_utils.hpp"
-#include "sync_utils.hpp"
 #include <vector>
 #include <atomic>
 #include <thread>
@@ -22,10 +21,11 @@ class FrameSender{
         sock_ptr_t sock;                        // TCPソケット
         _ip::tcp::acceptor acc;                 // TCPアクセプタ
         std::vector<sock_ptr_t> socks;          // 接続済TCPソケット
-        long frame_num = 0;                     // フレーム番号
         const int display_num;                  // 全ディスプレイ数
+        int fb_id = 0;                          // 表示フレームバッファのインデックス
+        const int viewbuf_size;                 // 表示フレームバッファ数
         std::atomic<int> send_count;            // 送信完了数
-        std::atomic<bool>& send_semaphore;      // 送信制御用セマフォ
+        std::vector<std::string> send_msgs;     // 送信メッセージ
         std::vector<jpegbuf_ptr_t>& send_bufs;  // 送信フレームバッファ
         
         void run();                                          // 送信処理を開始
@@ -35,8 +35,8 @@ class FrameSender{
     
     public:
         FrameSender(_asio::io_service& ios, const int port,  // コンストラクタ
-                    const int display_num, std::atomic<bool>& send_semaphore,
-                    std::vector<jpegbuf_ptr_t>& send_bufs);
+                    const int display_num, std::vector<jpegbuf_ptr_t>& send_bufs,
+                    const int dec_thre_num);
 };
 
 #endif  /* FRAME_SENDER_HPP */

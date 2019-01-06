@@ -12,7 +12,7 @@ CONF = $(PWD)/conf
 BIN = $(PWD)/bin
 CV_HDR = /usr/local/include/opencv2
 HEAD_LDFLAGS = -lboost_system -lboost_thread -lpthread -lturbojpeg \
-               -lopencv_core -lopencv_imgcodecs -lopencv_imgproc -lopencv_videoio 
+               -lopencv_core -lopencv_imgproc -lopencv_videoio 
 DISP_LDFLAGS = -lboost_system -lboost_thread -lpthread -lturbojpeg 
 
 # 全てビルド
@@ -27,7 +27,7 @@ head: build_common build_head test_head
 .PHONY: display
 display: build_common build_display test_display
 
-# 共通モジュールのビルド
+# 共通モジュールをビルド
 .PHONY: build_common
 build_common: $(COMN)/mutex_logger.o $(COMN)/base_config_parser.o
 
@@ -65,15 +65,15 @@ $(HEAD)/main.o: $(HEAD)/main.cpp
 # ディスプレイノード用プログラムをビルド
 .PHONY: build_display
 build_display: $(COMN)/mutex_logger.o $(COMN)/base_config_parser.o $(DISP)/config_parser.o \
-               $(DISP)/memory_checker.o $(DISP)/frame_receiver.o $(DISP)/frame_decoder.o \
+               $(DISP)/viewer_framebuffer.o $(DISP)/frame_receiver.o $(DISP)/frame_decoder.o \
                $(DISP)/frame_viewer.o $(DISP)/display_client.o $(DISP)/main.o
 	$(CXX) $(DISP_LDFLAGS) -o $(BIN)/display_client $^
 
 $(DISP)/config_parser.o: $(DISP)/config_parser.cpp
 	$(CXX) $(CXXFLAGS) -I$(DISP)/include -I$(COMN)/include -c -o $@ $<
 
-$(DISP)/memory_checker.o: $(DISP)/memory_checker.cpp
-	$(CXX) $(CXXFLAGS) -I$(DISP)/include -c -o $@ $<
+$(DISP)/viewer_framebuffer.o: $(DISP)/viewer_framebuffer.cpp
+	$(CXX) $(CXXFLAGS) -I$(DISP)/include -I$(COMN)/include -c -o $@ $<
 
 $(DISP)/frame_receiver.o: $(DISP)/frame_receiver.cpp
 	$(CXX) $(CXXFLAGS) -I$(DISP)/include -I$(COMN)/include -c -o $@ $<
@@ -100,7 +100,7 @@ test_head:
 test_display:
 	$(BIN)/display_client $(CONF)/display_conf.json
 
-# 実行ファイルを全消去
+# バイナリファイルを全消去
 .PHONY: clean
 clean:
 	rm -f $(BIN)/*

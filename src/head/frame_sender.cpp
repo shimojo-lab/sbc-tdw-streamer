@@ -7,11 +7,12 @@
 
 /* コンストラクタ */
 FrameSender::FrameSender(_asio::io_service& ios, const int port, const int display_num,
-                         std::atomic<bool>& send_semaphore, std::vector<jpegbuf_ptr_t>& send_bufs):
+                         std::vector<jpegbuf_ptr_t>& send_bufs, const int dec_thre_num):
     ios(ios),
     acc(ios, _ip::tcp::endpoint(_ip::tcp::v4(), port)),
     display_num(display_num),
-    send_semaphore(send_semaphore),
+    viewbuf_size(dec_thre_num+1),
+    send_msgs(display_num),
     send_bufs(send_bufs)
 {
     // パラメータを初期化
@@ -33,15 +34,14 @@ void FrameSender::run(){
 
 /* フレームを送信 */
 void FrameSender::sendFrame(){
-    for(int id=0; id<this->display_num; ++id){    
-//        const std::string param = PARAM_DELIMITER + std::to_string(this->frame_num);
-        const std::string param = "";
-        const std::string send_msg = this->send_bufs[id]->pop() + param + MSG_DELIMITER;
-        _asio::async_write(*this->socks[id],
-                           _asio::buffer(send_msg),
-                           boost::bind(&FrameSender::onSendFrame, this, _ph::error, _ph::bytes_transferred));
+    for(int i=0; i<this->display_num; ++i){
+        this->send_msgs[i] = this->send_bufs[i]->pop() + std::to_string(this->fb_id) + MSG_DELIMITER;
+        _asio::async_write(*this->socks[i],
+                           _asio::buffer(this->send_msgs[i]),
+                           boost::bind(&FrameSender::onSendFrame, this, _ph::error, _ph::bytes_transferred)
+        );
     }
-    this->frame_num += 1;
+    this->fb_id = (this->fb_id+1) % this->viewbuf_size;
 }
 
 /* ディスプレイノード接続時のコールバック */
@@ -83,11 +83,6 @@ void FrameSender::onSendFrame(const err_t& err, size_t t_bytes){
     this->send_count.store(count+1, std::memory_order_release);
     if(this->send_count.load(std::memory_order_acquire) == this->display_num){
         this->send_count.store(0, std::memory_order_release);
-        
-        // 受信側のメモリ残量に応じて送信中断
-        while(!this->send_semaphore.load(std::memory_order_acquire)){
-            std::this_thread::sleep_for(std::chrono::seconds(SEND_WAIT_TIME));
-        }
         this->sendFrame();
     }
 }

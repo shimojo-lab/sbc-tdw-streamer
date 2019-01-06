@@ -9,9 +9,12 @@
 #include "socket_utils.hpp"
 #include "base_config_parser.hpp"
 #include <vector>
+extern "C"{
+    #include <turbojpeg.h>
+}
 
 using fs_params_t = std::tuple<
-    std::string, int, int, int, int, int, int, int, std::vector<std::string>
+    std::string, int, int, int, int, int, int, int, int, int, int, std::vector<std::string>
 >;
 
 /* 設定ファイルのパーサ */
@@ -25,7 +28,11 @@ class ConfigParser : public BaseConfigParser{
         int fs_port;                        // フロントエンドサーバ用ポート
         int stream_port;                    // フレーム送信用ポート
         int sendbuf_size;                   // 送信フレームバッファのサイズ
-        int quality;                        // JPEG圧縮品質の初期値
+        int recvbuf_size;                   // 受信バッファサイズのサイズ
+        int viewbuf_size;                   // 表示フレームバッファのサイズ
+        int sampling_type;                  // クロマサブサンプリング形式の初期値
+        int quality;                        // JPEG品質係数の初期値
+        int dec_thre_num;                   // フレーム展開スレッドの数
         std::vector<std::string> ip_addrs;  // ディスプレイノードのIP
         
         const bool readParams(const _pt::ptree& conf) override;  // パラメータを読み込み
