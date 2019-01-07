@@ -21,7 +21,7 @@ const bool ConfigParser::readParams(const _pt::ptree& conf){
         this->ip = this->getStrParam("head_node.ip");
         this->port = this->getIntParam("head_node.port");
         this->fb_dev = this->getStrParam("device.framebuffer");
-        this->fb_dev = this->getStrParam("device.tty");
+        this->tty_dev = this->getStrParam("device.tty");
     }catch(...){
         print_err("Could not get parameter", "Config file is invalid");
         return false;

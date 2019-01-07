@@ -22,7 +22,8 @@ extern "C"{
     #include <linux/kd.h>
 }
 
-const int BITS_PER_CHANNEL = 8;  // 1チャネルあたりのビット数
+const int DEVICE_OPEN_FAILED = -1;  // デバイスファイルオープン失敗時の返り値
+const int BITS_PER_PIXEL = 24;      // 1ピクセルあたりのビット数
 
 /* 表示フレームバッファ */
 class ViewerFramebuffer{

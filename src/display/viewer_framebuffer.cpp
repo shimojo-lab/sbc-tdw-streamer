@@ -35,26 +35,34 @@ const bool ViewerFramebuffer::openFramebuffer(const std::string fb_dev, const in
 {
     // デバイスファイルを読み込み
     this->fb = open(fb_dev.c_str(), O_RDWR);
-    if(this->fb < 0){
+    if(this->fb == DEVICE_OPEN_FAILED){
         print_err("Could not open framebuffer", fb_dev);
         return false;
     }
     
     // フレームバッファのサイズを設定
     struct fb_fix_screeninfo finfo;
-    if(ioctl(this->fb, FBIOGET_VSCREENINFO, &this->vinfo) || ioctl(this->fb, FBIOGET_FSCREENINFO, &finfo)){
-        print_err("Could not get framebuffer size", "ioctl failed");
+    if(ioctl(this->fb, FBIOGET_VSCREENINFO, &this->vinfo)){
+        print_err("Could not get framebuffer info", "ioctl failed");
         return false;
     }
     this->vinfo.bits_per_pixel = BITS_PER_CHANNEL;
     this->vinfo.xres = width;
     this->vinfo.yres = height;
-    this->fb_size = this->vinfo.yres * finfo.line_length;
     this->vinfo.xres_virtual = this->vinfo.xres;
     this->vinfo.yres_virtual = this->vinfo.yres * this->viewbuf_size;
     this->vinfo.xoffset = 0;
     this->vinfo.yoffset = 0;
-    this->total_fb_size = this->vinfo.yres * finfo.line_length;
+    if(ioctl(this->fb, FBIOPUT_VSCREENINFO, &this->vinfo)){
+        print_err("Could not set framebuffer size", "ioctl failed");
+        return false;
+    }
+    if(ioctl(this->fb, FBIOGET_FSCREENINFO, &finfo)){
+        print_err("Could not get framebuffer info", "ioctl failed");
+        return false;
+    }
+    this->fb_size = this->vinfo.yres * finfo.line_length;
+    this->total_fb_size = this->vinfo.yres_virtual * finfo.line_length;
     
     // フレームバッファをメモリ上にマッピング
     this->fb_ptr = (unsigned char*)mmap(NULL,
@@ -74,12 +82,12 @@ const bool ViewerFramebuffer::openFramebuffer(const std::string fb_dev, const in
 /* カーソルを非表示化 */
 const bool ViewerFramebuffer::hideCursor(const std::string tty_dev){
     this->tty = open(tty_dev.c_str(), O_WRONLY);
-    if(this->tty < 0){
+    if(this->tty == DEVICE_OPEN_FAILED){
         print_err("Could not open tty", tty_dev);
         return false;
     }
-    else if(!ioctl(this->tty, KDSETMODE, KD_GRAPHICS)){
-        print_err("Could not hide cursor", tty_dev);
+    else if(ioctl(this->tty, KDSETMODE, KD_GRAPHICS)){
+        print_err("Could not hide cursor", "ioctl failed");
         return false;
     }
     return true;
