@@ -1,6 +1,6 @@
 {
     "//": "ヘッドノードの設定",
-    "video_src": "/home/kazuya/sbc_tdw_streamer/test/mmd.mp4",
+    "video_src": "/home/kazuya/sbc-tdw-streamer/test/mmd.mp4",
     "layout": {
         "column": 1,
         "row": 1

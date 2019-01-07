@@ -62,11 +62,11 @@ const bool ViewerFramebuffer::openFramebuffer(const std::string fb_dev, const in
         return false;
     }
     this->fb_size = this->vinfo.yres * finfo.line_length;
-    this->total_fb_size = this->vinfo.yres_virtual * finfo.line_length;
+    this->total_fb_size = finfo.smem_len;
     
     // フレームバッファをメモリ上にマッピング
     this->fb_ptr = (unsigned char*)mmap(NULL,
-                                        this->fb_size,
+                                        this->total_fb_size,
                                         PROT_READ|PROT_WRITE,
                                         MAP_SHARED,
                                         this->fb,
@@ -96,9 +96,8 @@ const bool ViewerFramebuffer::hideCursor(const std::string tty_dev){
 /* フレームバッファの描画領域を取得 */
 unsigned char *ViewerFramebuffer::getFramebuffer(const int id){
     // フレームバッファ満杯時は待機
-    std::unique_lock<std::mutex> u_lock(this->lock);
-    while(this->stored_num == this->viewbuf_size){
-        this->full_wait.wait(u_lock);
+    while(this->stored_num.load() == this->viewbuf_size){
+        usleep(1000);
     }
     
     // 描画領域のポインタを取得
@@ -108,19 +107,13 @@ unsigned char *ViewerFramebuffer::getFramebuffer(const int id){
 
 /* フレームバッファを有効化 */
 void ViewerFramebuffer::activateFramebuffer(){
-    std::unique_lock<std::mutex> u_lock(this->lock);
-    const int pre_stored_num = this->stored_num;
     ++this->stored_num;
-    if(pre_stored_num == 0){
-        this->empty_wait.notify_one();
-    }
 }
 
 /* フレームが供給されるまで待機 */
 void ViewerFramebuffer::waitForFramebuffer(){
-    std::unique_lock<std::mutex> u_lock(this->lock);
-    while(this->stored_num == 0){
-        this->empty_wait.wait(u_lock);
+    while(this->stored_num.load() == 0){
+        usleep(1000);
     } 
 }
 
@@ -132,11 +125,6 @@ void ViewerFramebuffer::swapFramebuffer(){
     this->cur_page = (this->cur_page+1) % this->viewbuf_size;
     
     // フレームバッファ満杯時のロックを解除
-    std::unique_lock<std::mutex> u_lock(this->lock);
-    const int pre_stored_num = this->stored_num;
     --this->stored_num;
-    if(pre_stored_num == this->viewbuf_size){
-        this->full_wait.notify_all();
-    }
 }
 
