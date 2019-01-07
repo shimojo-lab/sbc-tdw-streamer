@@ -22,7 +22,6 @@ FrameDecoder::FrameDecoder(const jpegbuf_ptr_t recv_buf, const rawbuf_ptr_t view
 
 /* デストラクタ */
 FrameDecoder::~FrameDecoder(){
-    // JPEGデコーダを破棄
     tjDestroy(this->handle);
 }
 
@@ -50,16 +49,14 @@ void FrameDecoder::decode(){
     tjDecompress2(this->handle,
                   jpeg_frame.data(),
                   jpeg_size,
-                  this->view_buf->getFramebuffer(id),
+                  this->view_buf->getDrawArea(id),
                   frame_w,
-                  frame_w*FRAME_COLORS,
+                  frame_w*COLOR_CHANNEL_NUM,
                   frame_h,
                   TJPF_RGB,
                   TJFLAG_FASTDCT|TJFLAG_FASTUPSAMPLE
     );
-    
-    // 表示フレームバッファに反映
-    this->view_buf->activateFramebuffer();
+    this->view_buf->addFrameNum();
 }
 
 /* フレーム展開を開始 */

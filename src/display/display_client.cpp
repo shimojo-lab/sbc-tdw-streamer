@@ -66,8 +66,7 @@ void DisplayClient::onRecvInit(const err_t& err, size_t t_bytes){
     );
     
     // 別スレッドでフレーム展開器を起動
-    const rawbuf_ptr_t view_buf = std::make_shared<ViewerFramebuffer>(this->fb_dev, width, height,
-                                                                      dec_thre_num+1, this->tty_dev);
+    const rawbuf_ptr_t view_buf = std::make_shared<ViewerFramebuffer>(width, height, dec_thre_num+1);
     for(int i=0; i<dec_thre_num; ++i){
         this->dec_thres.push_back(boost::thread(boost::bind(&DisplayClient::runFrameDecoder, this,
                                                             recv_buf, view_buf))
