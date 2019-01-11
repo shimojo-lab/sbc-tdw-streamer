@@ -10,13 +10,15 @@ ViewFramebuffer::ViewFramebuffer(const int width, const int height, const int vi
                                  const unsigned int wait_usec):
     viewbuf_num(viewbuf_num),
     frame_size(width*height*COLOR_CHANNEL_NUM),
-    wait_usec(wait_usec)
+    wait_usec(wait_usec),
+    viewbuf_ptrs(viewbuf_num),
+    viewbuf_states(viewbuf_num)
 {
     // フレームバッファ領域を確保
     for(int i=0; i<this->viewbuf_num; ++i){
-        this->viewbuf_ptrs.push_back(new unsigned char[this->frame_size]);
+        this->viewbuf_ptrs[i] = new unsigned char[this->frame_size];
+        this->viewbuf_states[i].store(false, std::memory_order_release);
     }
-    this->stored_num.store(0, std::memory_order_release);
 }
 
 /* デストラクタ */
@@ -28,7 +30,7 @@ ViewFramebuffer::~ViewFramebuffer(){
 
 /* フレームバッファの描画領域を取得 */
 unsigned char *ViewFramebuffer::getDrawArea(const int id){
-    while(this->stored_num.load(std::memory_order_acquire) == this->viewbuf_num){
+    while(this->viewbuf_states[id].load(std::memory_order_acquire)){
         usleep(this->wait_usec);
     }
     return this->viewbuf_ptrs[id];
@@ -36,12 +38,10 @@ unsigned char *ViewFramebuffer::getDrawArea(const int id){
 
 /* フレームバッファの表示領域を取得 */
 const unsigned char *ViewFramebuffer::getDisplayArea(){
-    while(this->stored_num.load(std::memory_order_acquire) == 0){
+    while(!this->viewbuf_states[this->cur_page].load(std::memory_order_acquire)){
         usleep(this->wait_usec);
-    } 
-    const unsigned char *ptr = this->viewbuf_ptrs[this->cur_page];
-    this->cur_page = (this->cur_page+1) % this->viewbuf_num;
-    return ptr;
+    }
+    return this->viewbuf_ptrs[this->cur_page];
 }
 
 /* フレームバッファの表示領域のインデックスを取得 */
@@ -49,14 +49,14 @@ const int ViewFramebuffer::getCurrentPage(){
     return this->cur_page;
 }
 
-
-/* 格納済フレーム数を加算 */
-void ViewFramebuffer::addFrameNum(){
-    ++this->stored_num;
+/* フレーム領域の表示を有効化 */
+void ViewFramebuffer::activateFrame(const int id){
+    this->viewbuf_states[id].store(true, std::memory_order_release);
 }
 
-/* 格納済フレーム数を減算 */
-void ViewFramebuffer::subFrameNum(){
-    --this->stored_num;
+/* フレーム領域の表示を無効化 */
+void ViewFramebuffer::deactivateFrame(){
+    this->viewbuf_states[this->cur_page].store(false, std::memory_order_release);
+    this->cur_page = (this->cur_page+1) % this->viewbuf_num;
 }
 

@@ -8,11 +8,12 @@
 /* コンストラクタ */
 FrameViewer::FrameViewer(_asio::io_service& ios, _ip::tcp::socket& sock, const tranbuf_ptr_t recv_buf, 
                          const rawbuf_ptr_t view_buf, const std::string fb_dev, const int width,
-                         const int height, const std::string tty_dev):
+                         const int height, const std::string tty_dev, const int tuning_term):
     ios(ios),
     sock(sock),
     recv_buf(recv_buf),
-    view_buf(view_buf)
+    view_buf(view_buf),
+    tuning_term(tuning_term)
 {
     // フレームバッファをオープン
     if(!this->openFramebuffer(fb_dev, width, height)){
@@ -98,19 +99,22 @@ void FrameViewer::hideCursor(const std::string& tty_dev){
 /* フレームを表示 */
 void FrameViewer::displayFrame(){
     std::memcpy(this->fb_ptr, this->next_frame, this->fb_size);
-    //_ml::warn("Could not display frame", "unable to write on framebuffer");
     msync(this->fb_ptr, this->fb_size, MS_SYNC);
-    this->view_buf->subFrameNum();
+    this->view_buf->deactivateFrame();
 }
 
 /* 同期メッセージを生成 */
 const std::string FrameViewer::makeSyncMsg(){
-    JsonHandler json;
-    json.setParam("frame_num", this->view_buf->getCurrentPage());
-    json.setParam("jpeg_control", JPEG_CONTROL_OFF);
-    json.setParam("quality", JPEG_PARAM_KEEP);
-    json.setParam("sampling_type", JPEG_PARAM_KEEP);
-    return json.serialize();
+    this->json.setParam("frame_num", this->view_buf->getCurrentPage());
+    if(this->frame_count == this->tuning_term){
+        this->frame_count = 0;
+        this->json.setParam("jpeg_tuning", JPEG_TUNING_ON);
+        this->json.setParam("quality", JPEG_PARAM_KEEP);
+        this->json.setParam("sampling_type", JPEG_PARAM_KEEP);
+    }else{
+        this->json.setParam("jpeg_tuning", JPEG_TUNING_OFF);
+    }
+    return this->json.serialize();
 }
 
 /* 同期メッセージを送信 */
@@ -138,6 +142,7 @@ void FrameViewer::onRecvSync(const err_t& err, size_t t_bytes){
     
     // フレームを表示
     this->displayFrame();
+    ++this->frame_count;
     
     // 次番フレーム用の同期を開始
     this->next_frame = this->view_buf->getDisplayArea();

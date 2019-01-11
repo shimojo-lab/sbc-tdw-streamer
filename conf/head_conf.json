@@ -1,6 +1,6 @@
 {
     "//": "ヘッドノードの設定",
-    "video_src": "/home/kazuya/sbc-tdw-streamer/test/test.mp4",
+    "video_src": "/home/kazuya/sbc-tdw-streamer/test/test2.mp4",
     "layout": {
         "column": 1,
         "row": 1
@@ -19,9 +19,10 @@
         "wait_time": 100
     },
     "compression": {
-        "init_subsampling_type": "yuv422",
+        "init_subsampling_type": "yuv444",
         "init_jpeg_quality": 95,
-        "jpeg_decoder_num": 3
+        "jpeg_decoder_num": 3,
+        "jpeg_tuning_term": 100
     },
     "display_node": [
         "192.168.10.56"

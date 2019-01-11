@@ -33,6 +33,7 @@ const bool ConfigParser::readParams(const _pt::ptree& conf){
         sampling = this->getStrParam("compression.init_subsampling_type");
         this->quality = this->getIntParam("compression.init_jpeg_quality");
         this->dec_thre_num = this->getIntParam("compression.jpeg_decoder_num");
+        this->tuning_term = this->getIntParam("compression.jpeg_tuning_term");
     }catch(...){
         _ml::caution("Could not get parameter", "Config file is invalid");
         return false;
@@ -84,9 +85,10 @@ const fs_params_t ConfigParser::getFrontendServerParams(){
     const int sampling_type = this->sampling_type;
     const int quality = this->quality;
     const int dec_thre_num = this->dec_thre_num;
+    const int tuning_term = this->tuning_term;
     const std::vector<std::string> ip_addrs = this->ip_addrs;
     return std::forward_as_tuple(video_src, column, row, width, height, stream_port,
                                  sendbuf_size, recvbuf_size, wait_usec, sampling_type,
-                                 quality, dec_thre_num, ip_addrs);
+                                 quality, dec_thre_num, tuning_term, ip_addrs);
 }
 

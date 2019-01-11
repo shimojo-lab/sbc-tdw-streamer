@@ -14,7 +14,7 @@ extern "C"{
 }
 
 using fs_params_t = std::tuple<
-    std::string, int, int, int, int, int, int, int, unsigned int, int, int, int,
+    std::string, int, int, int, int, int, int, int, unsigned int, int, int, int, int,
     std::vector<std::string>
 >;
 
@@ -34,6 +34,7 @@ class ConfigParser : public BaseConfigParser{
         int sampling_type;                  // クロマサブサンプル比の初期値
         int quality;                        // JPEG品質係数の初期値
         int dec_thre_num;                   // フレーム展開スレッドの数
+        int tuning_term;                    // JPEGパラメータの調整周期
         std::vector<std::string> ip_addrs;  // ディスプレイノードのIP
         
         const bool readParams(const _pt::ptree& conf) override;  // パラメータを読み込み

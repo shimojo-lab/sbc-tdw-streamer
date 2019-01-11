@@ -27,6 +27,7 @@ class FrontendServer{
         int recvbuf_num;                       // 受信フレームバッファの領域数
         unsigned int wait_usec;                // スピンロック内の待機時間
         int dec_thre_num;                      // フレーム展開スレッドの数
+        int tuning_term;                       // JPEGパラメータの調節周期
         int connected_num = 0;                 // 接続済ディスプレイノード数
         std::atomic<int> sampling_type;        // クロマサブサンプリングの形式
         std::atomic<int> quality;              // JPEG品質係数

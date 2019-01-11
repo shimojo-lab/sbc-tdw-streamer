@@ -17,7 +17,7 @@ FrontendServer::FrontendServer(_asio::io_service& ios, ConfigParser& parser, con
     std::tie(
         video_src, column, row, this->width, this->height, this->stream_port, sendbuf_num,
         this->recvbuf_num, this->wait_usec, sampling_type_, quality_, this->dec_thre_num,
-        this->ip_addrs
+        this->tuning_term, this->ip_addrs
     ) = parser.getFrontendServerParams();
     this->display_num = column * row;
     
@@ -67,6 +67,7 @@ const std::string FrontendServer::makeInitMsg(){
     json.setParam("recvbuf_num", this->recvbuf_num);
     json.setParam("wait_usec", this->wait_usec);
     json.setParam("dec_thre_num", this->dec_thre_num);
+    json.setParam("tuning_term", this->tuning_term);
     return json.serialize();
 }
 

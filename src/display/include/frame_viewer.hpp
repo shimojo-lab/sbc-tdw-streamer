@@ -37,6 +37,9 @@ class FrameViewer{
         int fb_size;                      // フレームバッファのサイズ
         unsigned char *fb_ptr;            // フレームバッファの先頭
         const unsigned char *next_frame;  // 次番フレーム
+        JsonHandler json;                 // JSONハンドラ
+        const int tuning_term;            // JPEGパラメータの調整周期
+        int frame_count = 0;              // 表示済フレーム数
         
         const bool openFramebuffer(const std::string& fb_dev,  // フレームバッファをオープン
                                    const int width, const int height);
@@ -51,7 +54,7 @@ class FrameViewer{
         FrameViewer(_asio::io_service& ios, _ip::tcp::socket& sock,  // コンストラクタ
                     const tranbuf_ptr_t recv_buf, const rawbuf_ptr_t view_buf,
                     const std::string fb_dev, const int width, const int height,
-                    const std::string tty_dev);
+                    const std::string tty_dev, const int tuning_term);
         ~FrameViewer();  // デストラクタ
 };
 

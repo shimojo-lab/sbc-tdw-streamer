@@ -30,7 +30,10 @@ const init_params_t DisplayClient::parseInitMsg(const std::string& msg){
     const int recvbuf_num = json.getParam("recvbuf_num");
     const int wait_usec = json.getParam("wait_usec");
     const int dec_thre_num = json.getParam("dec_thre_num");
-    return std::forward_as_tuple(width, height, stream_port, recvbuf_num, wait_usec, dec_thre_num);
+    const int tuning_term = json.getParam("tuning_term");
+    return std::forward_as_tuple(
+        width, height, stream_port, recvbuf_num, wait_usec, dec_thre_num, tuning_term
+    );
 }
 
 /* ヘッドノード接続時のコールバック */
@@ -61,9 +64,9 @@ void DisplayClient::onRecvInit(const err_t& err, size_t t_bytes){
     const auto data = this->stream_buf.data();
     std::string msg(_asio::buffers_begin(data), _asio::buffers_begin(data)+t_bytes);
     msg.erase(msg.length()-MSG_DELIMITER_LEN);
-    int width, height, stream_port, recvbuf_num, wait_usec, dec_thre_num;
+    int width, height, stream_port, recvbuf_num, wait_usec, dec_thre_num, tuning_term;
     std::tie(
-        width, height, stream_port, recvbuf_num, wait_usec, dec_thre_num
+        width, height, stream_port, recvbuf_num, wait_usec, dec_thre_num, tuning_term
     ) = this->parseInitMsg(msg);
 
     
@@ -93,7 +96,8 @@ void DisplayClient::onRecvInit(const err_t& err, size_t t_bytes){
                        this->fb_dev,
                        width,
                        height,
-                       this->tty_dev
+                       this->tty_dev,
+                       tuning_term
     );
 }
 

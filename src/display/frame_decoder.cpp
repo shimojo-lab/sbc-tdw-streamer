@@ -71,7 +71,7 @@ void FrameDecoder::decode(){
         _ml::warn("Could not get new video frame", err_msg);
         return;
     }
-    this->view_buf->addFrameNum();
+    this->view_buf->activateFrame(id);
 }
 
 /* フレーム展開を開始 */

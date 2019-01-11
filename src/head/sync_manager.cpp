@@ -23,13 +23,12 @@ SyncManager::SyncManager(_asio::io_service& ios, std::vector<sock_ptr_t>& socks,
 
 /* 同期メッセージをパース */
 void SyncManager::parseSyncMsg(const std::string& msg, const int id){
-    JsonHandler json;
-    json.deserialize(msg);
-    const int frame_num = json.getParam("frame_num");
-    
-    if(json.getParam("jpeg_control") == JPEG_CONTROL_ON){
+    this->json.deserialize(msg);
+    const int frame_num = this->json.getParam("frame_num");
+    _ml::debug(frame_num);
+    if(json.getParam("jpeg_control") == JPEG_TUNING_ON){
         // 品質係数を調整
-        switch(json.getParam("quality")){
+        switch(this->json.getParam("quality")){
             case JPEG_PARAM_KEEP:
                 break;
             case JPEG_PARAM_UP:
@@ -47,7 +46,7 @@ void SyncManager::parseSyncMsg(const std::string& msg, const int id){
         }
         
         // クロマサブサンプル比を調整
-        switch(json.getParam("sampling_type")){
+        switch(this->json.getParam("sampling_type")){
             case JPEG_PARAM_KEEP:
                 break;
             case JPEG_PARAM_UP:

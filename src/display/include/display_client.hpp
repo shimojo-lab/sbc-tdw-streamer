@@ -14,7 +14,7 @@
 #include <boost/thread.hpp>
 
 using init_params_t = std::tuple<
-    int, int, int, int, int, int
+    int, int, int, int, int, int, int
 >;
 
 /* ディスプレイクライアント */

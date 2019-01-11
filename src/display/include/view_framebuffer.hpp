@@ -18,12 +18,12 @@ const int COLOR_CHANNEL_NUM = 3;  // 色のチャネル数
 /* 表示フレームバッファ */
 class ViewFramebuffer{
     private:
-        const int viewbuf_num;                     // フレームバッファの領域数
-        const int frame_size;                      // フレームのサイズ
-        const unsigned int wait_usec;              // スピンロック内の待機時間
-        std::vector<unsigned char*> viewbuf_ptrs;  // フレームバッファの先頭
-        int cur_page = 0;                          // フレームバッファの表示領域
-        std::atomic<int> stored_num;               // 格納済フレーム数
+        const int viewbuf_num;                          // フレームバッファの領域数
+        const int frame_size;                           // フレームのサイズ
+        const unsigned int wait_usec;                   // スピンロック内の待機時間
+        std::vector<unsigned char*> viewbuf_ptrs;       // フレームバッファの先頭
+        std::vector<std::atomic<bool>> viewbuf_states;  // フレームバッファの使用状況
+        int cur_page = 0;                               // フレームバッファの表示領域
     
     public:
         ViewFramebuffer(const int width, const int height,  // コンストラクタ
@@ -32,8 +32,8 @@ class ViewFramebuffer{
         unsigned char *getDrawArea(const int id);  // フレームバッファの描画領域を取得
         const unsigned char *getDisplayArea();     // フレームバッファの表示領域を取得
         const int getCurrentPage();                // 表示領域のインデックスを取得
-        void addFrameNum();                        // 格納済フレーム数を加算
-        void subFrameNum();                        // 格納済フレーム数を減算
+        void activateFrame(const int id);          // フレーム領域の表示を有効化
+        void deactivateFrame();                    // フレーム領域の表示を無効化
 };
 
 using rawbuf_ptr_t = std::shared_ptr<ViewFramebuffer>;
