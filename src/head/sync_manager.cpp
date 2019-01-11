@@ -16,7 +16,7 @@ SyncManager::SyncManager(_asio::io_service& ios, std::vector<sock_ptr_t>& socks,
 {
     // パラメータを初期化
     this->sync_count.store(0, std::memory_order_release);
-    for(int id=0; id<this->display_num; ++id){
+    for(int i=0; i<this->display_num; ++i){
         this->stream_bufs.push_back(std::make_shared<_asio::streambuf>());
     }
 }
@@ -31,7 +31,7 @@ void SyncManager::parseSync(std::string& recv_msg){
 /* 同期メッセージ受信時のコールバック */
 void SyncManager::onRecvSync(const err_t& err, size_t t_bytes, const int id){
     if(err){
-        print_err("Failed to receive sync message", err.message());
+        _ml::caution("Failed to receive sync message", err.message());
         std::exit(EXIT_FAILURE);
     }
     
@@ -42,8 +42,7 @@ void SyncManager::onRecvSync(const err_t& err, size_t t_bytes, const int id){
     this->stream_bufs[id]->consume(t_bytes);
     
     // 全ディスプレイノード間で同期
-    const int count = this->sync_count.load(std::memory_order_acquire);
-    this->sync_count.store(count+1, std::memory_order_release);
+    ++this->sync_count;
     if(this->sync_count.load(std::memory_order_acquire) == this->display_num){
         this->sync_count.store(0, std::memory_order_release);
         this->sendSync();
@@ -53,7 +52,7 @@ void SyncManager::onRecvSync(const err_t& err, size_t t_bytes, const int id){
 /* 同期メッセージ送信時のコールバック */
 void SyncManager::onSendSync(const err_t& err, size_t t_bytes, const int id){
     if(err){
-        print_err("Failed to send sync message", err.message());
+        _ml::caution("Failed to send sync message", err.message());
         std::exit(EXIT_FAILURE);
     }
     
@@ -69,21 +68,21 @@ void SyncManager::onSendSync(const err_t& err, size_t t_bytes, const int id){
 void SyncManager::sendSync(){
     std::string send_msg("sync");
     send_msg += MSG_DELIMITER;
-    for(int id=0; id<this->display_num; ++id){
-        _asio::async_write(*this->socks[id],
+    for(int i=0; i<this->display_num; ++i){
+        _asio::async_write(*this->socks[i],
                            _asio::buffer(send_msg),
-                           boost::bind(&SyncManager::onSendSync, this, _ph::error, _ph::bytes_transferred, id)
+                           boost::bind(&SyncManager::onSendSync, this, _ph::error, _ph::bytes_transferred, i)
         );
     }
 }
 
 /* 同期メッセージの受信を開始 */
 void SyncManager::run(){
-    for(int id=0; id<this->display_num; ++id){
-        _asio::async_read_until(*this->socks[id],
-                                *this->stream_bufs[id],
+    for(int i=0; i<this->display_num; ++i){
+        _asio::async_read_until(*this->socks[i],
+                                *this->stream_bufs[i],
                                 MSG_DELIMITER,
-                                boost::bind(&SyncManager::onRecvSync, this, _ph::error, _ph::bytes_transferred, id)
+                                boost::bind(&SyncManager::onRecvSync, this, _ph::error, _ph::bytes_transferred, i)
         );
     }
     this->ios.run();

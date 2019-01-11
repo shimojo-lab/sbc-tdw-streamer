@@ -23,7 +23,7 @@ const bool ConfigParser::readParams(const _pt::ptree& conf){
         this->fb_dev = this->getStrParam("device.framebuffer");
         this->tty_dev = this->getStrParam("device.tty");
     }catch(...){
-        print_err("Could not get parameter", "Config file is invalid");
+        _ml::caution("Could not get parameter", "Config file is invalid");
         return false;
     }
     return true;

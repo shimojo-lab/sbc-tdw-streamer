@@ -11,7 +11,7 @@ BaseConfigParser::BaseConfigParser(const std::string conf_file){
     try{
         _pt::read_json(conf_file, this->conf);
     }catch(...){
-        print_err("Failed to read config file", conf_file);
+        _ml::caution("Failed to read config file", conf_file);
         std::exit(EXIT_FAILURE);
     }
 }

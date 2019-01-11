@@ -10,7 +10,7 @@ int main(int argc, char *argv[]){
     // 設定ファイルをパース
     std::string conf_file;
     if(argc != ARGUMENT_NUM){
-        print_err("Number of arguments is invalid", "Usage: head_server <config file>");
+        _ml::caution("Number of arguments is invalid", "Usage: head_server <config file>");
         std::exit(EXIT_FAILURE);
     }
     ConfigParser parser(argv[ARGUMENT_INDEX]);

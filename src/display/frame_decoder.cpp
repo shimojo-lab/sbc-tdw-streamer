@@ -7,7 +7,7 @@
 #include <chrono>
 
 /* コンストラクタ */
-FrameDecoder::FrameDecoder(const jpegbuf_ptr_t recv_buf, const rawbuf_ptr_t view_buf):
+FrameDecoder::FrameDecoder(const tranbuf_ptr_t recv_buf, const rawbuf_ptr_t view_buf):
     handle(tjInitDecompress()),
     recv_buf(recv_buf),
     view_buf(view_buf)
@@ -15,7 +15,7 @@ FrameDecoder::FrameDecoder(const jpegbuf_ptr_t recv_buf, const rawbuf_ptr_t view
     // JPEGデコータを起動
     if(this->handle == NULL){
         std::string err_msg(tjGetErrorStr());
-        print_err("Failed to init JPEG decoder", err_msg);
+        _ml::caution("Failed to init JPEG decoder", err_msg);
         std::exit(EXIT_FAILURE);
     }
 }
@@ -66,7 +66,7 @@ void FrameDecoder::run(){
         try{
             this->decode();
         }catch(...){
-            print_warn("Failed to get new video frame", "JPEG decode error");
+            _ml::warn("Could not get new video frame", "JPEG decode error");
         }
 //const auto end = std::chrono::system_clock::now();
 //double elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count();

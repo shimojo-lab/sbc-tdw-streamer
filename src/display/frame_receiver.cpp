@@ -7,13 +7,13 @@
 
 /* コンストラクタ */
 FrameReceiver::FrameReceiver(_asio::io_service& ios, const std::string ip, const int port,
-                             const jpegbuf_ptr_t rbuf):
+                             const tranbuf_ptr_t rbuf):
     ios(ios),
     sock(ios),
     rbuf(rbuf)
 {
     // フレーム受信を開始
-    print_info("Receiving video frames from " + ip + ":" + std::to_string(port));
+    _ml::notice("Receiving video frames from " + ip + ":" + std::to_string(port));
     this->run(ip, port);
 }
 
@@ -28,7 +28,7 @@ void FrameReceiver::run(const std::string ip, const int port){
 /* 接続時のコールバック */
 void FrameReceiver::onConnect(const err_t& err){
     if(err){
-        print_err("Failed TCP connection with head node", err.message());
+        _ml::caution("Failed TCP connection with head node", err.message());
         return;
     }
     
@@ -43,7 +43,7 @@ void FrameReceiver::onConnect(const err_t& err){
 /* フレーム受信時のコールバック */
 void FrameReceiver::onRecvFrame(const err_t& err, size_t t_bytes){
     if(err){
-        print_warn("Failed to receive frame", err.message());
+        _ml::caution("Failed to receive frame", err.message());
     }else{
         // フレームを取得
         const auto data = this->stream_buf.data();

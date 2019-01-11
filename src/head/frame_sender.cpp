@@ -7,11 +7,11 @@
 
 /* コンストラクタ */
 FrameSender::FrameSender(_asio::io_service& ios, const int port, const int display_num,
-                         std::vector<jpegbuf_ptr_t>& send_bufs, const int dec_thre_num):
+                         std::vector<tranbuf_ptr_t>& send_bufs, const int dec_thre_num):
     ios(ios),
     acc(ios, _ip::tcp::endpoint(_ip::tcp::v4(), port)),
     display_num(display_num),
-    viewbuf_size(dec_thre_num+1),
+    viewbuf_num(dec_thre_num+1),
     send_msgs(display_num),
     send_bufs(send_bufs)
 {
@@ -20,7 +20,7 @@ FrameSender::FrameSender(_asio::io_service& ios, const int port, const int displ
     this->send_count.store(0, std::memory_order_release);
     
     // 送信処理を開始
-    print_info("Streaming video frames at :" + std::to_string(port));
+    _ml::notice("Streaming video frames at :" + std::to_string(port));
     this->run();
 }
 
@@ -41,18 +41,17 @@ void FrameSender::sendFrame(){
                            boost::bind(&FrameSender::onSendFrame, this, _ph::error, _ph::bytes_transferred)
         );
     }
-    this->fb_id = (this->fb_id+1) % this->viewbuf_size;
+    this->fb_id = (this->fb_id+1) % this->viewbuf_num;
 }
 
 /* ディスプレイノード接続時のコールバック */
 void FrameSender::onConnect(const err_t& err){
     const std::string ip = this->sock->remote_endpoint().address().to_string();
     if(err){
-        print_err("Failed stream connection with " + ip, err.message());
+        _ml::caution("Failed stream connection with " + ip, err.message());
         std::exit(EXIT_FAILURE);
     }else{
-        const int count = this->send_count.load(std::memory_order_acquire);
-        this->send_count.store(count+1, std::memory_order_release);
+        ++this->send_count;
     }
     
     // 新規TCPソケットを用意
@@ -61,8 +60,9 @@ void FrameSender::onConnect(const err_t& err){
     
     if(this->send_count.load(std::memory_order_acquire) < this->display_num){
         // 接続待機を再開
-        const auto bind = boost::bind(&FrameSender::onConnect, this, _ph::error);
-        this->acc.async_accept(*this->sock, bind);
+        this->acc.async_accept(*this->sock,
+                               boost::bind(&FrameSender::onConnect, this, _ph::error)
+        );
     }else{
         // フレーム送信を開始
         this->sock->close();
@@ -74,13 +74,12 @@ void FrameSender::onConnect(const err_t& err){
 /* フレーム送信時のコールバック */
 void FrameSender::onSendFrame(const err_t& err, size_t t_bytes){
     if(err){
-        print_err("Failed to send frame", err.message());
+        _ml::caution("Failed to send frame", err.message());
         std::exit(EXIT_FAILURE);
     }
     
     // 全送信が完了したら次番フレームを送信
-    const int count = this->send_count.load(std::memory_order_acquire);
-    this->send_count.store(count+1, std::memory_order_release);
+    ++this->send_count;
     if(this->send_count.load(std::memory_order_acquire) == this->display_num){
         this->send_count.store(0, std::memory_order_release);
         this->sendFrame();

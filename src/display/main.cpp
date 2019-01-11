@@ -9,7 +9,7 @@
 int main(int argc, char *argv[]){
     // 設定ファイルをパース
     if(argc != ARGUMENT_NUM){
-        print_err("Number of arguments is invalid", "Usage: sbc_client <config file>");
+        _ml::caution("Number of arguments is invalid", "Usage: sbc_client <config file>");
         std::exit(EXIT_FAILURE);
     }
     ConfigParser parser(argv[ARGUMENT_INDEX]);

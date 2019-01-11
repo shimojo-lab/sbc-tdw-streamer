@@ -1,6 +1,6 @@
 {
     "//": "ヘッドノードの設定",
-    "video_src": "/home/kazuya/sbc-tdw-streamer/test/mmd.mp4",
+    "video_src": "/home/kazuya/sbc-tdw-streamer/test/test.mp4",
     "layout": {
         "column": 1,
         "row": 1
@@ -15,7 +15,8 @@
     },
     "buffer": {
         "send_buffer_size": 16,
-        "receive_buffer_size": 16
+        "receive_buffer_size": 16,
+        "wait_time": 1000
     },
     "compression": {
         "init_subsampling_type": "yuv444",

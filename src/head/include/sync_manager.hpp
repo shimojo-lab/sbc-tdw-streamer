@@ -21,8 +21,8 @@ class SyncManager{
         std::vector<streambuf_ptr_t> stream_bufs;  // ストリームバッファ
         const int display_num;                     // 全ディスプレイ数
         std::atomic<int> sync_count;               // 同期済ディスプレイ数
-        std::atomic<int>& sampling_type;           // クロマサブサンプリングの形式
-        std::atomic<int>& quality;                 // 量子化品質係数
+        std::atomic<int>& sampling_type;           // クロマサブサンプル比
+        std::atomic<int>& quality;                 // JPEG品質係数
         
         void parseSync(std::string& recv_msg);                            // 同期メッセージをパース
         void onRecvSync(const err_t& err, size_t t_bytes, const int id);  // 同期メッセージ受信時のコールバック

@@ -24,13 +24,14 @@ class FrontendServer{
         int height;                            // ディスプレイの縦の画素数
         int fs_port;                           // フロントエンドサーバ用ポート
         int stream_port;                       // フレーム送信用ポート
-        int recvbuf_size;                      // 受信フレームバッファのサイズ
+        int recvbuf_num;                       // 受信フレームバッファの領域数
+        unsigned int wait_usec;                // スピンロック内の待機時間
         int dec_thre_num;                      // フレーム展開スレッドの数
         int connected_num = 0;                 // 接続済ディスプレイノード数
         std::atomic<int> sampling_type;        // クロマサブサンプリングの形式
         std::atomic<int> quality;              // JPEG品質係数
         std::vector<std::string> ip_addrs;     // ディスプレイノードのIP
-        std::vector<jpegbuf_ptr_t> send_bufs;  // 送信フレームバッファ
+        std::vector<tranbuf_ptr_t> send_bufs;  // 送信フレームバッファ
         boost::thread send_thre;               // フレーム送信スレッド
         boost::thread enc_thre;                // フレーム圧縮スレッド
         

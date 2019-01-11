@@ -4,13 +4,11 @@
 **************************/
 
 #include "frame_encoder.hpp"
-#include <fstream>
-#include <iostream>
 
 /* コンストラクタ */
 FrameEncoder::FrameEncoder(const std::string video_src, const int column, const int row,
                            const int width, const int height, std::atomic<int>& sampling_type,
-                           std::atomic<int>& quality, std::vector<jpegbuf_ptr_t>& send_bufs):
+                           std::atomic<int>& quality, std::vector<tranbuf_ptr_t>& send_bufs):
     handle(tjInitCompress()),
     display_num(column*row),
     sampling_type(sampling_type),
@@ -20,14 +18,14 @@ FrameEncoder::FrameEncoder(const std::string video_src, const int column, const 
     // JPEGエンコーダを初期化
     if(this->handle == NULL){
         std::string err_msg(tjGetErrorStr());
-        print_err("Failed to init JPEG encoder", err_msg);
+        _ml::caution("Failed to init JPEG encoder", err_msg);
         std::exit(EXIT_FAILURE);
     }
     
     // 再生動画を読込み
     this->video = cv::VideoCapture(video_src.c_str());
     if(!this->video.isOpened()){
-        print_err("Failed to open video", video_src);
+        _ml::caution("Failed to open video", video_src);
         std::exit(EXIT_FAILURE);
     }
     
@@ -46,7 +44,7 @@ FrameEncoder::~FrameEncoder(){
 /* リサイズ用パラメータを設定 */
 void FrameEncoder::setResizeParams(const int column, const int row, const int width, const int height,
                                    const int frame_w, const int frame_h){
-    // リサイズフレーム背景を設定
+    // リサイズフレームの背景を設定
     const int bg_w = column * width;
     const int bg_h = row * height;
     this->bg_frame = cv::Mat::zeros(bg_h, bg_w, CV_8UC3);
@@ -93,14 +91,13 @@ void FrameEncoder::resize(cv::Mat& video_frame){
 /* フレームをJPEGで符号化 */
 void FrameEncoder::encode(const int sampling_type, const int quality){
     for(int i=0; i<this->display_num; ++i){
-        cv::Mat raw_frame = this->raw_frames[i];
         unsigned char *jpeg_frame = NULL;
         unsigned long jpeg_size = 0;
         const int tj_stat = tjCompress2(handle,
-                                        raw_frame.data,
-                                        raw_frame.cols,
-                                        raw_frame.cols*FRAME_COLORS,
-                                        raw_frame.rows,
+                                        raw_frames[i].data,
+                                        raw_frames[i].cols,
+                                        raw_frames[i].cols*COLOR_CHANNEL_NUM,
+                                        raw_frames[i].rows,
                                         TJPF_RGB,
                                         &jpeg_frame,
                                         &jpeg_size,
@@ -110,15 +107,15 @@ void FrameEncoder::encode(const int sampling_type, const int quality){
         );
         if(tj_stat != 0){
             const std::string err_msg(tjGetErrorStr());
-            print_warn("JPEG encode failed", err_msg);
+            _ml::warn("JPEG encode failed", err_msg);
         }else{
-            std::string jpeg_frame_bytes(jpeg_frame, jpeg_frame+jpeg_size);
+            const std::string jpeg_frame_bytes(jpeg_frame, jpeg_frame+jpeg_size);
             this->send_bufs[i]->push(jpeg_frame_bytes);
         }
     }
 }
 
-/* フレーム符号化を開始 */
+/* フレーム圧縮を開始 */
 void FrameEncoder::run(){
     while(true){
         cv::Mat video_frame;
@@ -129,7 +126,7 @@ void FrameEncoder::run(){
             this->resize(video_frame);
             this->encode(cur_sampling_type, cur_quality);
         }catch(...){
-            print_err("Could not get video frame", "Video ended");
+            _ml::caution("Could not get video frame", "JPEG encoder stopped");
             break;
         }
     }
