@@ -4,7 +4,7 @@
 ##################################
 
 CXX = g++
-CXXFLAGS = -Wall -std=c++11 -O3 -mtune=native -mfpmath=both
+CXXFLAGS = -Wall -std=c++11 -O3 -mtune=native -march=native -mfpmath=both
 HEAD = $(PWD)/src/head
 DISP = $(PWD)/src/display
 COMN = $(PWD)/src/common
@@ -29,9 +29,13 @@ display: build_common build_display test_display
 
 # 共通モジュールをビルド
 .PHONY: build_common
-build_common: $(COMN)/mutex_logger.o $(COMN)/base_config_parser.o $(COMN)/transceive_framebuffer.o
+build_common: $(COMN)/mutex_logger.o $(COMN)/json_handler.o $(COMN)/base_config_parser.o \
+			  $(COMN)/transceive_framebuffer.o
 
 $(COMN)/mutex_logger.o: $(COMN)/mutex_logger.cpp
+	$(CXX) $(CXXFLAGS) -I$(COMN)/include -c -o $@ $<
+
+$(COMN)/json_handler.o: $(COMN)/json_handler.cpp
 	$(CXX) $(CXXFLAGS) -I$(COMN)/include -c -o $@ $<
 
 $(COMN)/base_config_parser.o: $(COMN)/base_config_parser.cpp
@@ -42,9 +46,9 @@ $(COMN)/transceive_framebuffer.o: $(COMN)/transceive_framebuffer.cpp
 
 # ヘッドノード用プログラムをビルド
 .PHONY: build_head
-build_head: $(COMN)/mutex_logger.o $(COMN)/base_config_parser.o $(COMN)/transceive_framebuffer.o \
-            $(HEAD)/config_parser.o $(HEAD)/frame_encoder.o $(HEAD)/frame_sender.o \
-            $(HEAD)/sync_manager.o $(HEAD)/frontend_server.o $(HEAD)/main.o
+build_head: $(COMN)/mutex_logger.o $(COMN)/base_config_parser.o $(COMN)/json_handler.o \
+            $(COMN)/transceive_framebuffer.o $(HEAD)/config_parser.o $(HEAD)/frame_encoder.o \
+            $(HEAD)/frame_sender.o $(HEAD)/sync_manager.o $(HEAD)/frontend_server.o $(HEAD)/main.o
 	$(CXX) $(HEAD_LDFLAGS) -o $(BIN)/head_server $^
 
 $(HEAD)/config_parser.o: $(HEAD)/config_parser.cpp
@@ -67,10 +71,10 @@ $(HEAD)/main.o: $(HEAD)/main.cpp
 
 # ディスプレイノード用プログラムをビルド
 .PHONY: build_display
-build_display: $(COMN)/mutex_logger.o $(COMN)/base_config_parser.o $(COMN)/transceive_framebuffer.o\
-			   $(DISP)/config_parser.o $(DISP)/view_framebuffer.o $(DISP)/frame_receiver.o \
-               $(DISP)/frame_decoder.o $(DISP)/frame_viewer.o $(DISP)/display_client.o \
-               $(DISP)/main.o
+build_display: $(COMN)/mutex_logger.o $(COMN)/base_config_parser.o $(COMN)/json_handler.o \
+               $(COMN)/transceive_framebuffer.o $(DISP)/config_parser.o $(DISP)/view_framebuffer.o \
+               $(DISP)/frame_receiver.o $(DISP)/frame_decoder.o $(DISP)/frame_viewer.o \
+               $(DISP)/display_client.o $(DISP)/main.o
 	$(CXX) $(DISP_LDFLAGS) -o $(BIN)/display_client $^
 
 $(DISP)/config_parser.o: $(DISP)/config_parser.cpp

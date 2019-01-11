@@ -6,9 +6,10 @@
 #ifndef SYNC_MANAGER_HPP
 #define SYNC_MANAGER_HPP
 
+#include "mutex_logger.hpp"
 #include "socket_utils.hpp"
 #include "sync_utils.hpp"
-#include "mutex_logger.hpp"
+#include "json_handler.hpp"
 #include <atomic>
 
 using streambuf_ptr_t = std::shared_ptr<_asio::streambuf>;
@@ -24,7 +25,7 @@ class SyncManager{
         std::atomic<int>& sampling_type;           // クロマサブサンプル比
         std::atomic<int>& quality;                 // JPEG品質係数
         
-        void parseSync(std::string& recv_msg);                            // 同期メッセージをパース
+        void parseSyncMsg(const std::string& msg, const int id);          // 同期メッセージをパース
         void onRecvSync(const err_t& err, size_t t_bytes, const int id);  // 同期メッセージ受信時のコールバック
         void onSendSync(const err_t& err, size_t t_bytes, const int id);  // 同期メッセージ送信時のコールバック
         void sendSync();                                                  // 同期メッセージを送信

@@ -22,7 +22,7 @@ class ViewFramebuffer{
         const int frame_size;                      // フレームのサイズ
         const unsigned int wait_usec;              // スピンロック内の待機時間
         std::vector<unsigned char*> viewbuf_ptrs;  // フレームバッファの先頭
-        int cur_page = 0;                          // 表示中のフレームバッファの領域
+        int cur_page = 0;                          // フレームバッファの表示領域
         std::atomic<int> stored_num;               // 格納済フレーム数
     
     public:
@@ -30,7 +30,8 @@ class ViewFramebuffer{
                         const int viewbuf_num, const unsigned int wait_usec);
         ~ViewFramebuffer();                        // デストラクタ
         unsigned char *getDrawArea(const int id);  // フレームバッファの描画領域を取得
-        const unsigned char *getDisplayArea();     // フレームバッファの描画領域を取得
+        const unsigned char *getDisplayArea();     // フレームバッファの表示領域を取得
+        const int getCurrentPage();                // 表示領域のインデックスを取得
         void addFrameNum();                        // 格納済フレーム数を加算
         void subFrameNum();                        // 格納済フレーム数を減算
 };

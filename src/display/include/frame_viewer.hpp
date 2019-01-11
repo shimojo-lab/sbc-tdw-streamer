@@ -10,10 +10,10 @@
 #include "transceive_framebuffer.hpp"
 #include "socket_utils.hpp"
 #include "sync_utils.hpp"
+#include "json_handler.hpp"
 #include "view_framebuffer.hpp"
 #include <cstring>
 extern "C"{
-    #include <unistd.h>
     #include <fcntl.h>
     #include <sys/types.h>
     #include <sys/mman.h>
@@ -40,8 +40,9 @@ class FrameViewer{
         
         const bool openFramebuffer(const std::string& fb_dev,  // フレームバッファをオープン
                                    const int width, const int height);
-        const bool hideCursor(const std::string& tty_dev);     // カーソルを非表示化
+        void hideCursor(const std::string& tty_dev);           // カーソルを非表示化
         void displayFrame();                                   // フレームを表示
+        const std::string makeSyncMsg();                       // 同期メッセージを生成
         void sendSync();                                       // 同期メッセージを送信
         void onRecvSync(const err_t& err, size_t t_bytes);     // 同期メッセージ受信時のコールバック
         void onSendSync(const err_t& err, size_t t_bytes);     // 同期メッセージ送信時のコールバック

@@ -22,10 +22,62 @@ SyncManager::SyncManager(_asio::io_service& ios, std::vector<sock_ptr_t>& socks,
 }
 
 /* 同期メッセージをパース */
-void SyncManager::parseSync(std::string& recv_msg){
-    // を取得
-    const int iter = recv_msg.length() - MSG_DELIMITER_LEN;
-    recv_msg.erase(iter);
+void SyncManager::parseSyncMsg(const std::string& msg, const int id){
+    JsonHandler json;
+    json.deserialize(msg);
+    const int frame_num = json.getParam("frame_num");
+    
+    if(json.getParam("jpeg_control") == JPEG_CONTROL_ON){
+        // 品質係数を調整
+        switch(json.getParam("quality")){
+            case JPEG_PARAM_KEEP:
+                break;
+            case JPEG_PARAM_UP:
+                if(this->quality.load(std::memory_order_acquire) < JPEG_QUALITY_MAX){
+                    ++this->quality;
+                }
+                break;
+            case JPEG_PARAM_DOWN:
+                if(this->quality.load(std::memory_order_acquire) > JPEG_QUALITY_MIN){
+                    --this->quality;
+                }
+                break;
+            default:
+                break;
+        }
+        
+        // クロマサブサンプル比を調整
+        switch(json.getParam("sampling_type")){
+            case JPEG_PARAM_KEEP:
+                break;
+            case JPEG_PARAM_UP:
+                switch(this->sampling_type.load(std::memory_order_acquire)){
+                    case TJSAMP_422:
+                        this->sampling_type.store(TJSAMP_444, std::memory_order_release);
+                        break;
+                    case TJSAMP_411:
+                        this->sampling_type.store(TJSAMP_422, std::memory_order_release);
+                        break;
+                    default:
+                        break;
+                }
+                break;
+            case JPEG_PARAM_DOWN:
+                switch(this->sampling_type.load(std::memory_order_acquire)){
+                    case TJSAMP_444:
+                        this->sampling_type.store(TJSAMP_422, std::memory_order_release);
+                        break;
+                    case TJSAMP_422:
+                        this->sampling_type.store(TJSAMP_411, std::memory_order_release);
+                        break;
+                    default:
+                        break;
+                }
+                break;
+            default:
+                break;
+        }
+    }
 }
 
 /* 同期メッセージ受信時のコールバック */
@@ -37,8 +89,9 @@ void SyncManager::onRecvSync(const err_t& err, size_t t_bytes, const int id){
     
     // 同期メッセージをパース
     const auto data = this->stream_bufs[id]->data();
-    std::string recv_msg(_asio::buffers_begin(data), _asio::buffers_begin(data)+t_bytes);
-    this->parseSync(recv_msg);
+    std::string sync_msg(_asio::buffers_begin(data), _asio::buffers_begin(data)+t_bytes);
+    sync_msg.erase(sync_msg.length()-MSG_DELIMITER_LEN);
+    this->parseSyncMsg(sync_msg, id);
     this->stream_bufs[id]->consume(t_bytes);
     
     // 全ディスプレイノード間で同期

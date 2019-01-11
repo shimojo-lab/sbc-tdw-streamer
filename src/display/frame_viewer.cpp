@@ -85,34 +85,38 @@ const bool FrameViewer::openFramebuffer(const std::string& fb_dev, const int wid
 }
 
 /* カーソルを非表示化 */
-const bool FrameViewer::hideCursor(const std::string& tty_dev){
+void FrameViewer::hideCursor(const std::string& tty_dev){
     this->tty = open(tty_dev.c_str(), O_WRONLY);
     if(this->tty == DEVICE_OPEN_FAILED){
-        _ml::caution("Could not open tty", tty_dev);
-        return false;
+        _ml::warn("Could not open tty", tty_dev);
     }
     else if(ioctl(this->tty, KDSETMODE, KD_GRAPHICS)){
-        _ml::caution("Could not hide cursor", "ioctl failed");
-        return false;
+        _ml::warn("Could not hide cursor", "ioctl failed");
     }
-    return true;
 }
 
 /* フレームを表示 */
 void FrameViewer::displayFrame(){
-    try{
-        std::memcpy(this->fb_ptr, this->next_frame, this->fb_size);
-        msync(this->fb_ptr, this->fb_size, MS_SYNC);
-    }catch(...){
-        _ml::warn("Failed to display frame", "unable to write on framebuffer");
-    }
+    std::memcpy(this->fb_ptr, this->next_frame, this->fb_size);
+    //_ml::warn("Could not display frame", "unable to write on framebuffer");
+    msync(this->fb_ptr, this->fb_size, MS_SYNC);
     this->view_buf->subFrameNum();
+}
+
+/* 同期メッセージを生成 */
+const std::string FrameViewer::makeSyncMsg(){
+    JsonHandler json;
+    json.setParam("frame_num", this->view_buf->getCurrentPage());
+    json.setParam("jpeg_control", JPEG_CONTROL_OFF);
+    json.setParam("quality", JPEG_PARAM_KEEP);
+    json.setParam("sampling_type", JPEG_PARAM_KEEP);
+    return json.serialize();
 }
 
 /* 同期メッセージを送信 */
 void FrameViewer::sendSync(){
     // メッセージを送信
-    const std::string send_msg = MSG_DELIMITER;
+    const std::string send_msg = this->makeSyncMsg() + MSG_DELIMITER;
     _asio::async_write(this->sock,
                        _asio::buffer(send_msg),
                        boost::bind(&FrameViewer::onSendSync, this, _ph::error, _ph::bytes_transferred)
@@ -129,8 +133,7 @@ void FrameViewer::onRecvSync(const err_t& err, size_t t_bytes){
     // 同期メッセージを取得
     const auto data = this->stream_buf.data();
     std::string recv_msg(_asio::buffers_begin(data), _asio::buffers_begin(data)+t_bytes);
-    const int iter = recv_msg.length() - MSG_DELIMITER_LEN;
-    recv_msg.erase(iter);
+    recv_msg.erase(recv_msg.length()-MSG_DELIMITER_LEN);
     this->stream_buf.consume(t_bytes);
     
     // フレームを表示

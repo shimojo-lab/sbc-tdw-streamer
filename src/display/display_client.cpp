@@ -20,6 +20,19 @@ DisplayClient::DisplayClient(_asio::io_service& ios, ConfigParser& parser):
     );
 }
 
+/* 初期化メッセージをパース */
+const init_params_t DisplayClient::parseInitMsg(const std::string& msg){
+    JsonHandler json;
+    json.deserialize(msg);
+    const int width = json.getParam("width");
+    const int height = json.getParam("height");
+    const int stream_port = json.getParam("stream_port");
+    const int recvbuf_num = json.getParam("recvbuf_num");
+    const int wait_usec = json.getParam("wait_usec");
+    const int dec_thre_num = json.getParam("dec_thre_num");
+    return std::forward_as_tuple(width, height, stream_port, recvbuf_num, wait_usec, dec_thre_num);
+}
+
 /* ヘッドノード接続時のコールバック */
 void DisplayClient::onConnect(const err_t& err){
     if(err){
@@ -45,19 +58,14 @@ void DisplayClient::onRecvInit(const err_t& err, size_t t_bytes){
     _ml::notice("Received init message from head node");
     
     // 初期化メッセージをパース
-    std::stringstream ss;
-    _pt::ptree params;
     const auto data = this->stream_buf.data();
-    std::string params_bytes(_asio::buffers_begin(data), _asio::buffers_begin(data)+t_bytes);
-    params_bytes.erase(params_bytes.length()-MSG_DELIMITER_LEN);
-    ss << params_bytes;
-    _pt::read_json(ss, params);
-    const int width = std::stoi(params.get_optional<std::string>("width").get());
-    const int height = std::stoi(params.get_optional<std::string>("height").get());
-    const int stream_port = std::stoi(params.get_optional<std::string>("stream_port").get());
-    const int recvbuf_num = std::stoi(params.get_optional<std::string>("recvbuf_num").get());
-    const int wait_usec = std::stoi(params.get_optional<std::string>("wait_usec").get());
-    const int dec_thre_num = std::stoi(params.get_optional<std::string>("dec_thre_num").get());
+    std::string msg(_asio::buffers_begin(data), _asio::buffers_begin(data)+t_bytes);
+    msg.erase(msg.length()-MSG_DELIMITER_LEN);
+    int width, height, stream_port, recvbuf_num, wait_usec, dec_thre_num;
+    std::tie(
+        width, height, stream_port, recvbuf_num, wait_usec, dec_thre_num
+    ) = this->parseInitMsg(msg);
+
     
     // 別スレッドでフレーム受信器を起動
     const tranbuf_ptr_t recv_buf = std::make_shared<TransceiveFramebuffer>(recvbuf_num, wait_usec);

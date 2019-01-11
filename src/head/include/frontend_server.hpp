@@ -36,6 +36,7 @@ class FrontendServer{
         boost::thread enc_thre;                // フレーム圧縮スレッド
         
         void waitForConnection();          // 接続待機を開始
+        const std::string makeInitMsg();   // 初期化メッセージを生成
         void onConnect(const err_t& err);  // ディスプレイノード接続時のコールバック
         void onSendInit(const err_t& err,  // 初期化メッセージ送信時のコールバック
                         size_t t_bytes, const std::string ip);

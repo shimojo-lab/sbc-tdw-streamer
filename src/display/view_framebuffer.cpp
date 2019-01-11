@@ -7,7 +7,7 @@
 
 /* コンストラクタ */
 ViewFramebuffer::ViewFramebuffer(const int width, const int height, const int viewbuf_num,
-                                     const unsigned int wait_usec):
+                                 const unsigned int wait_usec):
     viewbuf_num(viewbuf_num),
     frame_size(width*height*COLOR_CHANNEL_NUM),
     wait_usec(wait_usec)
@@ -43,6 +43,12 @@ const unsigned char *ViewFramebuffer::getDisplayArea(){
     this->cur_page = (this->cur_page+1) % this->viewbuf_num;
     return ptr;
 }
+
+/* フレームバッファの表示領域のインデックスを取得 */
+const int ViewFramebuffer::getCurrentPage(){
+    return this->cur_page;
+}
+
 
 /* 格納済フレーム数を加算 */
 void ViewFramebuffer::addFrameNum(){

@@ -58,6 +58,18 @@ void FrontendServer::waitForConnection(){
     );
 }
 
+/* 初期化メッセージを生成 */
+const std::string FrontendServer::makeInitMsg(){
+    JsonHandler json;
+    json.setParam("width", this->width);
+    json.setParam("height", this->height);
+    json.setParam("stream_port", this->stream_port);
+    json.setParam("recvbuf_num", this->recvbuf_num);
+    json.setParam("wait_usec", this->wait_usec);
+    json.setParam("dec_thre_num", this->dec_thre_num);
+    return json.serialize();
+}
+
 /* ディスプレイノード接続時のコールバック */
 void FrontendServer::onConnect(const err_t& err){
     const std::string ip = this->sock->remote_endpoint().address().to_string();
@@ -79,16 +91,7 @@ void FrontendServer::onConnect(const err_t& err){
     }
     
     // 初期化メッセージを返信
-    _pt::ptree json;
-    std::stringstream jsonstream;
-    json.add<int>("width", this->width);
-    json.add<int>("height", this->height);
-    json.add<int>("stream_port", this->stream_port);
-    json.add<int>("recvbuf_num", this->recvbuf_num);
-    json.add<int>("wait_usec", this->wait_usec);
-    json.add<int>("dec_thre_num", this->dec_thre_num);
-    _pt::write_json(jsonstream, json, false);
-    const std::string msg = jsonstream.str() + MSG_DELIMITER;
+    const std::string msg = this->makeInitMsg() + MSG_DELIMITER;
     _asio::async_write(*this->sock,
                        _asio::buffer(msg),
                        boost::bind(&FrontendServer::onSendInit, this, _ph::error, _ph::bytes_transferred, ip)
