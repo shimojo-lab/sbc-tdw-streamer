@@ -28,34 +28,49 @@ FrameDecoder::~FrameDecoder(){
 /* フレームを複号 */
 void FrameDecoder::decode(){
     // フレームを取り出し
-    std::string jpeg_frame_bytes = this->recv_buf->pop();
-    const int iter = jpeg_frame_bytes.length() - VIEWBUF_ID_LEN;
-    const int id = std::stoi(jpeg_frame_bytes.substr(iter));
-    jpeg_frame_bytes.erase(iter);
-    const unsigned long jpeg_size = (unsigned long)jpeg_frame_bytes.length();
-    std::vector<unsigned char> jpeg_frame(jpeg_frame_bytes.c_str(), jpeg_frame_bytes.c_str()+jpeg_size);
+    std::string jpeg_str = this->recv_buf->pop();
+    const int iter = jpeg_str.length() - VIEWBUF_ID_LEN;
+    int id;
+    try{
+        id = std::stoi(jpeg_str.substr(iter));
+    }catch(...){
+        return;
+    }
+    jpeg_str.erase(iter);
+    const unsigned long jpeg_size = (unsigned long)jpeg_str.length();
+    std::vector<unsigned char> jpeg_frame(jpeg_str.c_str(), jpeg_str.c_str()+jpeg_size);
     
     // JPEGのヘッダを読み込み
     int frame_w, frame_h, sampling_type;
-    tjDecompressHeader2(this->handle,
-                        jpeg_frame.data(),
-                        jpeg_size,
-                        &frame_w,
-                        &frame_h,
-                        &sampling_type
+    const int tj_stat1 = tjDecompressHeader2(this->handle,
+                                             jpeg_frame.data(),
+                                             jpeg_size,
+                                             &frame_w,
+                                             &frame_h,
+                                             &sampling_type
     );
+    if(tj_stat1 == JPEG_FAILED){
+        const std::string err_msg(tjGetErrorStr());
+        _ml::warn("Could not get new video frame", err_msg);
+        return;
+    }
     
     // フレームを複号
-    tjDecompress2(this->handle,
-                  jpeg_frame.data(),
-                  jpeg_size,
-                  this->view_buf->getDrawArea(id),
-                  frame_w,
-                  frame_w*COLOR_CHANNEL_NUM,
-                  frame_h,
-                  TJPF_RGB,
-                  TJFLAG_FASTDCT|TJFLAG_FASTUPSAMPLE
+    const int tj_stat2 = tjDecompress2(this->handle,
+                                       jpeg_frame.data(),
+                                       jpeg_size,
+                                       this->view_buf->getDrawArea(id),
+                                       frame_w,
+                                       frame_w*COLOR_CHANNEL_NUM,
+                                       frame_h,
+                                       TJPF_RGB,
+                                       TJFLAG_FASTDCT|TJFLAG_FASTUPSAMPLE
     );
+    if(tj_stat2 == JPEG_FAILED){
+        const std::string err_msg(tjGetErrorStr());
+        _ml::warn("Could not get new video frame", err_msg);
+        return;
+    }
     this->view_buf->addFrameNum();
 }
 
@@ -63,11 +78,7 @@ void FrameDecoder::decode(){
 void FrameDecoder::run(){
     while(true){
 //const auto start = std::chrono::system_clock::now();
-        try{
-            this->decode();
-        }catch(...){
-            _ml::warn("Could not get new video frame", "JPEG decode error");
-        }
+        this->decode();
 //const auto end = std::chrono::system_clock::now();
 //double elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count();
 //print_debug(elapsed);

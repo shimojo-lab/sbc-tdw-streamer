@@ -10,15 +10,15 @@
 #include <string>
 #include <mutex>
 
-const std::string GREEN("\033[1;32m");   // 緑文字出力
-const std::string YELLOW("\033[1;33m");  // 黄文字出力
+const std::string GREEN("\033[0;32m");   // 緑文字出力
+const std::string YELLOW("\033[0;33m");  // 黄文字出力
 const std::string RED("\033[0;31m");     // 赤文字出力
 const std::string CYAN("\033[0;36m");    // シアン文字出力
 const std::string RESET("\033[0m");      // 文字色リセット
 
 /* 排他制御付きロガー */
 namespace mutex_logger{
-    std::unique_lock<std::mutex> log_lock();                         // 排他制御を実行
+    static std::mutex lock;                                          // 排他制御用のロック
     void notice(const std::string& msg);                             // 通知メッセージを表示
     void warn(const std::string& msg, const std::string& suppl);     // 警告メッセージを表示
     void caution(const std::string& msg, const std::string& suppl);  // エラーメッセージを表示

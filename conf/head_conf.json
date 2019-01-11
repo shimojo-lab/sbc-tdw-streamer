@@ -14,13 +14,13 @@
         "frame_streamer": 20000
     },
     "buffer": {
-        "send_buffer_size": 16,
-        "receive_buffer_size": 16,
-        "wait_time": 500
+        "send_buffer_size":64,
+        "receive_buffer_size": 64,
+        "wait_time": 100
     },
     "compression": {
-        "init_subsampling_type": "yuv444",
-        "init_jpeg_quality": 90,
+        "init_subsampling_type": "yuv422",
+        "init_jpeg_quality": 95,
         "jpeg_decoder_num": 3
     },
     "display_node": [

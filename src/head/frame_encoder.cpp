@@ -105,7 +105,7 @@ void FrameEncoder::encode(const int sampling_type, const int quality){
                                         quality,
                                         TJFLAG_FASTDCT
         );
-        if(tj_stat != 0){
+        if(tj_stat == JPEG_FAILED){
             const std::string err_msg(tjGetErrorStr());
             _ml::warn("JPEG encode failed", err_msg);
         }else{
@@ -119,16 +119,14 @@ void FrameEncoder::encode(const int sampling_type, const int quality){
 void FrameEncoder::run(){
     while(true){
         cv::Mat video_frame;
-        const int cur_sampling_type = this->sampling_type.load(std::memory_order_acquire);
-        const int cur_quality = this->quality.load(std::memory_order_acquire);
+        this->video >> video_frame;
         try{
-            this->video >> video_frame;
             this->resize(video_frame);
-            this->encode(cur_sampling_type, cur_quality);
         }catch(...){
             _ml::caution("Could not get video frame", "JPEG encoder stopped");
             break;
         }
+        this->encode(this->sampling_type.load(std::memory_order_acquire), this->quality.load(std::memory_order_acquire));
     }
 }
 

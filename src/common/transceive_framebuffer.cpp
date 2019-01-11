@@ -21,6 +21,7 @@ void TransceiveFramebuffer::push(const std::string& frame){
 
 /* フレームを取り出し */
 const std::string TransceiveFramebuffer::pop(){
+    std::lock_guard<std::mutex> pop_lock(this->lock);
     while(this->buf.empty()){
         usleep(this->wait_usec);
     }
@@ -30,7 +31,7 @@ const std::string TransceiveFramebuffer::pop(){
 }
 
 /* 使用中の領域数数を取得 */
-const int TransceiveFramebuffer::getItemNum(){
+const int TransceiveFramebuffer::getStoredNum(){
     return this->buf.size();
 }
 
