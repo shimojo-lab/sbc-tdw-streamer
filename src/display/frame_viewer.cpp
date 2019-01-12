@@ -99,22 +99,22 @@ void FrameViewer::hideCursor(const std::string& tty_dev){
 /* フレームを表示 */
 void FrameViewer::displayFrame(){
     std::memcpy(this->fb_ptr, this->next_frame, this->fb_size);
-    msync(this->fb_ptr, this->fb_size, MS_SYNC);
+    msync(this->fb_ptr, this->fb_size, MS_INVALIDATE);
     this->view_buf->deactivateFrame();
 }
 
 /* 同期メッセージを生成 */
 const std::string FrameViewer::makeSyncMsg(){
-    this->json.setParam("frame_num", this->view_buf->getCurrentPage());
+    this->params.setParam("frame_num", this->view_buf->getCurrentPage());
     if(this->frame_count == this->tuning_term){
         this->frame_count = 0;
-        this->json.setParam("jpeg_tuning", JPEG_TUNING_ON);
-        this->json.setParam("quality", JPEG_PARAM_KEEP);
-        this->json.setParam("sampling_type", JPEG_PARAM_KEEP);
+        this->params.setParam("jpeg_tuning", JPEG_TUNING_ON);
+        this->params.setParam("quality", JPEG_PARAM_KEEP);
+        this->params.setParam("sampling_type", JPEG_PARAM_KEEP);
     }else{
-        this->json.setParam("jpeg_tuning", JPEG_TUNING_OFF);
+        this->params.setParam("jpeg_tuning", JPEG_TUNING_OFF);
     }
-    return this->json.serialize();
+    return this->params.serialize();
 }
 
 /* 同期メッセージを送信 */

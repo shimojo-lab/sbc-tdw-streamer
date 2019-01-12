@@ -1,6 +1,6 @@
 {
     "//": "ヘッドノードの設定",
-    "video_src": "/home/kazuya/sbc-tdw-streamer/test/test2.mp4",
+    "video_src": "/home/kazuya/sbc-tdw-streamer/test/test.mp4",
     "layout": {
         "column": 1,
         "row": 1
@@ -14,13 +14,13 @@
         "frame_streamer": 20000
     },
     "buffer": {
-        "send_buffer_size":64,
-        "receive_buffer_size": 64,
-        "wait_time": 100
+        "send_buffer_size":32,
+        "receive_buffer_size": 32,
+        "wait_time": 10
     },
     "compression": {
-        "init_subsampling_type": "yuv444",
-        "init_jpeg_quality": 95,
+        "init_subsampling_type": "yuv422",
+        "init_jpeg_quality": 75,
         "jpeg_decoder_num": 3,
         "jpeg_tuning_term": 100
     },

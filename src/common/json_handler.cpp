@@ -26,6 +26,6 @@ const int JsonHandler::getParam(const std::string& key){
 
 /* JSONにパラメータを追加 */
 void JsonHandler::setParam(const std::string& key, const int param){
-    this->json.add<int>(key, param);
+    this->json.put(key, param);
 }
 

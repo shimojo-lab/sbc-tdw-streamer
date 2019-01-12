@@ -37,7 +37,7 @@ class FrameViewer{
         int fb_size;                      // フレームバッファのサイズ
         unsigned char *fb_ptr;            // フレームバッファの先頭
         const unsigned char *next_frame;  // 次番フレーム
-        JsonHandler json;                 // JSONハンドラ
+        JsonHandler params;               // JPEGパラメータ変更要求
         const int tuning_term;            // JPEGパラメータの調整周期
         int frame_count = 0;              // 表示済フレーム数
         

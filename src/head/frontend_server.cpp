@@ -60,15 +60,15 @@ void FrontendServer::waitForConnection(){
 
 /* 初期化メッセージを生成 */
 const std::string FrontendServer::makeInitMsg(){
-    JsonHandler json;
-    json.setParam("width", this->width);
-    json.setParam("height", this->height);
-    json.setParam("stream_port", this->stream_port);
-    json.setParam("recvbuf_num", this->recvbuf_num);
-    json.setParam("wait_usec", this->wait_usec);
-    json.setParam("dec_thre_num", this->dec_thre_num);
-    json.setParam("tuning_term", this->tuning_term);
-    return json.serialize();
+    JsonHandler params;
+    params.setParam("width", this->width);
+    params.setParam("height", this->height);
+    params.setParam("stream_port", this->stream_port);
+    params.setParam("recvbuf_num", this->recvbuf_num);
+    params.setParam("wait_usec", this->wait_usec);
+    params.setParam("dec_thre_num", this->dec_thre_num);
+    params.setParam("tuning_term", this->tuning_term);
+    return params.serialize();
 }
 
 /* ディスプレイノード接続時のコールバック */

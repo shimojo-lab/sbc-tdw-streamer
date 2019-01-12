@@ -25,8 +25,8 @@ SyncManager::SyncManager(_asio::io_service& ios, std::vector<sock_ptr_t>& socks,
 void SyncManager::parseSyncMsg(const std::string& msg, const int id){
     this->json.deserialize(msg);
     const int frame_num = this->json.getParam("frame_num");
-    _ml::debug(frame_num);
-    if(json.getParam("jpeg_control") == JPEG_TUNING_ON){
+    
+    if(json.getParam("jpeg_tuning") == JPEG_TUNING_ON){
         // 品質係数を調整
         switch(this->json.getParam("quality")){
             case JPEG_PARAM_KEEP:
