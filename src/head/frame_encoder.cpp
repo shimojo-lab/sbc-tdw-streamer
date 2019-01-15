@@ -6,7 +6,7 @@
 #include "frame_encoder.hpp"
 
 /* コンストラクタ */
-FrameEncoder::FrameEncoder(const std::string video_src, const int column, const int row,
+FrameEncoder::FrameEncoder(const std::string video_src, const int column, const int row, const int bezel_w, const int bezel_h,
                            const int width, const int height, std::atomic<int>& sampling_type,
                            std::atomic<int>& quality, std::vector<tranbuf_ptr_t>& send_bufs):
     handle(tjInitCompress()),
@@ -32,7 +32,7 @@ FrameEncoder::FrameEncoder(const std::string video_src, const int column, const 
     // リサイズ用パラメータを設定
     cv::Mat video_frame;
     this->video >> video_frame;
-    this->setResizeParams(column, row, width, height, video_frame.cols, video_frame.rows);
+    this->setResizeParams(column, row, bezel_w, bezel_h, width, height, video_frame.cols, video_frame.rows);
 }
 
 /* デストラクタ */
@@ -42,11 +42,11 @@ FrameEncoder::~FrameEncoder(){
 }
 
 /* リサイズ用パラメータを設定 */
-void FrameEncoder::setResizeParams(const int column, const int row, const int width, const int height,
+void FrameEncoder::setResizeParams(const int column, const int row, const int bezel_w, const int bezel_h, const int width, const int height,
                                    const int frame_w, const int frame_h){
     // リサイズフレームの背景を設定
-    const int bg_w = column * width;
-    const int bg_h = row * height;
+    const int bg_w = column * width + (column - 1) * bezel_w;
+    const int bg_h = row * height + (row - 1) * bezel_h;
     this->bg_frame = cv::Mat::zeros(bg_h, bg_w, CV_8UC3);
     
     // リサイズ倍率を設定
@@ -66,7 +66,7 @@ void FrameEncoder::setResizeParams(const int column, const int row, const int wi
     this->raw_frames = std::vector<cv::Mat>(this->display_num);
     for(int j=0; j<row; ++j){
         for(int i=0; i<column; ++i){
-            this->regions[i+column*j] = cv::Rect(width*i, height*j, width, height);
+            this->regions[i+column*j] = cv::Rect((width+bezel_w)*i, (height+bezel_h)*j, width, height);
         }
     }
 }

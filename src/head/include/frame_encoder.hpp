@@ -35,7 +35,7 @@ class FrameEncoder{
         std::vector<cv::Mat> raw_frames;        // ディスプレイノードの各フレーム
         std::vector<tranbuf_ptr_t>& send_bufs;  // 送信フレームバッファ
         
-        void setResizeParams(const int column, const int row,        // リサイズ用パラメータを設定
+        void setResizeParams(const int column, const int row, const int bezel_w, const int bezel_h,       // リサイズ用パラメータを設定
                              const int width, const int height,
                              const int frame_w, const int frame_h);
         void resize(cv::Mat& video_frame);                           // フレームをリサイズ
@@ -43,7 +43,7 @@ class FrameEncoder{
     
     public:
         FrameEncoder(const std::string video_src, const int column,  // コンストラクタ
-                     const int row, const int width, const int height,
+                     const int row, const int bezel_w, const int bezel_h, const int width, const int height,
                      std::atomic<int>& sampling_type, std::atomic<int>& quality,
                      std::vector<tranbuf_ptr_t>& send_bufs);
         ~FrameEncoder();  // デストラクタ

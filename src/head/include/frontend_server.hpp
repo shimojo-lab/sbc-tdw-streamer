@@ -42,7 +42,7 @@ class FrontendServer{
         void onSendInit(const err_t& err,  // 初期化メッセージ送信時のコールバック
                         size_t t_bytes, const std::string ip);
         void runFrameEncoder(const std::string video_src,  // 別スレッドでフレーム符号化器を起動
-                             const int column, const int row, const int width, const int height);
+                             const int column, const int row, const int bezel_w, const int bezel_h, const int width, const int height);
         void runFrameSender();             // 別スレッドでフレーム送信器を起動
         void runSyncManager();             // 同スレッドで同期制御器を起動
     

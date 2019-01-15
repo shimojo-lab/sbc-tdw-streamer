@@ -14,7 +14,7 @@ extern "C"{
 }
 
 using fs_params_t = std::tuple<
-    std::string, int, int, int, int, int, int, int, unsigned int, int, int, int, int,
+    std::string, int, int, int, int, int, int, int, unsigned int, int, int, int, int, int, int,
     std::vector<std::string>
 >;
 
@@ -22,8 +22,10 @@ using fs_params_t = std::tuple<
 class ConfigParser : public BaseConfigParser{
     private:
         std::string video_src;              // 再生動画のソース
-        int row;                            // ディスプレイの横の枚数
-        int column;                         // ディスプレイの縦の枚数
+        int column;                         // ディスプレイの横の枚数
+        int row;                            // ディスプレイの縦の枚数
+        int bezel_w;                        // 横のベゼル幅
+        int bezel_h;                        // 縦のベゼル幅
         int width;                          // ディスプレイの横の画素数
         int height;                         // ディスプレイの縦の画素数
         int fs_port;                        // フロントエンドサーバ用ポート

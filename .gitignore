@@ -1,7 +1,7 @@
-*.mp4
 *.webm
+*.mp4
 *.out
 *.o
-sbc_client
-sbc_server
+head_server
+display_client
 

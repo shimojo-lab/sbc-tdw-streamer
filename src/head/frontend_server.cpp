@@ -13,9 +13,9 @@ FrontendServer::FrontendServer(_asio::io_service& ios, ConfigParser& parser, con
 {
     // パラメータを受け取り
     std::string video_src;
-    int column, row, sendbuf_num, sampling_type_, quality_;
+    int column, row, bezel_w, bezel_h, sendbuf_num, sampling_type_, quality_;
     std::tie(
-        video_src, column, row, this->width, this->height, this->stream_port, sendbuf_num,
+        video_src, column, row, bezel_w, bezel_h, this->width, this->height, this->stream_port, sendbuf_num,
         this->recvbuf_num, this->wait_usec, sampling_type_, quality_, this->dec_thre_num,
         this->tuning_term, this->ip_addrs
     ) = parser.getFrontendServerParams();
@@ -37,6 +37,8 @@ FrontendServer::FrontendServer(_asio::io_service& ios, ConfigParser& parser, con
                                                video_src,
                                                column,
                                                row,
+                                               bezel_w,
+                                               bezel_h,
                                                this->width,
                                                this->height)
     );
@@ -123,12 +125,15 @@ void FrontendServer::onSendInit(const err_t& err, size_t t_bytes, const std::str
 }
 
 /* 別スレッドでフレーム符号化器を起動 */
-void FrontendServer::runFrameEncoder(const std::string video_src, const int column, const int row,
+void FrontendServer::runFrameEncoder(const std::string video_src, const int column, const int row, const int bezel_w, const int bezel_h,
                                      const int width, const int height)
 {
     FrameEncoder encoder(video_src,
                          column,
-                         row, width,
+                         row,
+                         bezel_w,
+                         bezel_h,
+                         width,
                          height,
                          this->sampling_type,
                          this->quality,

@@ -105,14 +105,14 @@ void FrameViewer::displayFrame(){
 
 /* 同期メッセージを生成 */
 const std::string FrameViewer::makeSyncMsg(){
-    this->params.setParam("frame_num", this->view_buf->getCurrentPage());
+    this->params.setParam("num", this->view_buf->getCurrentPage());
     if(this->frame_count == this->tuning_term){
         this->frame_count = 0;
-        this->params.setParam("jpeg_tuning", JPEG_TUNING_ON);
-        this->params.setParam("quality", JPEG_PARAM_KEEP);
-        this->params.setParam("sampling_type", JPEG_PARAM_KEEP);
+        this->params.setParam("tune", JPEG_TUNING_ON);
+        this->params.setParam("param", JPEG_PARAM_KEEP);
+        this->params.setParam("change", JPEG_PARAM_KEEP);
     }else{
-        this->params.setParam("jpeg_tuning", JPEG_TUNING_OFF);
+        this->params.setParam("tune", JPEG_TUNING_OFF);
     }
     return this->params.serialize();
 }
