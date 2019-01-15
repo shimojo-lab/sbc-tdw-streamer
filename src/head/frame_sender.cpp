@@ -17,7 +17,7 @@ FrameSender::FrameSender(_asio::io_service& ios, const int port, const int displ
 {
     // パラメータを初期化
     this->sock = std::make_shared<_ip::tcp::socket>(ios);
-    this->send_count.store(0, std::memory_order_release);
+    this->send_count.store(0);
     
     // 送信処理を開始
     _ml::notice("Streaming video frames at :" + std::to_string(port));
@@ -66,7 +66,7 @@ void FrameSender::onConnect(const err_t& err){
     }else{
         // フレーム送信を開始
         this->sock->close();
-        this->send_count.store(0, std::memory_order_release);
+        this->send_count.store(0);
         this->sendFrame();
     }
 }
@@ -81,7 +81,7 @@ void FrameSender::onSendFrame(const err_t& err, size_t t_bytes){
     // 全送信が完了したら次番フレームを送信
     ++this->send_count;
     if(this->send_count.load(std::memory_order_acquire) == this->display_num){
-        this->send_count.store(0, std::memory_order_release);
+        this->send_count.store(0);
         this->sendFrame();
     }
 }

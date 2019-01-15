@@ -9,6 +9,7 @@
 #include "mutex_logger.hpp"
 #include "transceive_framebuffer.hpp"
 #include <vector>
+#include <algorithm>
 #include <atomic>
 #include <cstdlib>
 #include <opencv2/core.hpp>
@@ -26,8 +27,8 @@ class FrameEncoder{
         const tjhandle handle;                  // JPEGエンコーダ
         cv::VideoCapture video;                 // 再生動画
         const int display_num;                  // 全ディスプレイ数
-        cv::Mat bg_frame;                       // リサイズフレームの背景
-        int ratio;                              // リサイズ倍率
+        cv::Mat resized_frame;                  // リサイズ後のフレーム
+        double ratio;                           // リサイズ倍率
         cv::Rect roi;                           // リサイズフレームの貼り付け位置
         std::atomic<int>& sampling_type;        // クロマサブサンプル比
         std::atomic<int>& quality;              // JPEG品質係数
@@ -43,8 +44,8 @@ class FrameEncoder{
     
     public:
         FrameEncoder(const std::string video_src, const int column,  // コンストラクタ
-                     const int row, const int bezel_w, const int bezel_h, const int width, const int height,
-                     std::atomic<int>& sampling_type, std::atomic<int>& quality,
+                     const int row, const int bezel_w, const int bezel_h, const int width,
+                     const int height, std::atomic<int>& sampling_type, std::atomic<int>& quality,
                      std::vector<tranbuf_ptr_t>& send_bufs);
         ~FrameEncoder();  // デストラクタ
         void run();       // フレーム圧縮を開始

@@ -4,6 +4,7 @@
 **************************/
 
 #include "frame_encoder.hpp"
+#include <opencv2/highgui.hpp>
 
 /* コンストラクタ */
 FrameEncoder::FrameEncoder(const std::string video_src, const int column, const int row, const int bezel_w, const int bezel_h,
@@ -44,19 +45,19 @@ FrameEncoder::~FrameEncoder(){
 /* リサイズ用パラメータを設定 */
 void FrameEncoder::setResizeParams(const int column, const int row, const int bezel_w, const int bezel_h, const int width, const int height,
                                    const int frame_w, const int frame_h){
-    // リサイズフレームの背景を設定
+    // リサイズ後のフレームを背景を初期化
     const int bg_w = column * width + (column - 1) * bezel_w;
     const int bg_h = row * height + (row - 1) * bezel_h;
-    this->bg_frame = cv::Mat::zeros(bg_h, bg_w, CV_8UC3);
+    this->resized_frame = cv::Mat::zeros(cv::Size(bg_w, bg_h), CV_8UC3);
     
     // リサイズ倍率を設定
-    const int x_ratio = (int)((double)bg_w / (double)frame_w);
-    const int y_ratio = (int)((double)bg_h / (double)frame_h);
-    this->ratio = x_ratio < y_ratio ? x_ratio : y_ratio;
+    const double x_ratio = (double)bg_w / (double)frame_w;
+    const double y_ratio = (double)bg_h / (double)frame_h;
+    this->ratio = std::min(x_ratio, y_ratio);
     
     // リサイズフレームのパディングを設定
-    const int resize_w = frame_w * this->ratio;
-    const int resize_h = frame_h * this->ratio;
+    const int resize_w = (int)((double)frame_w * this->ratio);
+    const int resize_h = (int)((double)frame_h * this->ratio);
     const int paste_x = (int)((double)(bg_w-resize_w) / 2.0);
     const int paste_y = (int)((double)(bg_h-resize_h) / 2.0);
     this->roi = cv::Rect(paste_x, paste_y, resize_w, resize_h);
@@ -77,14 +78,12 @@ void FrameEncoder::resize(cv::Mat& video_frame){
     cv::resize(video_frame, video_frame, cv::Size(), this->ratio, this->ratio, CV_INTER_LINEAR);
     
     // 背景と重ねてパディング
-    cv::Mat resized_frame;
-    this->bg_frame.copyTo(resized_frame);
-    cv::Mat paste_area(resized_frame, this->roi);
+    cv::Mat paste_area = this->resized_frame(this->roi);
     video_frame.copyTo(paste_area);
     
     // ディスプレイノードの担当領域毎に分割
     for(int i=0; i<this->display_num; ++i){
-        this->raw_frames[i] = cv::Mat(resized_frame, this->regions[i]);
+        this->resized_frame(this->regions[i]).copyTo(this->raw_frames[i]);
     }
 }
 
@@ -93,7 +92,7 @@ void FrameEncoder::encode(const int sampling_type, const int quality){
     for(int i=0; i<this->display_num; ++i){
         unsigned char *jpeg_frame = NULL;
         unsigned long jpeg_size = 0;
-        const int tj_stat = tjCompress2(handle,
+        const int tj_stat = tjCompress2(this->handle,
                                         raw_frames[i].data,
                                         raw_frames[i].cols,
                                         raw_frames[i].cols*COLOR_CHANNEL_NUM,
@@ -109,8 +108,8 @@ void FrameEncoder::encode(const int sampling_type, const int quality){
             const std::string err_msg(tjGetErrorStr());
             _ml::warn("JPEG encode failed", err_msg);
         }else{
-            const std::string jpeg_frame_bytes(jpeg_frame, jpeg_frame+jpeg_size);
-            this->send_bufs[i]->push(jpeg_frame_bytes);
+            const std::string jpeg_str(jpeg_frame, jpeg_frame+jpeg_size);
+            this->send_bufs[i]->push(jpeg_str);
         }
     }
 }
@@ -126,7 +125,7 @@ void FrameEncoder::run(){
             _ml::caution("Could not get video frame", "JPEG encoder stopped");
             break;
         }
-        this->encode(this->sampling_type.load(std::memory_order_acquire), this->quality.load(std::memory_order_acquire));
+        this->encode(this->sampling_type.load(), this->quality.load());
     }
 }
 

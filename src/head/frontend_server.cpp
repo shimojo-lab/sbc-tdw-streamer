@@ -15,8 +15,8 @@ FrontendServer::FrontendServer(_asio::io_service& ios, ConfigParser& parser, con
     std::string video_src;
     int column, row, bezel_w, bezel_h, sendbuf_num, sampling_type_, quality_;
     std::tie(
-        video_src, column, row, bezel_w, bezel_h, this->width, this->height, this->stream_port, sendbuf_num,
-        this->recvbuf_num, this->wait_usec, sampling_type_, quality_, this->dec_thre_num,
+        video_src, column, row, bezel_w, bezel_h, this->width, this->height, this->stream_port,
+        sendbuf_num, this->recvbuf_num, this->wait_usec, sampling_type_, quality_, this->dec_thre_num,
         this->tuning_term, this->ip_addrs
     ) = parser.getFrontendServerParams();
     this->display_num = column * row;
@@ -24,8 +24,8 @@ FrontendServer::FrontendServer(_asio::io_service& ios, ConfigParser& parser, con
     // パラメータを初期化
     this->sock = std::make_shared<_ip::tcp::socket>(ios);
     this->socks = std::vector<sock_ptr_t>(this->display_num);
-    this->sampling_type.store(sampling_type_, std::memory_order_release);
-    this->quality.store(quality_, std::memory_order_release);
+    this->sampling_type.store(sampling_type_);
+    this->quality.store(quality_);
     this->send_bufs = std::vector<tranbuf_ptr_t>(this->display_num);
     for(int i=0; i<this->display_num; ++i){
         this->send_bufs[i] = std::make_shared<TransceiveFramebuffer>(sendbuf_num, wait_usec);
@@ -78,7 +78,7 @@ void FrontendServer::onConnect(const err_t& err){
     const std::string ip = this->sock->remote_endpoint().address().to_string();
     if(err){
         _ml::caution("Could not accept " + ip, err.message());
-        this->waitForConnection();
+        std::exit(EXIT_FAILURE);
         return;
     }
     
@@ -87,7 +87,7 @@ void FrontendServer::onConnect(const err_t& err){
     const size_t id = std::distance(this->ip_addrs.begin(), iter);
     if(id == this->ip_addrs.size()){
         _ml::caution(ip + " is not registered", "Check config file");
-        this->waitForConnection();
+        std::exit(EXIT_FAILURE);
         return;
     }else{
         _ml::notice("Accepted new display node: " + ip);
@@ -125,8 +125,8 @@ void FrontendServer::onSendInit(const err_t& err, size_t t_bytes, const std::str
 }
 
 /* 別スレッドでフレーム符号化器を起動 */
-void FrontendServer::runFrameEncoder(const std::string video_src, const int column, const int row, const int bezel_w, const int bezel_h,
-                                     const int width, const int height)
+void FrontendServer::runFrameEncoder(const std::string video_src, const int column, const int row,
+                                     const int bezel_w, const int bezel_h, const int width, const int height)
 {
     FrameEncoder encoder(video_src,
                          column,

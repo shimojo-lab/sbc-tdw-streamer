@@ -11,9 +11,11 @@ COMN = $(PWD)/src/common
 CONF = $(PWD)/conf
 BIN = $(PWD)/bin
 CV_HDR = /usr/local/include/opencv2
+JPEG_HDR = /opt/libjpeg-turbo/include
 HEAD_LDFLAGS = -lboost_system -lboost_thread -lpthread -lturbojpeg \
-               -lopencv_core -lopencv_imgproc -lopencv_videoio 
-DISP_LDFLAGS = -lboost_system -lboost_thread -lpthread -lturbojpeg
+               -lopencv_core -lopencv_imgproc -lopencv_videoio -L/opt/libjpeg-turbo/lib64
+DISP_LDFLAGS = -lboost_system -lboost_thread -lpthread -lturbojpeg \
+               -L/opt/libjpeg-turbo/lib32
 
 # 全てビルド
 .PHONY: all
@@ -52,22 +54,22 @@ build_head: $(COMN)/mutex_logger.o $(COMN)/base_config_parser.o $(COMN)/json_han
 	$(CXX) $(HEAD_LDFLAGS) -o $(BIN)/head_server $^
 
 $(HEAD)/config_parser.o: $(HEAD)/config_parser.cpp
-	$(CXX) $(CXXFLAGS) -I$(HEAD)/include -I$(COMN)/include -c -o $@ $<
+	$(CXX) $(CXXFLAGS) -I$(HEAD)/include -I$(COMN)/include -I$(JPEG_HDR) -c -o $@ $<
 
 $(HEAD)/frame_encoder.o: $(HEAD)/frame_encoder.cpp
-	$(CXX) $(CXXFLAGS) -I$(HEAD)/include -I$(COMN)/include -I$(CV_HDR) -c -o $@ $<
+	$(CXX) $(CXXFLAGS) -I$(HEAD)/include -I$(COMN)/include -I$(CV_HDR) -I$(JPEG_HDR) -c -o $@ $<
 
 $(HEAD)/frame_sender.o: $(HEAD)/frame_sender.cpp
 	$(CXX) $(CXXFLAGS) -I$(HEAD)/include -I$(COMN)/include -c -o $@ $<
 
 $(HEAD)/sync_manager.o: $(HEAD)/sync_manager.cpp
-	$(CXX) $(CXXFLAGS) -I$(HEAD)/include -I$(COMN)/include -c -o $@ $<
+	$(CXX) $(CXXFLAGS) -I$(HEAD)/include -I$(COMN)/include -I$(JPEG_HDR) -c -o $@ $<
 
 $(HEAD)/frontend_server.o: $(HEAD)/frontend_server.cpp
-	$(CXX) $(CXXFLAGS) -I$(HEAD)/include -I$(COMN)/include -c -o $@ $<
+	$(CXX) $(CXXFLAGS) -I$(HEAD)/include -I$(COMN)/include -I$(JPEG_HDR) -c -o $@ $<
 
 $(HEAD)/main.o: $(HEAD)/main.cpp
-	$(CXX) $(CXXFLAGS) -I$(HEAD)/include -I$(COMN)/include -c -o $@ $<
+	$(CXX) $(CXXFLAGS) -I$(HEAD)/include -I$(COMN)/include -I$(JPEG_HDR) -c -o $@ $<
 
 # ディスプレイノード用プログラムをビルド
 .PHONY: build_display
@@ -87,16 +89,16 @@ $(DISP)/frame_receiver.o: $(DISP)/frame_receiver.cpp
 	$(CXX) $(CXXFLAGS) -I$(DISP)/include -I$(COMN)/include -c -o $@ $<
 
 $(DISP)/frame_decoder.o: $(DISP)/frame_decoder.cpp
-	$(CXX) $(CXXFLAGS) -I$(DISP)/include -I$(COMN)/include -I$(CV_HDR) -c -o $@ $<
+	$(CXX) $(CXXFLAGS) -I$(DISP)/include -I$(COMN)/include -I$(JPEG_HDR) -c -o $@ $<
 
 $(DISP)/frame_viewer.o: $(DISP)/frame_viewer.cpp
-	$(CXX) $(CXXFLAGS) -I$(DISP)/include -I$(COMN)/include -I$(CV_HDR) -c -o $@ $<
+	$(CXX) $(CXXFLAGS) -I$(DISP)/include -I$(COMN)/include -I$(JPEG_HDR) -c -o $@ $<
 
 $(DISP)/display_client.o: $(DISP)/display_client.cpp
-	$(CXX) $(CXXFLAGS) -I$(DISP)/include -I$(COMN)/include -c -o $@ $<
+	$(CXX) $(CXXFLAGS) -I$(DISP)/include -I$(COMN)/include -I$(JPEG_HDR) -c -o $@ $<
 
 $(DISP)/main.o: $(DISP)/main.cpp
-	$(CXX) $(CXXFLAGS) -I$(DISP)/include -I$(COMN)/include -c -o $@ $<
+	$(CXX) $(CXXFLAGS) -I$(DISP)/include -I$(COMN)/include -I$(JPEG_HDR) -c -o $@ $<
 
 # ヘッドノード用プログラムを起動
 .PHONY: test_head
