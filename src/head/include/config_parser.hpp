@@ -42,7 +42,7 @@ class ConfigParser : public BaseConfigParser{
         const bool readParams(const _pt::ptree& conf) override;  // パラメータを読み込み
     
     public:
-        ConfigParser(const std::string filename);     // コンストラクタ
+        ConfigParser(const std::string& filename);    // コンストラクタ
         const int getFrontendServerPort();            // フロントエンドサーバのポート番号を取得
         const fs_params_t getFrontendServerParams();  // フロントエンドサーバへ値渡し
 };

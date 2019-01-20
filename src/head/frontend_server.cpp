@@ -56,7 +56,7 @@ FrontendServer::FrontendServer(_asio::io_service& ios, ConfigParser& parser, con
     this->send_thre = boost::thread(boost::bind(&FrontendServer::runFrameSender,
                                                 this,
                                                 stream_port,
-                                                dec_thre_num+3)
+                                                dec_thre_num+VIEWBUF_EXTRA_NUM)
     );
     
     // 接続待機を開始

@@ -10,6 +10,7 @@ extern "C"{
     #include <turbojpeg.h>
 }
 
+const int VIEWBUF_EXTRA_NUM = 3;     // 表示フレームバッファの余剰領域数
 const int JPEG_TUNING_ON = 1;        // JPEGパラメータ変更フラグ
 const int JPEG_TUNING_OFF = 0;       // JPEGパラメータ非変更フラグ
 const int JPEG_QUALITY_CHANGE = 0;   // 品質係数変更フラグ

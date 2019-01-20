@@ -6,12 +6,10 @@
 #ifndef TRANSCEIVE_FRAMEBUFFER_HPP
 #define TRANSCEIVE_FRAMEBUFFER_HPP
 
-#include <string>
 #include <mutex>
+#include <thread>
+#include <chrono>
 #include <boost/circular_buffer.hpp>
-extern "C"{
-    #include <unistd.h>
-}
 
 const int BUF_FRONT_INDEX = 0;  // バッファの先頭のインデックス
 const int VIEWBUF_ID_LEN = 1;   // フレーム表示バッファのインデックス長

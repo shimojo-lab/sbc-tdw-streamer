@@ -12,14 +12,18 @@ TransceiveFramebuffer::TransceiveFramebuffer(const int buf_num):
 
 /* フレームを格納 */
 void TransceiveFramebuffer::push(const std::string& frame){
-    while(this->buf.full());
+    while(this->buf.full()){
+        std::this_thread::sleep_for(std::chrono::nanoseconds(1));
+    }
     this->buf.push_back(frame);
 }
 
 /* フレームを取り出し */
 const std::string TransceiveFramebuffer::pop(){
     std::lock_guard<std::mutex> pop_lock(this->lock);
-    while(this->buf.empty());
+    while(this->buf.empty()){
+        std::this_thread::sleep_for(std::chrono::nanoseconds(1));
+    }
     const std::string frame = this->buf[BUF_FRONT_INDEX];
     this->buf.pop_front();
     return frame;

@@ -2,7 +2,7 @@
     "//": "ヘッドノードの設定",
     "video": {
         "src": "/home/kazuya/sbc-tdw-streamer/test/a.mp4",
-        "framerate": 30;
+        "framerate": 30
     },
     "layout": {
         "column": 1,
@@ -30,7 +30,7 @@
         "jpeg_tuning_term": 10
     },
     "display_node": [
-        "192.168.10.53"
+        "192.168.10.42"
     ]
 }
 
