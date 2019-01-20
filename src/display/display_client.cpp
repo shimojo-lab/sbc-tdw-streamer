@@ -22,17 +22,17 @@ DisplayClient::DisplayClient(_asio::io_service& ios, ConfigParser& parser):
 
 /* 初期化メッセージをパース */
 const init_params_t DisplayClient::parseInitMsg(const std::string& msg){
-    JsonHandler json;
-    json.deserialize(msg);
-    const int width = json.getParam("width");
-    const int height = json.getParam("height");
-    const int stream_port = json.getParam("stream_port");
-    const int recvbuf_num = json.getParam("recvbuf_num");
-    const int wait_usec = json.getParam("wait_usec");
-    const int dec_thre_num = json.getParam("dec_thre_num");
-    const int tuning_term = json.getParam("tuning_term");
+    JsonHandler init_params;
+    init_params.deserialize(msg);
+    const int width = init_params.getParam("width");
+    const int height = init_params.getParam("height");
+    const int stream_port = init_params.getParam("stream_port");
+    const int recvbuf_num = init_params.getParam("recvbuf_num");
+    const int dec_thre_num = init_params.getParam("dec_thre_num");
+    const int framerate = init_params.getParam("framerate");
+    const int tuning_term = init_params.getParam("tuning_term");
     return std::forward_as_tuple(
-        width, height, stream_port, recvbuf_num, wait_usec, dec_thre_num, tuning_term
+        width, height, stream_port, recvbuf_num, dec_thre_num, framerate, tuning_term
     );
 }
 
@@ -64,14 +64,13 @@ void DisplayClient::onRecvInit(const err_t& err, size_t t_bytes){
     const auto data = this->stream_buf.data();
     std::string msg(_asio::buffers_begin(data), _asio::buffers_begin(data)+t_bytes);
     msg.erase(msg.length()-MSG_DELIMITER_LEN);
-    int width, height, stream_port, recvbuf_num, wait_usec, dec_thre_num, tuning_term;
+    int width, height, stream_port, recvbuf_num, dec_thre_num, framerate, tuning_term;
     std::tie(
-        width, height, stream_port, recvbuf_num, wait_usec, dec_thre_num, tuning_term
+        width, height, stream_port, recvbuf_num, dec_thre_num, framerate, tuning_term
     ) = this->parseInitMsg(msg);
-
     
     // 別スレッドでフレーム受信器を起動
-    const tranbuf_ptr_t recv_buf = std::make_shared<TransceiveFramebuffer>(recvbuf_num, wait_usec);
+    const tranbuf_ptr_t recv_buf = std::make_shared<TransceiveFramebuffer>(recvbuf_num);
     this->recv_thre = boost::thread(boost::bind(&DisplayClient::runFrameReceiver,
                                                 this,
                                                 stream_port,
@@ -79,7 +78,7 @@ void DisplayClient::onRecvInit(const err_t& err, size_t t_bytes){
     );
     
     // 別スレッドでフレーム展開器を起動
-    const rawbuf_ptr_t view_buf = std::make_shared<ViewFramebuffer>(width, height, dec_thre_num+1, wait_usec);
+    const rawbuf_ptr_t view_buf = std::make_shared<ViewFramebuffer>(width, height, dec_thre_num+3);
     for(int i=0; i<dec_thre_num; ++i){
         this->dec_thres.push_back(boost::thread(boost::bind(&DisplayClient::runFrameDecoder,
                                                             this,

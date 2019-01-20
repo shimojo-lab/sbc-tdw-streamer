@@ -12,6 +12,7 @@
 #include "sync_utils.hpp"
 #include "json_handler.hpp"
 #include "view_framebuffer.hpp"
+#include <chrono>
 #include <cstring>
 extern "C"{
     #include <fcntl.h>
@@ -20,6 +21,8 @@ extern "C"{
     #include <linux/fb.h>
     #include <linux/kd.h>
 }
+
+using hr_chrono_t = std::chrono::high_resolution_clock::time_point;
 
 const int DEVICE_OPEN_FAILED = -1;  // デバイスファイルオープン失敗時の返り値
 const int BITS_PER_PIXEL = 24;      // 1ピクセルあたりのビット数
@@ -37,9 +40,10 @@ class FrameViewer{
         int fb_size;                      // フレームバッファのサイズ
         unsigned char *fb_ptr;            // フレームバッファの先頭
         const unsigned char *next_frame;  // 次番フレーム
-        JsonHandler params;               // JPEGパラメータ変更要求
+        JsonHandler tuning_params;        // JPEGパラメータ変更要求
         const int tuning_term;            // JPEGパラメータの調整周期
         int frame_count = 0;              // 表示済フレーム数
+        hr_chrono_t pre_time;             // 1周期開始時刻
         
         const bool openFramebuffer(const std::string& fb_dev,  // フレームバッファをオープン
                                    const int width, const int height);

@@ -125,7 +125,9 @@ void FrameEncoder::run(){
             _ml::caution("Could not get video frame", "JPEG encoder stopped");
             break;
         }
-        this->encode(this->sampling_type.load(), this->quality.load());
+        this->encode(this->sampling_type.load(std::memory_order_acquire),
+                     this->quality.load(std::memory_order_acquire)
+        );
     }
 }
 

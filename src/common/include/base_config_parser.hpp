@@ -27,7 +27,7 @@ class BaseConfigParser{
         const int getIntParam(const std::string& key);           // パラメータを取得 (int型用)
     
     public:
-        BaseConfigParser(const std::string filename);  // コンストラクタ
+        BaseConfigParser(const std::string& filename);  // コンストラクタ
 };
 
 #endif  /* BASE_CONFIG_PARSER_HPP */

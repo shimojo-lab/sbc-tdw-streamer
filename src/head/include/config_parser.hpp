@@ -14,7 +14,7 @@ extern "C"{
 }
 
 using fs_params_t = std::tuple<
-    std::string, int, int, int, int, int, int, int, unsigned int, int, int, int, int, int, int,
+    std::string, int, int, int, int, int, int, int, int, int, int, int, int, int, int,
     std::vector<std::string>
 >;
 
@@ -22,6 +22,7 @@ using fs_params_t = std::tuple<
 class ConfigParser : public BaseConfigParser{
     private:
         std::string video_src;              // 再生動画のソース
+        int framerate;                      // 目標フレームレート
         int column;                         // ディスプレイの横の枚数
         int row;                            // ディスプレイの縦の枚数
         int bezel_w;                        // 横のベゼル幅
@@ -32,7 +33,6 @@ class ConfigParser : public BaseConfigParser{
         int stream_port;                    // フレーム送信用ポート
         int sendbuf_size;                   // 送信フレームバッファのサイズ
         int recvbuf_size;                   // 受信バッファサイズのサイズ
-        unsigned int wait_usec;             // スピンロック内の待機時間
         int sampling_type;                  // クロマサブサンプル比の初期値
         int quality;                        // JPEG品質係数の初期値
         int dec_thre_num;                   // フレーム展開スレッドの数

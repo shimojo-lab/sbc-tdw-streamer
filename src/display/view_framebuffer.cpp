@@ -6,18 +6,16 @@
 #include "view_framebuffer.hpp"
 
 /* コンストラクタ */
-ViewFramebuffer::ViewFramebuffer(const int width, const int height, const int viewbuf_num,
-                                 const unsigned int wait_usec):
+ViewFramebuffer::ViewFramebuffer(const int width, const int height, const int viewbuf_num):
     viewbuf_num(viewbuf_num),
     frame_size(width*height*COLOR_CHANNEL_NUM),
-    wait_usec(wait_usec),
     viewbuf_ptrs(viewbuf_num),
     viewbuf_states(viewbuf_num)
 {
     // フレームバッファ領域を確保
     for(int i=0; i<this->viewbuf_num; ++i){
         this->viewbuf_ptrs[i] = new unsigned char[this->frame_size];
-        this->viewbuf_states[i].store(false);
+        this->viewbuf_states[i].store(false, std::memory_order_release);
     }
 }
 
@@ -30,13 +28,13 @@ ViewFramebuffer::~ViewFramebuffer(){
 
 /* フレームバッファの描画領域を取得 */
 unsigned char *ViewFramebuffer::getDrawArea(const int id){
-    while(this->viewbuf_states[id].load());
+    while(this->viewbuf_states[id].load(std::memory_order_acquire));
     return this->viewbuf_ptrs[id];
 }
 
 /* フレームバッファの表示領域を取得 */
 const unsigned char *ViewFramebuffer::getDisplayArea(){
-    while(!this->viewbuf_states[this->cur_page].load());
+    while(!this->viewbuf_states[this->cur_page].load(std::memory_order_acquire));
     return this->viewbuf_ptrs[this->cur_page];
 }
 
@@ -47,12 +45,12 @@ const int ViewFramebuffer::getCurrentPage(){
 
 /* フレーム領域の表示を有効化 */
 void ViewFramebuffer::activateFrame(const int id){
-    this->viewbuf_states[id].store(true);
+    this->viewbuf_states[id].store(true, std::memory_order_release);
 }
 
 /* フレーム領域の表示を無効化 */
 void ViewFramebuffer::deactivateFrame(){
-    this->viewbuf_states[this->cur_page].store(false);
+    this->viewbuf_states[this->cur_page].store(false, std::memory_order_release);
     this->cur_page = (this->cur_page+1) % this->viewbuf_num;
 }
 

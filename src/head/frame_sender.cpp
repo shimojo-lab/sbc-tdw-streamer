@@ -7,17 +7,17 @@
 
 /* コンストラクタ */
 FrameSender::FrameSender(_asio::io_service& ios, const int port, const int display_num,
-                         std::vector<tranbuf_ptr_t>& send_bufs, const int dec_thre_num):
+                         std::vector<tranbuf_ptr_t>& send_bufs, const int viewbuf_num):
     ios(ios),
     acc(ios, _ip::tcp::endpoint(_ip::tcp::v4(), port)),
     display_num(display_num),
-    viewbuf_num(dec_thre_num+1),
+    viewbuf_num(viewbuf_num),
     send_msgs(display_num),
     send_bufs(send_bufs)
 {
     // パラメータを初期化
     this->sock = std::make_shared<_ip::tcp::socket>(ios);
-    this->send_count.store(0);
+    this->send_count.store(0, std::memory_order_release);
     
     // 送信処理を開始
     _ml::notice("Streaming video frames at :" + std::to_string(port));
@@ -51,7 +51,7 @@ void FrameSender::onConnect(const err_t& err){
         _ml::caution("Failed stream connection with " + ip, err.message());
         std::exit(EXIT_FAILURE);
     }else{
-        ++this->send_count;
+        this->send_count.fetch_add(1, std::memory_order_release);
     }
     
     // 新規TCPソケットを用意
@@ -66,7 +66,7 @@ void FrameSender::onConnect(const err_t& err){
     }else{
         // フレーム送信を開始
         this->sock->close();
-        this->send_count.store(0);
+        this->send_count.store(0, std::memory_order_release);
         this->sendFrame();
     }
 }
@@ -79,9 +79,9 @@ void FrameSender::onSendFrame(const err_t& err, size_t t_bytes){
     }
     
     // 全送信が完了したら次番フレームを送信
-    ++this->send_count;
+    this->send_count.fetch_add(1, std::memory_order_release);
     if(this->send_count.load(std::memory_order_acquire) == this->display_num){
-        this->send_count.store(0);
+        this->send_count.store(0, std::memory_order_release);
         this->sendFrame();
     }
 }

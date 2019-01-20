@@ -11,8 +11,10 @@
 #include "sync_utils.hpp"
 #include "json_handler.hpp"
 #include <atomic>
+#include <chrono>
 
 using streambuf_ptr_t = std::shared_ptr<_asio::streambuf>;
+using hr_chrono_t = std::chrono::high_resolution_clock::time_point;
 
 /* 同期制御器 */
 class SyncManager{
@@ -24,7 +26,9 @@ class SyncManager{
         std::atomic<int> sync_count;               // 同期済ディスプレイ数
         std::atomic<int>& sampling_type;           // クロマサブサンプル比
         std::atomic<int>& quality;                 // JPEG品質係数
-        JsonHandler json;                          // JSONハンドラ
+        JsonHandler tune_params;                   // パラメータ変更要求
+        int next_id;                               // 次のフレーム番号
+        hr_chrono_t pre_time;                      // 1周期の開始時刻
         
         void parseSyncMsg(const std::string& msg, const int id);          // 同期メッセージをパース
         void onRecvSync(const err_t& err, size_t t_bytes, const int id);  // 同期メッセージ受信時のコールバック

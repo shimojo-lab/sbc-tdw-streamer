@@ -23,7 +23,7 @@ class ConfigParser : public BaseConfigParser{
         const bool readParams(const _pt::ptree& conf) override;  // パラメータを読み込み
         
     public:
-        ConfigParser(const std::string conf_file);   // コンストラクタ
+        ConfigParser(const std::string& conf_file);  // コンストラクタ
         const dc_params_t getDisplayClientParams();  // ディスプレイクライアントへ値渡し
 };
 

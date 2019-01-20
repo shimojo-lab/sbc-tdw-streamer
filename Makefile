@@ -4,7 +4,7 @@
 ##################################
 
 CXX = g++
-CXXFLAGS = -Wall -std=c++11 -O3 -mtune=native -march=native -mfpmath=both
+CXXFLAGS = -Wall -std=c++11 -O3 -mtune=native -march=native
 HEAD = $(PWD)/src/head
 DISP = $(PWD)/src/display
 COMN = $(PWD)/src/common

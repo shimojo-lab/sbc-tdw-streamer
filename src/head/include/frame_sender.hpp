@@ -34,7 +34,7 @@ class FrameSender{
     public:
         FrameSender(_asio::io_service& ios, const int port,  // コンストラクタ
                     const int display_num, std::vector<tranbuf_ptr_t>& send_bufs,
-                    const int dec_thre_num);
+                    const int viewbuf_num);
 };
 
 #endif  /* FRAME_SENDER_HPP */

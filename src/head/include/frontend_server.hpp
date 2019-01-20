@@ -20,14 +20,8 @@ class FrontendServer{
         _ip::tcp::acceptor acc;                // TCPアクセプタ
         std::vector<sock_ptr_t> socks;         // 接続済TCPソケット
         int display_num;                       // 全ディスプレイ数
-        int width;                             // ディスプレイの横の画素数
-        int height;                            // ディスプレイの縦の画素数
         int fs_port;                           // フロントエンドサーバ用ポート
-        int stream_port;                       // フレーム送信用ポート
-        int recvbuf_num;                       // 受信フレームバッファの領域数
-        unsigned int wait_usec;                // スピンロック内の待機時間
-        int dec_thre_num;                      // フレーム展開スレッドの数
-        int tuning_term;                       // JPEGパラメータの調節周期
+        JsonHandler init_params;               // 初期化メッセージ用パラメータ
         int connected_num = 0;                 // 接続済ディスプレイノード数
         std::atomic<int> sampling_type;        // クロマサブサンプリングの形式
         std::atomic<int> quality;              // JPEG品質係数
@@ -37,13 +31,13 @@ class FrontendServer{
         boost::thread enc_thre;                // フレーム圧縮スレッド
         
         void waitForConnection();          // 接続待機を開始
-        const std::string makeInitMsg();   // 初期化メッセージを生成
         void onConnect(const err_t& err);  // ディスプレイノード接続時のコールバック
         void onSendInit(const err_t& err,  // 初期化メッセージ送信時のコールバック
                         size_t t_bytes, const std::string ip);
         void runFrameEncoder(const std::string video_src,  // 別スレッドでフレーム符号化器を起動
                              const int column, const int row, const int bezel_w, const int bezel_h, const int width, const int height);
-        void runFrameSender();             // 別スレッドでフレーム送信器を起動
+        void runFrameSender(const int stream_port,         // 別スレッドでフレーム送信器を起動
+                            const int viewbuf_num);
         void runSyncManager();             // 同スレッドで同期制御器を起動
     
     public:

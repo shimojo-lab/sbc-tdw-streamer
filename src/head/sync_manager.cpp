@@ -23,34 +23,34 @@ SyncManager::SyncManager(_asio::io_service& ios, std::vector<sock_ptr_t>& socks,
 
 /* 同期メッセージをパース */
 void SyncManager::parseSyncMsg(const std::string& msg, const int id){
-    this->json.deserialize(msg);
-    const int frame_num = this->json.getParam("num");
-    const int tune = this->json.getParam("tune");
+    this->tune_params.deserialize(msg);
+    const int frame_id = this->tune_params.getParam("id");
+    const int tune = this->tune_params.getParam("tune");
     
     if(tune == JPEG_TUNING_ON){
-        const int param = this->json.getParam("param");
-        const int change = this->json.getParam("change");
+        const int param = this->tune_params.getParam("param");
+        const int change = this->tune_params.getParam("change");
         if(param == JPEG_QUALITY_CHANGE){
             // 品質係数を変更
-            if(change==JPEG_PARAM_UP && this->quality.load()<JPEG_QUALITY_MAX){
-                ++this->quality;
+            if(change==JPEG_PARAM_UP && this->quality.load(std::memory_order_acquire)<JPEG_QUALITY_MAX){
+                this->quality.fetch_add(1, std::memory_order_release);
             }
-            else if(change==JPEG_PARAM_DOWN && this->quality.load()>JPEG_QUALITY_MIN){
-                --this->quality;
+            else if(change==JPEG_PARAM_DOWN && this->quality.load(std::memory_order_acquire)>JPEG_QUALITY_MIN){
+                this->quality.fetch_sub(1, std::memory_order_release);
             }
         }else{
             // クロマサブサンプル比を変更 
             if(change==JPEG_PARAM_UP){
-                switch(this->sampling_type.load()){
+                switch(this->sampling_type.load(std::memory_order_acquire)){
                     case TJSAMP_422:
-                        this->sampling_type.store(TJSAMP_444);
+                        this->sampling_type.store(TJSAMP_444, std::memory_order_release);
                         break;
                     case TJSAMP_420:
-                        this->sampling_type.store(TJSAMP_422);
+                        this->sampling_type.store(TJSAMP_422, std::memory_order_release);
                         break;
                 }
             }else if(change==JPEG_PARAM_DOWN){
-                switch(this->sampling_type.load()){
+                switch(this->sampling_type.load(std::memory_order_acquire)){
                     case TJSAMP_444:
                         this->sampling_type.store(TJSAMP_422);
                         break;
@@ -78,9 +78,13 @@ void SyncManager::onRecvSync(const err_t& err, size_t t_bytes, const int id){
     this->stream_bufs[id]->consume(t_bytes);
     
     // 全ディスプレイノード間で同期
-    ++this->sync_count;
+    this->sync_count.fetch_add(1, std::memory_order_release);
     if(this->sync_count.load(std::memory_order_acquire) == this->display_num){
-        this->sync_count.store(0);
+        const auto post_time = std::chrono::system_clock::now();
+        double elapsed = 1000.0 / std::chrono::duration_cast<std::chrono::milliseconds>(post_time-this->pre_time).count();
+        _ml::debug(elapsed);
+        this->pre_time = post_time;
+        this->sync_count.store(0, std::memory_order_release);
         this->sendSync();
     }
 }

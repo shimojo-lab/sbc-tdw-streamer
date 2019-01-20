@@ -21,15 +21,13 @@ const int JPEG_FAILED = -1;     // JPEG変換失敗時の返り値
 class TransceiveFramebuffer{
     private:
         boost::circular_buffer<std::string> buf;  // リングバッファ
-        const unsigned int wait_usec;             // スピンロックでの待機時間
         std::mutex lock;                          // 排他制御用のロック
     
     public:
-        TransceiveFramebuffer(const int buf_num,  // コンストラクタ
-                              const unsigned int wait_usec);
-        void push(const std::string& frame);      // フレームを格納
-        const std::string pop();                  // フレームを取り出し
-        const int getStoredNum();                 // 使用中の領域数を取得
+        TransceiveFramebuffer(const int buf_num);  // コンストラクタ
+        void push(const std::string& frame);       // フレームを格納
+        const std::string pop();                   // フレームを取り出し
+        const int getStoredNum();                  // 使用中の領域数を取得
 };
 
 using tranbuf_ptr_t = std::shared_ptr<TransceiveFramebuffer>;

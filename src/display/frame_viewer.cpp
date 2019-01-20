@@ -99,22 +99,22 @@ void FrameViewer::hideCursor(const std::string& tty_dev){
 /* フレームを表示 */
 void FrameViewer::displayFrame(){
     std::memcpy(this->fb_ptr, this->next_frame, this->fb_size);
-    msync(this->fb_ptr, this->fb_size, MS_INVALIDATE);
+    msync(this->fb_ptr, this->fb_size, MS_SYNC|MS_INVALIDATE);
     this->view_buf->deactivateFrame();
 }
 
 /* 同期メッセージを生成 */
 const std::string FrameViewer::makeSyncMsg(){
-    this->params.setParam("num", this->view_buf->getCurrentPage());
+    this->tuning_params.setParam("id", this->view_buf->getCurrentPage());
     if(this->frame_count == this->tuning_term){
         this->frame_count = 0;
-        this->params.setParam("tune", JPEG_TUNING_ON);
-        this->params.setParam("param", JPEG_PARAM_KEEP);
-        this->params.setParam("change", JPEG_PARAM_KEEP);
+        this->tuning_params.setParam("tune", JPEG_TUNING_ON);
+        this->tuning_params.setParam("param", JPEG_PARAM_KEEP);
+        this->tuning_params.setParam("change", JPEG_PARAM_KEEP);
     }else{
-        this->params.setParam("tune", JPEG_TUNING_OFF);
+        this->tuning_params.setParam("tune", JPEG_TUNING_OFF);
     }
-    return this->params.serialize();
+    return this->tuning_params.serialize();
 }
 
 /* 同期メッセージを送信 */
@@ -143,6 +143,12 @@ void FrameViewer::onRecvSync(const err_t& err, size_t t_bytes){
     // フレームを表示
     this->displayFrame();
     ++this->frame_count;
+    
+    // フレームレートを計算
+    const hr_chrono_t post_time = std::chrono::high_resolution_clock::now();
+    const double fps = 1000.0 / std::chrono::duration_cast<std::chrono::milliseconds>(post_time-this->pre_time).count();
+    _ml::debug(std::to_string(fps)+"fps");
+    this->pre_time = post_time;
     
     // 次番フレーム用の同期を開始
     this->next_frame = this->view_buf->getDisplayArea();

@@ -1,6 +1,9 @@
 {
     "//": "ヘッドノードの設定",
-    "video_src": "/home/kazuya/sbc-tdw-streamer/test/bunny/fullhd.mp4",
+    "video": {
+        "src": "/home/kazuya/sbc-tdw-streamer/test/a.mp4",
+        "framerate": 30;
+    },
     "layout": {
         "column": 1,
         "row": 1,

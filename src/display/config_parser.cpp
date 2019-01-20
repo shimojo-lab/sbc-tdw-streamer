@@ -6,7 +6,7 @@
 #include "config_parser.hpp"
 
 /* コンストラクタ */
-ConfigParser::ConfigParser(const std::string conf_file):
+ConfigParser::ConfigParser(const std::string& conf_file):
     BaseConfigParser(conf_file)
 {   
     // パラメータを読み込み

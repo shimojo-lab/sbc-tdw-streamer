@@ -34,6 +34,7 @@ void FrameDecoder::decode(){
     try{
         id = std::stoi(jpeg_str.substr(iter));
     }catch(...){
+        _ml::warn("Could not get new video frame", "message format error");
         return;
     }
     jpeg_str.erase(iter);
@@ -81,7 +82,7 @@ void FrameDecoder::run(){
         this->decode();
 //const auto end = std::chrono::system_clock::now();
 //double elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count();
-//print_debug(elapsed);
+//_ml::debug(elapsed);
     }
 }
 

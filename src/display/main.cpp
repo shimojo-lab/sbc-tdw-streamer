@@ -19,6 +19,6 @@ int main(int argc, char *argv[]){
     DisplayClient client(ios, parser);
     ios.run();
     
-    return 0;
+    return EXIT_SUCCESS;
 }
 
