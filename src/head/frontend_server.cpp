@@ -12,8 +12,8 @@ FrontendServer::FrontendServer(_asio::io_service& ios, ConfigParser& parser, con
 {
     // パラメータを受け取り
     std::string video_src;
-    int framerate, column, row, bezel_w, bezel_h, width, height, stream_port;
-    int sendbuf_num, recvbuf_num, sampling_type_, quality_, dec_thre_num, tuning_term;
+    int framerate, column, row, bezel_w, bezel_h, width, height, stream_port, sendbuf_num, recvbuf_num;
+    int sampling_type_, quality_, dec_thre_num, tuning_term;
     std::tie(
         video_src, framerate, column, row, bezel_w, bezel_h, width, height, stream_port,
         sendbuf_num, recvbuf_num, sampling_type_, quality_, dec_thre_num, tuning_term, this->ip_addrs

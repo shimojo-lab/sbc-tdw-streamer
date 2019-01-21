@@ -42,7 +42,7 @@ const bool ConfigParser::readParams(const _pt::ptree& conf){
     }
     
     // クロマサブサンプル比を設定
-    if(sampling_name=="yuv444"){
+    if(sampling_name == "yuv444"){
         this->sampling_type = TJSAMP_444;
     }else if(sampling_name == "yuv422"){
         this->sampling_type = TJSAMP_422;

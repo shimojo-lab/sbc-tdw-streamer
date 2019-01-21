@@ -56,7 +56,8 @@ void FrameEncoder::setResizeParams(const int column, const int row, const int be
     // リサイズ倍率を設定
     const double x_ratio = (double)bg_w / (double)frame_w;
     const double y_ratio = (double)bg_h / (double)frame_h;
-    this->ratio = std::min(x_ratio, y_ratio);
+    this->ratio = x_ratio<y_ratio ? x_ratio : y_ratio;
+    this->interpolation_type = this->ratio>=1 ? cv::INTER_LINEAR : cv::INTER_AREA;
     
     // リサイズフレームのパディングを設定
     const int resize_w = (int)((double)frame_w * this->ratio);

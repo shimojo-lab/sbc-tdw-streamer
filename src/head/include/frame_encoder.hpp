@@ -9,7 +9,6 @@
 #include "mutex_logger.hpp"
 #include "transceive_framebuffer.hpp"
 #include <vector>
-#include <algorithm>
 #include <atomic>
 #include <cstdlib>
 #include <opencv2/core.hpp>
@@ -39,8 +38,7 @@ class FrameEncoder{
         std::vector<tranbuf_ptr_t>& send_bufs;  // 送信フレームバッファ
         
         void setResizeParams(const int column, const int row,        // リサイズ用パラメータを設定
-                             const int bezel_w, const int bezel_h,
-                             const int width, const int height,
+                             const int bezel_w, const int bezel_h, const int width, const int height,
                              const int frame_w, const int frame_h);
         void resize(cv::Mat& video_frame);                           // フレームをリサイズ
         void encode(const int sampling_type, const int quality);     // フレームをJPEG圧縮
