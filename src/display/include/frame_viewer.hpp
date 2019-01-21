@@ -12,7 +12,6 @@
 #include "sync_utils.hpp"
 #include "json_handler.hpp"
 #include "view_framebuffer.hpp"
-#include <chrono>
 #include <cstring>
 extern "C"{
     #include <fcntl.h>
@@ -21,8 +20,6 @@ extern "C"{
     #include <linux/fb.h>
     #include <linux/kd.h>
 }
-
-using hr_chrono_t = std::chrono::high_resolution_clock::time_point;
 
 const int DEVICE_OPEN_FAILED = -1;  // デバイスファイルオープン失敗時の返り値
 const int BITS_PER_PIXEL = 24;      // 1ピクセルあたりのビット数
@@ -34,7 +31,7 @@ class FrameViewer{
         _ip::tcp::socket& sock;           // TCPソケット
         _asio::streambuf stream_buf;      // ストリームバッファ
         const tranbuf_ptr_t recv_buf;     // 受信フレームバッファ
-        const rawbuf_ptr_t view_buf;      // 表示フレームバッファ
+        const viewbuf_ptr_t view_buf;     // 表示フレームバッファ
         int fb;                           // フレームバッファのデバイスファイル
         int tty;                          // デバイス端末のデバイスファイル
         int fb_size;                      // フレームバッファのサイズ
@@ -43,7 +40,7 @@ class FrameViewer{
         JsonHandler tuning_params;        // JPEGパラメータ変更要求
         const int tuning_term;            // JPEGパラメータの調整周期
         int frame_count = 0;              // 表示済フレーム数
-        hr_chrono_t pre_time;             // 1周期開始時刻
+        hr_chrono_t pre_time;             // 1周期の開始時刻
         
         const bool openFramebuffer(const std::string& fb_dev,  // フレームバッファをオープン
                                    const int width, const int height);
@@ -56,7 +53,7 @@ class FrameViewer{
     
     public:
         FrameViewer(_asio::io_service& ios, _ip::tcp::socket& sock,  // コンストラクタ
-                    const tranbuf_ptr_t recv_buf, const rawbuf_ptr_t view_buf,
+                    const tranbuf_ptr_t recv_buf, const viewbuf_ptr_t view_buf,
                     const std::string fb_dev, const int width, const int height,
                     const std::string tty_dev, const int tuning_term);
         ~FrameViewer();  // デストラクタ

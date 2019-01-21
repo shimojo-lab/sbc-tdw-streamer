@@ -11,11 +11,11 @@ DisplayClient::DisplayClient(_asio::io_service& ios, ConfigParser& parser):
     sock(ios)
 {
     // パラメータを設定
-    int port;
-    std::tie(this->ip, port, this->fb_dev, this->tty_dev) = parser.getDisplayClientParams();
+    int fs_port;
+    std::tie(this->ip_addr, fs_port, this->fb_dev, this->tty_dev) = parser.getDisplayClientParams();
     
     // ヘッドノードに接続
-    this->sock.async_connect(_ip::tcp::endpoint(_ip::address::from_string(this->ip), port),
+    this->sock.async_connect(_ip::tcp::endpoint(_ip::address::from_string(this->ip_addr), fs_port),
                              boost::bind(&DisplayClient::onConnect, this, _ph::error)
     );
 }
@@ -24,13 +24,13 @@ DisplayClient::DisplayClient(_asio::io_service& ios, ConfigParser& parser):
 const init_params_t DisplayClient::parseInitMsg(const std::string& msg){
     JsonHandler init_params;
     init_params.deserialize(msg);
-    const int width = init_params.getParam("width");
-    const int height = init_params.getParam("height");
-    const int stream_port = init_params.getParam("stream_port");
-    const int recvbuf_num = init_params.getParam("recvbuf_num");
-    const int dec_thre_num = init_params.getParam("dec_thre_num");
-    const int framerate = init_params.getParam("framerate");
-    const int tuning_term = init_params.getParam("tuning_term");
+    const int width = init_params.getIntParam("width");
+    const int height = init_params.getIntParam("height");
+    const int stream_port = init_params.getIntParam("stream_port");
+    const int recvbuf_num = init_params.getIntParam("recvbuf_num");
+    const int dec_thre_num = init_params.getIntParam("dec_thre_num");
+    const int framerate = init_params.getIntParam("framerate");
+    const int tuning_term = init_params.getIntParam("tuning_term");
     return std::forward_as_tuple(
         width, height, stream_port, recvbuf_num, dec_thre_num, framerate, tuning_term
     );
@@ -42,7 +42,7 @@ void DisplayClient::onConnect(const err_t& err){
         _ml::caution("Failed connection with head node", err.message());
         std::exit(EXIT_FAILURE);
     }
-    _ml::notice("Connected to connect to head node");
+    _ml::notice("Connected to head node");
     
     // 初期化メッセージの受信を開始
     _asio::async_read_until(this->sock,
@@ -55,7 +55,7 @@ void DisplayClient::onConnect(const err_t& err){
 /* 初期化メッセージ受信時のコールバック */
 void DisplayClient::onRecvInit(const err_t& err, size_t t_bytes){
     if(err){
-        _ml::caution("Failed to receive init message", err.message());
+        _ml::caution("Could not receive init message", err.message());
         return;
     }
     _ml::notice("Received init message from head node");
@@ -78,7 +78,7 @@ void DisplayClient::onRecvInit(const err_t& err, size_t t_bytes){
     );
     
     // 別スレッドでフレーム展開器を起動
-    const rawbuf_ptr_t view_buf = std::make_shared<ViewFramebuffer>(width, height, dec_thre_num+VIEWBUF_EXTRA_NUM);
+    const viewbuf_ptr_t view_buf = std::make_shared<ViewFramebuffer>(width, height, dec_thre_num+VIEWBUF_EXTRA_NUM);
     for(int i=0; i<dec_thre_num; ++i){
         this->dec_thres.push_back(boost::thread(boost::bind(&DisplayClient::runFrameDecoder,
                                                             this,
@@ -103,11 +103,11 @@ void DisplayClient::onRecvInit(const err_t& err, size_t t_bytes){
 /* 別スレッドでフレーム受信器を起動 */
 void DisplayClient::runFrameReceiver(const int stream_port, const tranbuf_ptr_t recv_buf){
     _asio::io_service ios;
-    FrameReceiver receiver(ios, this->ip, stream_port, recv_buf);
+    FrameReceiver receiver(ios, this->ip_addr, stream_port, recv_buf);
 }
 
 /* 別スレッドでフレーム展開器を起動 */
-void DisplayClient::runFrameDecoder(const tranbuf_ptr_t recv_buf, const rawbuf_ptr_t view_buf){
+void DisplayClient::runFrameDecoder(const tranbuf_ptr_t recv_buf, const viewbuf_ptr_t view_buf){
     FrameDecoder decoder(recv_buf, view_buf);
     decoder.run();
 }

@@ -19,10 +19,13 @@ class JsonHandler{
         _pt::ptree json;  // JSON本体
     
     public:
-        const std::string serialize();                           // JSONをシリアライズ
-        void deserialize(const std::string& json_str);           // JSONをデシリアライズ
-        const int getParam(const std::string& key);              // JSON内のパラメータを取得
-        void setParam(const std::string& key, const int param);  // JSONにパラメータを追加
+        const std::string serialize();                              // JSONをシリアライズ
+        void deserialize(const std::string& json_str);              // JSONをデシリアライズ
+        const int getIntParam(const std::string& key);              // JSON内のパラメータを取得 (int用)
+        const std::string getStringParam(const std::string& key);   // JSON内のパラメータを取得 (文字列用)
+        void setIntParam(const std::string& key, const int param);  // JSONにパラメータを追加 (int用)
+        void setStringParam(const std::string& key,                 // JSONにパラメータを追加 (文字列用)
+                            const std::string& param);
 };
 
 #endif  /* JSON_HANDLER_HPP */

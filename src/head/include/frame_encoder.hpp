@@ -20,6 +20,7 @@ extern "C"{
 }
 
 const int COLOR_CHANNEL_NUM = 3;  // 色のチャネル数
+const int JPEG_FAILED = -1;       // JPEG圧縮失敗時の返り値
 
 /* フレーム圧縮器 */
 class FrameEncoder{
@@ -27,8 +28,9 @@ class FrameEncoder{
         const tjhandle handle;                  // JPEGエンコーダ
         cv::VideoCapture video;                 // 再生動画
         const int display_num;                  // 全ディスプレイ数
-        cv::Mat resized_frame;                  // リサイズ後のフレーム
         double ratio;                           // リサイズ倍率
+        int interpolation_type;                 // リサイズ方式
+        cv::Mat resized_frame;                  // リサイズ後のフレーム
         cv::Rect roi;                           // リサイズフレームの貼り付け位置
         std::atomic<int>& sampling_type;        // クロマサブサンプル比
         std::atomic<int>& quality;              // JPEG品質係数
@@ -36,7 +38,8 @@ class FrameEncoder{
         std::vector<cv::Mat> raw_frames;        // ディスプレイノードの各フレーム
         std::vector<tranbuf_ptr_t>& send_bufs;  // 送信フレームバッファ
         
-        void setResizeParams(const int column, const int row, const int bezel_w, const int bezel_h,       // リサイズ用パラメータを設定
+        void setResizeParams(const int column, const int row,        // リサイズ用パラメータを設定
+                             const int bezel_w, const int bezel_h,
                              const int width, const int height,
                              const int frame_w, const int frame_h);
         void resize(cv::Mat& video_frame);                           // フレームをリサイズ

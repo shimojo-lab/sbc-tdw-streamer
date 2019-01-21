@@ -23,8 +23,8 @@ class BaseConfigParser{
     protected:
         _pt::ptree conf;  // パラメータ群
         
-        const std::string getStrParam(const std::string& key);   // パラメータを取得 (文字列用)
-        const int getIntParam(const std::string& key);           // パラメータを取得 (int型用)
+        const std::string getStrParam(const std::string& key);  // パラメータを取得 (String型用)
+        const int getIntParam(const std::string& key);          // パラメータを取得 (int型用)
     
     public:
         BaseConfigParser(const std::string& filename);  // コンストラクタ

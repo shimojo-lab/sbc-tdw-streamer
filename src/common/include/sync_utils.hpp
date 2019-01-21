@@ -6,9 +6,9 @@
 #ifndef SYNC_UTILS_HPP
 #define SYNC_UTILS_HPP
 
-extern "C"{
-    #include <turbojpeg.h>
-}
+#include <chrono>
+
+using hr_chrono_t = std::chrono::high_resolution_clock::time_point;
 
 const int VIEWBUF_EXTRA_NUM = 3;     // 表示フレームバッファの余剰領域数
 const int JPEG_TUNING_ON = 1;        // JPEGパラメータ変更フラグ

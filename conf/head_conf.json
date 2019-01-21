@@ -7,8 +7,8 @@
     "layout": {
         "column": 1,
         "row": 1,
-        "bezel_w": 0,
-        "bezel_h": 0
+        "bezel_width": 0,
+        "bezel_height": 0
     },
     "resolution": {
         "width": 1920,
@@ -20,14 +20,13 @@
     },
     "buffer": {
         "send_buffer_size": 16,
-        "receive_buffer_size": 16,
-        "wait_time": 10
+        "receive_buffer_size": 16
     },
     "compression": {
         "init_subsampling_type": "yuv444",
         "init_jpeg_quality": 90,
-        "jpeg_decoder_num": 2,
-        "jpeg_tuning_term": 10
+        "jpeg_decoder_num": 1,
+        "jpeg_tuning_term": 100
     },
     "display_node": [
         "192.168.10.42"

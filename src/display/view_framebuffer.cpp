@@ -8,13 +8,13 @@
 /* コンストラクタ */
 ViewFramebuffer::ViewFramebuffer(const int width, const int height, const int viewbuf_num):
     viewbuf_num(viewbuf_num),
-    frame_size(width*height*COLOR_CHANNEL_NUM),
     viewbuf_ptrs(viewbuf_num),
     viewbuf_states(viewbuf_num)
 {
     // フレームバッファ領域を確保
+    const int frame_size = width * height * COLOR_CHANNEL_NUM;
     for(int i=0; i<this->viewbuf_num; ++i){
-        this->viewbuf_ptrs[i] = new unsigned char[this->frame_size];
+        this->viewbuf_ptrs[i] = new unsigned char[frame_size];
         this->viewbuf_states[i].store(false, std::memory_order_release);
     }
 }

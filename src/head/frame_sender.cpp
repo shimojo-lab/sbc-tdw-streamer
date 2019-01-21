@@ -35,9 +35,10 @@ void FrameSender::run(){
 /* フレームを送信 */
 void FrameSender::sendFrame(){
     for(int i=0; i<this->display_num; ++i){
-        this->send_msgs[i] = this->send_bufs[i]->pop() + std::to_string(this->fb_id) + MSG_DELIMITER;
+        this->send_msgs[i].setIntParam("id", this->fb_id);
+        this->send_msgs[i].setStringParam("src", this->send_bufs[i]->pop());
         _asio::async_write(*this->socks[i],
-                           _asio::buffer(this->send_msgs[i]),
+                           _asio::buffer(this->send_msgs[i].serialize()+MSG_DELIMITER),
                            boost::bind(&FrameSender::onSendFrame, this, _ph::error, _ph::bytes_transferred)
         );
     }
@@ -46,9 +47,9 @@ void FrameSender::sendFrame(){
 
 /* ディスプレイノード接続時のコールバック */
 void FrameSender::onConnect(const err_t& err){
-    const std::string ip = this->sock->remote_endpoint().address().to_string();
+    const std::string ip_addr = this->sock->remote_endpoint().address().to_string();
     if(err){
-        _ml::caution("Failed stream connection with " + ip, err.message());
+        _ml::caution("Failed stream connection with " + ip_addr, err.message());
         std::exit(EXIT_FAILURE);
     }else{
         this->send_count.fetch_add(1, std::memory_order_release);

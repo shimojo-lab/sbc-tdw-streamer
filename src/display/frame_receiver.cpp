@@ -6,20 +6,20 @@
 #include "frame_receiver.hpp"
 
 /* コンストラクタ */
-FrameReceiver::FrameReceiver(_asio::io_service& ios, const std::string ip, const int port,
-                             const tranbuf_ptr_t rbuf):
+FrameReceiver::FrameReceiver(_asio::io_service& ios, const std::string ip_addr, const int stream_port,
+                             const tranbuf_ptr_t recv_buf):
     ios(ios),
     sock(ios),
-    rbuf(rbuf)
+    recv_buf(recv_buf)
 {
     // フレーム受信を開始
-    _ml::notice("Receiving video frames from " + ip + ":" + std::to_string(port));
-    this->run(ip, port);
+    _ml::notice("Receiving video frames from " + ip_addr + ":" + std::to_string(stream_port));
+    this->run(ip_addr, stream_port);
 }
 
 /* フレーム受信を開始 */
-void FrameReceiver::run(const std::string ip, const int port){
-    this->sock.async_connect(_ip::tcp::endpoint(_ip::address::from_string(ip), port),
+void FrameReceiver::run(const std::string& ip_addr, const int stream_port){
+    this->sock.async_connect(_ip::tcp::endpoint(_ip::address::from_string(ip_addr), stream_port),
                              boost::bind(&FrameReceiver::onConnect, this, _ph::error)
     );
     ios.run(); 
@@ -28,7 +28,7 @@ void FrameReceiver::run(const std::string ip, const int port){
 /* 接続時のコールバック */
 void FrameReceiver::onConnect(const err_t& err){
     if(err){
-        _ml::caution("Failed TCP connection with head node", err.message());
+        _ml::caution("Failed stream connection with head node", err.message());
         return;
     }
     
@@ -43,13 +43,13 @@ void FrameReceiver::onConnect(const err_t& err){
 /* フレーム受信時のコールバック */
 void FrameReceiver::onRecvFrame(const err_t& err, size_t t_bytes){
     if(err){
-        _ml::caution("Failed to receive frame", err.message());
+        _ml::caution("Could not receive frame", err.message());
     }else{
         // フレームを取得
         const auto data = this->stream_buf.data();
         std::string recv_msg(_asio::buffers_begin(data), _asio::buffers_begin(data)+t_bytes);
         recv_msg.erase(recv_msg.length()-MSG_DELIMITER_LEN);
-        this->rbuf->push(recv_msg);
+        this->recv_buf->push(recv_msg);
         this->stream_buf.consume(t_bytes);
     }
     

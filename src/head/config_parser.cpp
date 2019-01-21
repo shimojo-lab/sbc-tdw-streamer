@@ -24,8 +24,8 @@ const bool ConfigParser::readParams(const _pt::ptree& conf){
         this->framerate = this->getIntParam("video.framerate");
         this->column = this->getIntParam("layout.column");
         this->row = this->getIntParam("layout.row");
-        this->bezel_w = this->getIntParam("layout.bezel_w");
-        this->bezel_h = this->getIntParam("layout.bezel_h");
+        this->bezel_w = this->getIntParam("layout.bezel_width");
+        this->bezel_h = this->getIntParam("layout.bezel_height");
         this->width = this->getIntParam("resolution.width");
         this->height = this->getIntParam("resolution.height");
         this->fs_port = this->getIntParam("port.frontend_server");
@@ -87,8 +87,9 @@ const fs_params_t ConfigParser::getFrontendServerParams(){
     const int dec_thre_num = this->dec_thre_num;
     const int tuning_term = this->tuning_term;
     const std::vector<std::string> ip_addrs = this->ip_addrs;
-    return std::forward_as_tuple(video_src, framerate, column, row, bezel_w, bezel_h, width, height, stream_port,
-                                 sendbuf_size, recvbuf_size, sampling_type,
-                                 quality, dec_thre_num, tuning_term, ip_addrs);
+    return std::forward_as_tuple(
+        video_src, framerate, column, row, bezel_w, bezel_h, width, height, stream_port,
+        sendbuf_size, recvbuf_size, sampling_type, quality, dec_thre_num, tuning_term, ip_addrs
+    );
 }
 

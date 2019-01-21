@@ -4,12 +4,12 @@
 **************************/
 
 #include "frame_encoder.hpp"
-#include <opencv2/highgui.hpp>
 
 /* コンストラクタ */
-FrameEncoder::FrameEncoder(const std::string video_src, const int column, const int row, const int bezel_w, const int bezel_h,
-                           const int width, const int height, std::atomic<int>& sampling_type,
-                           std::atomic<int>& quality, std::vector<tranbuf_ptr_t>& send_bufs):
+FrameEncoder::FrameEncoder(const std::string video_src, const int column, const int row,
+                           const int bezel_w, const int bezel_h, const int width, const int height,
+                           std::atomic<int>& sampling_type, std::atomic<int>& quality,
+                           std::vector<tranbuf_ptr_t>& send_bufs):
     handle(tjInitCompress()),
     display_num(column*row),
     sampling_type(sampling_type),
@@ -33,7 +33,9 @@ FrameEncoder::FrameEncoder(const std::string video_src, const int column, const 
     // リサイズ用パラメータを設定
     cv::Mat video_frame;
     this->video >> video_frame;
-    this->setResizeParams(column, row, bezel_w, bezel_h, width, height, video_frame.cols, video_frame.rows);
+    this->setResizeParams(
+        column, row, bezel_w, bezel_h, width, height, video_frame.cols, video_frame.rows
+    );
 }
 
 /* デストラクタ */
@@ -43,11 +45,12 @@ FrameEncoder::~FrameEncoder(){
 }
 
 /* リサイズ用パラメータを設定 */
-void FrameEncoder::setResizeParams(const int column, const int row, const int bezel_w, const int bezel_h, const int width, const int height,
+void FrameEncoder::setResizeParams(const int column, const int row, const int bezel_w,
+                                   const int bezel_h, const int width, const int height,
                                    const int frame_w, const int frame_h){
     // リサイズ後のフレームを背景を初期化
-    const int bg_w = column * width + (column - 1) * bezel_w;
-    const int bg_h = row * height + (row - 1) * bezel_h;
+    const int bg_w = width * column + bezel_w * 2 * (column - 1);
+    const int bg_h = height * row + bezel_h * 2 * (row - 1);
     this->resized_frame = cv::Mat::zeros(cv::Size(bg_w, bg_h), CV_8UC3);
     
     // リサイズ倍率を設定
@@ -58,8 +61,8 @@ void FrameEncoder::setResizeParams(const int column, const int row, const int be
     // リサイズフレームのパディングを設定
     const int resize_w = (int)((double)frame_w * this->ratio);
     const int resize_h = (int)((double)frame_h * this->ratio);
-    const int paste_x = (int)((double)(bg_w-resize_w) / 2.0);
-    const int paste_y = (int)((double)(bg_h-resize_h) / 2.0);
+    const int paste_x = (int)((double)(bg_w - resize_w) / 2.0);
+    const int paste_y = (int)((double)(bg_h - resize_h) / 2.0);
     this->roi = cv::Rect(paste_x, paste_y, resize_w, resize_h);
     
     // ディスプレイノードの担当領域を設定
@@ -67,7 +70,10 @@ void FrameEncoder::setResizeParams(const int column, const int row, const int be
     this->raw_frames = std::vector<cv::Mat>(this->display_num);
     for(int j=0; j<row; ++j){
         for(int i=0; i<column; ++i){
-            this->regions[i+column*j] = cv::Rect((width+bezel_w)*i, (height+bezel_h)*j, width, height);
+            this->regions[i+column*j] = cv::Rect((width+bezel_w*2)*i,
+                                                 (height+bezel_h*2)*j,
+                                                 width,
+                                                 height);
         }
     }
 }
@@ -75,7 +81,13 @@ void FrameEncoder::setResizeParams(const int column, const int row, const int be
 /* フレームをリサイズ */
 void FrameEncoder::resize(cv::Mat& video_frame){
     // アスペクト比を維持して拡大
-    cv::resize(video_frame, video_frame, cv::Size(), this->ratio, this->ratio, CV_INTER_LINEAR);
+    cv::resize(video_frame,
+               video_frame,
+               cv::Size(),
+               this->ratio,
+               this->ratio,
+               this->interpolation_type
+    );
     
     // 背景と重ねてパディング
     cv::Mat paste_area = this->resized_frame(this->roi);
@@ -116,15 +128,20 @@ void FrameEncoder::encode(const int sampling_type, const int quality){
 
 /* フレーム圧縮を開始 */
 void FrameEncoder::run(){
+    cv::Mat video_frame;
     while(true){
-        cv::Mat video_frame;
+        // フレームを1枚取り出し
         this->video >> video_frame;
+        
+        // フレームをリサイズ
         try{
             this->resize(video_frame);
         }catch(...){
             _ml::caution("Could not get video frame", "JPEG encoder stopped");
             break;
         }
+        
+        // フレームを圧縮
         this->encode(this->sampling_type.load(std::memory_order_acquire),
                      this->quality.load(std::memory_order_acquire)
         );

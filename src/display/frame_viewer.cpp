@@ -7,7 +7,7 @@
 
 /* コンストラクタ */
 FrameViewer::FrameViewer(_asio::io_service& ios, _ip::tcp::socket& sock, const tranbuf_ptr_t recv_buf, 
-                         const rawbuf_ptr_t view_buf, const std::string fb_dev, const int width,
+                         const viewbuf_ptr_t view_buf, const std::string fb_dev, const int width,
                          const int height, const std::string tty_dev, const int tuning_term):
     ios(ios),
     sock(sock),
@@ -105,14 +105,14 @@ void FrameViewer::displayFrame(){
 
 /* 同期メッセージを生成 */
 const std::string FrameViewer::makeSyncMsg(){
-    this->tuning_params.setParam("id", this->view_buf->getCurrentPage());
+    this->tuning_params.setIntParam("id", this->view_buf->getCurrentPage());
     if(this->frame_count == this->tuning_term){
         this->frame_count = 0;
-        this->tuning_params.setParam("tune", JPEG_TUNING_ON);
-        this->tuning_params.setParam("param", JPEG_PARAM_KEEP);
-        this->tuning_params.setParam("change", JPEG_PARAM_KEEP);
+        this->tuning_params.setIntParam("tune", JPEG_TUNING_ON);
+        this->tuning_params.setIntParam("param", JPEG_PARAM_KEEP);
+        this->tuning_params.setIntParam("change", JPEG_PARAM_KEEP);
     }else{
-        this->tuning_params.setParam("tune", JPEG_TUNING_OFF);
+        this->tuning_params.setIntParam("tune", JPEG_TUNING_OFF);
     }
     return this->tuning_params.serialize();
 }
@@ -158,7 +158,7 @@ void FrameViewer::onRecvSync(const err_t& err, size_t t_bytes){
 /* 同期メッセージ送信時のコールバック */
 void FrameViewer::onSendSync(const err_t& err, size_t t_bytes){
     if(err){
-        _ml::caution("Failed to send sync message", err.message());
+        _ml::caution("Could not send sync message", err.message());
         return;
     }
     

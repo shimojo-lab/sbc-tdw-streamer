@@ -8,6 +8,7 @@
 
 #include "mutex_logger.hpp"
 #include "socket_utils.hpp"
+#include "json_handler.hpp"
 #include "transceive_framebuffer.hpp"
 #include <vector>
 #include <atomic>
@@ -23,7 +24,7 @@ class FrameSender{
         int fb_id = 0;                          // 表示フレームバッファのインデックス
         const int viewbuf_num;                  // 表示フレームバッファの領域数
         std::atomic<int> send_count;            // 送信完了数
-        std::vector<std::string> send_msgs;     // 送信メッセージ
+        std::vector<JsonHandler> send_msgs;     // 送信メッセージ
         std::vector<tranbuf_ptr_t>& send_bufs;  // 送信フレームバッファ
         
         void run();                                          // 送信処理を開始

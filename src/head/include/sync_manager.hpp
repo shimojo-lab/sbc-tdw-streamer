@@ -11,10 +11,11 @@
 #include "sync_utils.hpp"
 #include "json_handler.hpp"
 #include <atomic>
-#include <chrono>
+extern "C"{
+    #include <turbojpeg.h>
+}
 
 using streambuf_ptr_t = std::shared_ptr<_asio::streambuf>;
-using hr_chrono_t = std::chrono::high_resolution_clock::time_point;
 
 /* 同期制御器 */
 class SyncManager{

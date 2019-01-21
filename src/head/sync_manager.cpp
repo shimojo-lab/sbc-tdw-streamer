@@ -24,12 +24,12 @@ SyncManager::SyncManager(_asio::io_service& ios, std::vector<sock_ptr_t>& socks,
 /* 同期メッセージをパース */
 void SyncManager::parseSyncMsg(const std::string& msg, const int id){
     this->tune_params.deserialize(msg);
-    const int frame_id = this->tune_params.getParam("id");
-    const int tune = this->tune_params.getParam("tune");
+    this->next_id = this->tune_params.getIntParam("id");
+    const int tune = this->tune_params.getIntParam("tune");
     
     if(tune == JPEG_TUNING_ON){
-        const int param = this->tune_params.getParam("param");
-        const int change = this->tune_params.getParam("change");
+        const int param = this->tune_params.getIntParam("param");
+        const int change = this->tune_params.getIntParam("change");
         if(param == JPEG_QUALITY_CHANGE){
             // 品質係数を変更
             if(change==JPEG_PARAM_UP && this->quality.load(std::memory_order_acquire)<JPEG_QUALITY_MAX){
@@ -106,8 +106,7 @@ void SyncManager::onSendSync(const err_t& err, size_t t_bytes, const int id){
 
 /* 同期メッセージを送信 */
 void SyncManager::sendSync(){
-    std::string send_msg("sync");
-    send_msg += MSG_DELIMITER;
+    const std::string send_msg = std::to_string(this->next_id) + MSG_DELIMITER;
     for(int i=0; i<this->display_num; ++i){
         _asio::async_write(*this->socks[i],
                            _asio::buffer(send_msg),
