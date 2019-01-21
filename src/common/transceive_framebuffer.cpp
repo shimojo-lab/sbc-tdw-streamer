@@ -13,7 +13,7 @@ TransceiveFramebuffer::TransceiveFramebuffer(const int jpegbuf_num):
 /* フレームを格納 */
 void TransceiveFramebuffer::push(const std::string& jpeg_frame){
     while(this->jpeg_buf.full()){
-        std::this_thread::sleep_for(std::chrono::nanoseconds(SPINLOCK_INTERVAL));
+        std::this_thread::sleep_for(std::chrono::nanoseconds(TRANBUF_SPINLOCK_INTERVAL));
     }
     this->jpeg_buf.push_back(jpeg_frame);
 }
@@ -22,7 +22,7 @@ void TransceiveFramebuffer::push(const std::string& jpeg_frame){
 const std::string TransceiveFramebuffer::pop(){
     std::lock_guard<std::mutex> pop_lock(this->lock);
     while(this->jpeg_buf.empty()){
-        std::this_thread::sleep_for(std::chrono::nanoseconds(SPINLOCK_INTERVAL));
+        std::this_thread::sleep_for(std::chrono::nanoseconds(TRANBUF_SPINLOCK_INTERVAL));
     }
     const std::string jpeg_frame = this->jpeg_buf[BUF_FRONT_INDEX];
     this->jpeg_buf.pop_front();

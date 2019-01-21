@@ -11,8 +11,8 @@
 #include <chrono>
 #include <boost/circular_buffer.hpp>
 
-const int BUF_FRONT_INDEX = 0;    // バッファの先頭のインデックス
-const int SPINLOCK_INTERVAL = 1;  // スピンロック中の待機時間
+const int BUF_FRONT_INDEX = 0;            // バッファの先頭のインデックス
+const int TRANBUF_SPINLOCK_INTERVAL = 1;  // スピンロック中の待機時間
 
 /* 送受信用フレームバッファ */
 class TransceiveFramebuffer{

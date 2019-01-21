@@ -34,7 +34,9 @@ unsigned char *ViewFramebuffer::getDrawArea(const int id){
 
 /* フレームバッファの表示領域を取得 */
 const unsigned char *ViewFramebuffer::getDisplayArea(){
-    while(!this->viewbuf_states[this->cur_page].load(std::memory_order_acquire));
+    while(!this->viewbuf_states[this->cur_page].load(std::memory_order_acquire)){
+        std::this_thread::sleep_for(std::chrono::nanoseconds(VIEWBUF_SPINLOCK_INTERVAL));
+    }
     return this->viewbuf_ptrs[this->cur_page];
 }
 

@@ -9,8 +9,11 @@
 #include <vector>
 #include <memory>
 #include <atomic>
+#include <thread>
+#include <chrono>
 
-const int COLOR_CHANNEL_NUM = 3;  // 色のチャネル数
+const int COLOR_CHANNEL_NUM = 3;          // 色のチャネル数
+const int VIEWBUF_SPINLOCK_INTERVAL = 1;  // スピンロック中の待機時間
 
 /* 表示フレームバッファ */
 class ViewFramebuffer{
