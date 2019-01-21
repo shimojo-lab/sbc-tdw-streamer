@@ -62,7 +62,11 @@ void FrameDecoder::decode(unsigned char *jpeg_frame, const unsigned long jpeg_si
 /* フレーム展開を開始 */
 void FrameDecoder::run(){
     while(true){
-//const auto start = std::chrono::system_clock::now();
+        // 展開時間を計測 (デバッグ用)
+        #ifdef DEBUG
+        const auto start = std::chrono::system_clock::now();
+        #endif
+        
         // フレームを取り出し
         std::string jpeg_str = this->recv_buf->pop();
         const int id = std::stoi(jpeg_str.substr(FRAME_ID_INDEX, FRAME_ID_LEN));
@@ -73,9 +77,12 @@ void FrameDecoder::run(){
         std::vector<unsigned char> jpeg_frame(jpeg_str.c_str(), jpeg_str.c_str()+jpeg_size);
         this->decode(jpeg_frame.data(), jpeg_size, id);
         this->view_buf->activateFrame(id);
-//const auto end = std::chrono::system_clock::now();
-//double elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count();
-//_ml::debug(elapsed);
+        
+        #ifdef DEBUG
+        const auto end = std::chrono::system_clock::now();
+        const double elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count();
+        _ml::debug(std::to_string(elapsed) + "fps");
+        #endif
     }
 }
 

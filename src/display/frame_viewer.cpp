@@ -8,12 +8,12 @@
 /* コンストラクタ */
 FrameViewer::FrameViewer(_asio::io_service& ios, _ip::tcp::socket& sock, const tranbuf_ptr_t recv_buf, 
                          const viewbuf_ptr_t view_buf, const std::string fb_dev, const int width,
-                         const int height, const std::string tty_dev, const int tuning_term):
+                         const int height, const std::string tty_dev, SyncMessageGenerator& generator):
     ios(ios),
     sock(sock),
     recv_buf(recv_buf),
     view_buf(view_buf),
-    tuning_term(tuning_term)
+    generator(generator)
 {
     // フレームバッファをオープン
     if(!this->openFramebuffer(fb_dev, width, height)){
@@ -103,24 +103,10 @@ void FrameViewer::displayFrame(){
     std::this_thread::sleep_for(std::chrono::milliseconds(DISPLAY_INTERVAL));
 }
 
-/* 同期メッセージを生成 */
-const std::string FrameViewer::makeSyncMsg(){
-    this->tuning_params.setIntParam("id", this->view_buf->getCurrentPage());
-    if(this->frame_count == this->tuning_term){
-        this->frame_count = 0;
-        this->tuning_params.setIntParam("tune", JPEG_TUNING_ON);
-        this->tuning_params.setIntParam("param", JPEG_PARAM_KEEP);
-        this->tuning_params.setIntParam("change", JPEG_PARAM_KEEP);
-    }else{
-        this->tuning_params.setIntParam("tune", JPEG_TUNING_OFF);
-    }
-    return this->tuning_params.serialize();
-}
-
 /* 同期メッセージを送信 */
 void FrameViewer::sendSync(){
     // メッセージを送信
-    const std::string send_msg = this->makeSyncMsg() + MSG_DELIMITER;
+    const std::string send_msg = this->generator.generate() + MSG_DELIMITER;
     _asio::async_write(this->sock,
                        _asio::buffer(send_msg),
                        boost::bind(&FrameViewer::onSendSync, this, _ph::error, _ph::bytes_transferred)
@@ -143,13 +129,14 @@ void FrameViewer::onRecvSync(const err_t& err, size_t t_bytes){
     // フレームを表示
     this->displayFrame();
     this->view_buf->deactivateFrame();
-    ++this->frame_count;
     
     // フレームレートを計算
+    #ifdef DEBUG
     const hr_chrono_t post_time = std::chrono::high_resolution_clock::now();
     const double fps = 1000.0 / std::chrono::duration_cast<std::chrono::milliseconds>(post_time-this->pre_time).count();
     _ml::debug(std::to_string(fps)+"fps");
     this->pre_time = post_time;
+    #endif
     
     // 次番フレーム用の同期を開始
     this->next_frame = this->view_buf->getDisplayArea();

@@ -5,8 +5,8 @@
         "framerate": 30
     },
     "layout": {
-        "column": 1,
-        "row": 1,
+        "column": 2,
+        "row": 2,
         "bezel_width": 0,
         "bezel_height": 0
     },
@@ -23,13 +23,16 @@
         "receive_buffer_size": 16
     },
     "compression": {
-        "init_subsampling_type": "yuv422",
-        "init_jpeg_quality": 90,
+        "init_subsampling_type": "yuv444",
+        "init_jpeg_quality": 95,
         "jpeg_decoder_num": 2,
         "jpeg_tuning_term": 100
     },
     "display_node": [
-        "192.168.10.42"
+        "192.168.10.42",
+        "192.168.10.53",
+        "192.168.10.55",
+        "192.168.10.56"
     ]
 }
 

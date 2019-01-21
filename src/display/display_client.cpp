@@ -29,10 +29,10 @@ const init_params_t DisplayClient::parseInitMsg(const std::string& msg){
     const int stream_port = init_params.getIntParam("stream_port");
     const int recvbuf_num = init_params.getIntParam("recvbuf_num");
     const int dec_thre_num = init_params.getIntParam("dec_thre_num");
-    const int framerate = init_params.getIntParam("framerate");
+    const int target_fps = init_params.getIntParam("target_fps");
     const int tuning_term = init_params.getIntParam("tuning_term");
     return std::forward_as_tuple(
-        width, height, stream_port, recvbuf_num, dec_thre_num, framerate, tuning_term
+        width, height, stream_port, recvbuf_num, dec_thre_num, target_fps, tuning_term
     );
 }
 
@@ -64,9 +64,9 @@ void DisplayClient::onRecvInit(const err_t& err, size_t t_bytes){
     const auto data = this->stream_buf.data();
     std::string msg(_asio::buffers_begin(data), _asio::buffers_begin(data)+t_bytes);
     msg.erase(msg.length()-MSG_DELIMITER_LEN);
-    int width, height, stream_port, recvbuf_num, dec_thre_num, framerate, tuning_term;
+    int width, height, stream_port, recvbuf_num, dec_thre_num, target_fps, tuning_term;
     std::tie(
-        width, height, stream_port, recvbuf_num, dec_thre_num, framerate, tuning_term
+        width, height, stream_port, recvbuf_num, dec_thre_num, target_fps, tuning_term
     ) = this->parseInitMsg(msg);
     
     // 別スレッドでフレーム受信器を起動
@@ -88,6 +88,7 @@ void DisplayClient::onRecvInit(const err_t& err, size_t t_bytes){
     }
     
     // 同スレッドでフレーム表示器を起動
+    SyncMessageGenerator generator(target_fps, tuning_term, recv_buf);
     FrameViewer viewer(this->ios,
                        this->sock,
                        recv_buf,
@@ -96,7 +97,7 @@ void DisplayClient::onRecvInit(const err_t& err, size_t t_bytes){
                        width,
                        height,
                        this->tty_dev,
-                       tuning_term
+                       generator
     );
 }
 

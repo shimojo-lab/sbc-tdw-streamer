@@ -11,6 +11,7 @@
 #include "socket_utils.hpp"
 #include "sync_utils.hpp"
 #include "json_handler.hpp"
+#include "sync_message_generator.hpp"
 #include "view_framebuffer.hpp"
 #include <cstring>
 extern "C"{
@@ -38,17 +39,14 @@ class FrameViewer{
         int tty;                          // デバイス端末のデバイスファイル
         int fb_size;                      // フレームバッファのサイズ
         unsigned char *fb_ptr;            // フレームバッファの先頭
+        SyncMessageGenerator& generator;  // 同期メッセージ生成器
         const unsigned char *next_frame;  // 次番フレーム
-        JsonHandler tuning_params;        // JPEGパラメータ変更要求
-        const int tuning_term;            // JPEGパラメータの調整周期
-        int frame_count = 0;              // 表示済フレーム数
         hr_chrono_t pre_time;             // 1周期の開始時刻
         
         const bool openFramebuffer(const std::string& fb_dev,  // フレームバッファをオープン
                                    const int width, const int height);
         void hideCursor(const std::string& tty_dev);           // カーソルを非表示化
         void displayFrame();                                   // フレームを表示
-        const std::string makeSyncMsg();                       // 同期メッセージを生成
         void sendSync();                                       // 同期メッセージを送信
         void onRecvSync(const err_t& err, size_t t_bytes);     // 同期メッセージ受信時のコールバック
         void onSendSync(const err_t& err, size_t t_bytes);     // 同期メッセージ送信時のコールバック
@@ -57,7 +55,7 @@ class FrameViewer{
         FrameViewer(_asio::io_service& ios, _ip::tcp::socket& sock,  // コンストラクタ
                     const tranbuf_ptr_t recv_buf, const viewbuf_ptr_t view_buf,
                     const std::string fb_dev, const int width, const int height,
-                    const std::string tty_dev, const int tuning_term);
+                    const std::string tty_dev, SyncMessageGenerator& generator);
         ~FrameViewer();  // デストラクタ
 };
 

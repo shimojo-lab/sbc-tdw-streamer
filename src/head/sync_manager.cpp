@@ -22,43 +22,38 @@ SyncManager::SyncManager(_asio::io_service& ios, std::vector<sock_ptr_t>& socks,
 }
 
 /* 同期メッセージをパース */
-void SyncManager::parseSyncMsg(const std::string& msg, const int id){
-    this->tune_params.deserialize(msg);
-    this->next_id = this->tune_params.getIntParam("id");
-    const int tune = this->tune_params.getIntParam("tune");
+void SyncManager::parseSyncMsg(const std::string& sync_msg, const int id){
+    this->sync_params.deserialize(sync_msg);
+    const int param_flag = this->sync_params.getIntParam("param");
+    const int change_flag = this->sync_params.getIntParam("change");
     
-    if(tune == JPEG_TUNING_ON){
-        const int param = this->tune_params.getIntParam("param");
-        const int change = this->tune_params.getIntParam("change");
-        if(param == JPEG_QUALITY_CHANGE){
-            // 品質係数を変更
-            if(change==JPEG_PARAM_UP && this->quality.load(std::memory_order_acquire)<JPEG_QUALITY_MAX){
-                this->quality.fetch_add(1, std::memory_order_release);
+    if(param_flag == JPEG_SAMPLING_CHANGE){
+        // クロマサブサンプル比を変更 
+        if(change_flag == JPEG_PARAM_UP){
+            switch(this->sampling_type.load(std::memory_order_acquire)){
+                case TJSAMP_422:
+                    this->sampling_type.store(TJSAMP_444, std::memory_order_release);
+                    break;
+                case TJSAMP_420:
+                    this->sampling_type.store(TJSAMP_422, std::memory_order_release);
+                    break;
             }
-            else if(change==JPEG_PARAM_DOWN && this->quality.load(std::memory_order_acquire)>JPEG_QUALITY_MIN){
-                this->quality.fetch_sub(1, std::memory_order_release);
+        }else if(change_flag == JPEG_PARAM_DOWN){
+            switch(this->sampling_type.load(std::memory_order_acquire)){
+                case TJSAMP_444:
+                    this->sampling_type.store(TJSAMP_422);
+                    break;
+                case TJSAMP_422:
+                    this->sampling_type.store(TJSAMP_420);
+                    break;
             }
-        }else{
-            // クロマサブサンプル比を変更 
-            if(change==JPEG_PARAM_UP){
-                switch(this->sampling_type.load(std::memory_order_acquire)){
-                    case TJSAMP_422:
-                        this->sampling_type.store(TJSAMP_444, std::memory_order_release);
-                        break;
-                    case TJSAMP_420:
-                        this->sampling_type.store(TJSAMP_422, std::memory_order_release);
-                        break;
-                }
-            }else if(change==JPEG_PARAM_DOWN){
-                switch(this->sampling_type.load(std::memory_order_acquire)){
-                    case TJSAMP_444:
-                        this->sampling_type.store(TJSAMP_422);
-                        break;
-                    case TJSAMP_422:
-                        this->sampling_type.store(TJSAMP_420);
-                        break;
-                }
-            }
+        }
+    }else if(param_flag == JPEG_QUALITY_CHANGE){
+        // 品質係数を変更
+        if(change_flag==JPEG_PARAM_UP && this->quality.load(std::memory_order_acquire)<JPEG_QUALITY_MAX){
+            this->quality.fetch_add(1, std::memory_order_release);
+        }else if(change_flag==JPEG_PARAM_DOWN && this->quality.load(std::memory_order_acquire)>JPEG_QUALITY_MIN){
+            this->quality.fetch_sub(1, std::memory_order_release);
         }
     }
 }

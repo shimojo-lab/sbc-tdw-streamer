@@ -75,14 +75,17 @@ $(HEAD)/main.o: $(HEAD)/main.cpp
 .PHONY: build_display
 build_display: $(COMN)/mutex_logger.o $(COMN)/base_config_parser.o $(COMN)/json_handler.o \
                $(COMN)/transceive_framebuffer.o $(DISP)/config_parser.o $(DISP)/view_framebuffer.o \
-               $(DISP)/frame_receiver.o $(DISP)/frame_decoder.o $(DISP)/frame_viewer.o \
-               $(DISP)/display_client.o $(DISP)/main.o
+               $(DISP)/sync_message_generator.o $(DISP)/frame_receiver.o $(DISP)/frame_decoder.o \
+               $(DISP)/frame_viewer.o $(DISP)/display_client.o $(DISP)/main.o
 	$(CXX) $(DISP_LDFLAGS) -o $(BIN)/display_client $^
 
 $(DISP)/config_parser.o: $(DISP)/config_parser.cpp
 	$(CXX) $(CXXFLAGS) -I$(DISP)/include -I$(COMN)/include -c -o $@ $<
 
 $(DISP)/view_framebuffer.o: $(DISP)/view_framebuffer.cpp
+	$(CXX) $(CXXFLAGS) -I$(DISP)/include -I$(COMN)/include -c -o $@ $<
+
+$(DISP)/sync_message_generator.o: $(DISP)/sync_message_generator.cpp
 	$(CXX) $(CXXFLAGS) -I$(DISP)/include -I$(COMN)/include -c -o $@ $<
 
 $(DISP)/frame_receiver.o: $(DISP)/frame_receiver.cpp

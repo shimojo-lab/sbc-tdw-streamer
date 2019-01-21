@@ -27,7 +27,7 @@ class SyncManager{
         std::atomic<int> sync_count;               // 同期済ディスプレイ数
         std::atomic<int>& sampling_type;           // クロマサブサンプル比
         std::atomic<int>& quality;                 // JPEG品質係数
-        JsonHandler tune_params;                   // パラメータ変更要求
+        JsonHandler sync_params;                   // 同期メッセージに記述されたパラメータ
         int next_id;                               // 次のフレーム番号
         hr_chrono_t pre_time;                      // 1周期の開始時刻
         
