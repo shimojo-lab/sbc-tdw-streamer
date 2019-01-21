@@ -38,7 +38,6 @@ void FrameDecoder::decode(unsigned char *jpeg_frame, const unsigned long jpeg_si
     if(tj_stat1 == JPEG_FAILED){
         const std::string err_msg(tjGetErrorStr());
         _ml::warn("Could not get new video frame", err_msg);
-        this->view_buf->activateFrame(id);
         return;
     }
     
@@ -56,25 +55,24 @@ void FrameDecoder::decode(unsigned char *jpeg_frame, const unsigned long jpeg_si
     if(tj_stat2 == JPEG_FAILED){
         const std::string err_msg(tjGetErrorStr());
         _ml::warn("Could not get new video frame", err_msg);
-        this->view_buf->activateFrame(id);
         return;
     }
-    this->view_buf->activateFrame(id);
 }
 
 /* フレーム展開を開始 */
 void FrameDecoder::run(){
     while(true){
 //const auto start = std::chrono::system_clock::now();
-        // フレーム転送メッセージをパース
-        this->recv_frame.deserialize(this->recv_buf->pop());
-        const int id = this->recv_frame.getIntParam("id");
-        const std::string jpeg_str = this->recv_frame.getStringParam("src");
+        // フレームを取り出し
+        std::string jpeg_str = this->recv_buf->pop();
+        const int id = std::stoi(jpeg_str.substr(FRAME_ID_INDEX, FRAME_ID_LEN));
+        jpeg_str.erase(FRAME_ID_INDEX, FRAME_ID_LEN);
         
         // フレームを展開
         const unsigned long jpeg_size = (unsigned long)jpeg_str.length();
         std::vector<unsigned char> jpeg_frame(jpeg_str.c_str(), jpeg_str.c_str()+jpeg_size);
-        this->decode(jpeg_frame.data(), jpeg_size, id);        
+        this->decode(jpeg_frame.data(), jpeg_size, id);
+        this->view_buf->activateFrame(id);
 //const auto end = std::chrono::system_clock::now();
 //double elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count();
 //_ml::debug(elapsed);

@@ -100,7 +100,7 @@ void FrameViewer::hideCursor(const std::string& tty_dev){
 void FrameViewer::displayFrame(){
     std::memcpy(this->fb_ptr, this->next_frame, this->fb_size);
     msync(this->fb_ptr, this->fb_size, MS_SYNC|MS_INVALIDATE);
-    this->view_buf->deactivateFrame();
+    std::this_thread::sleep_for(std::chrono::milliseconds(DISPLAY_INTERVAL));
 }
 
 /* 同期メッセージを生成 */
@@ -142,6 +142,7 @@ void FrameViewer::onRecvSync(const err_t& err, size_t t_bytes){
     
     // フレームを表示
     this->displayFrame();
+    this->view_buf->deactivateFrame();
     ++this->frame_count;
     
     // フレームレートを計算

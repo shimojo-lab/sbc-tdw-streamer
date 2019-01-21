@@ -35,10 +35,9 @@ void FrameSender::run(){
 /* フレームを送信 */
 void FrameSender::sendFrame(){
     for(int i=0; i<this->display_num; ++i){
-        this->send_msgs[i].setIntParam("id", this->fb_id);
-        this->send_msgs[i].setStringParam("src", this->send_bufs[i]->pop());
+        this->send_msgs[i] = std::to_string(this->fb_id) + this->send_bufs[i]->pop() + MSG_DELIMITER;
         _asio::async_write(*this->socks[i],
-                           _asio::buffer(this->send_msgs[i].serialize()+MSG_DELIMITER),
+                           _asio::buffer(this->send_msgs[i]),
                            boost::bind(&FrameSender::onSendFrame, this, _ph::error, _ph::bytes_transferred)
         );
     }

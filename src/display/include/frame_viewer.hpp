@@ -21,8 +21,10 @@ extern "C"{
     #include <linux/kd.h>
 }
 
-const int DEVICE_OPEN_FAILED = -1;  // デバイスファイルオープン失敗時の返り値
-const int BITS_PER_PIXEL = 24;      // 1ピクセルあたりのビット数
+const int DEVICE_OPEN_FAILED = -1;                         // デバイスファイルオープン失敗時の返り値
+const int BITS_PER_PIXEL = 24;                             // 1ピクセルあたりのビット数
+const double MAX_FPS = 60.0;                               // 最大フレームレート
+constexpr int DISPLAY_INTERVAL = (int)(1000.0 / MAX_FPS);  // フレーム表示後の待機時間
 
 /* フレーム表示器 */
 class FrameViewer{

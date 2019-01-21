@@ -7,14 +7,15 @@
 #define FRAME_DECODER_HPP
 
 #include "mutex_logger.hpp"
-#include "json_handler.hpp"
 #include "transceive_framebuffer.hpp"
 #include "view_framebuffer.hpp"
 extern "C"{
     #include <turbojpeg.h>
 }
 
-const int JPEG_FAILED = -1;  // JPEG展開失敗時の返り値
+const int JPEG_FAILED = -1;    // JPEG展開失敗時の返り値
+const int FRAME_ID_INDEX = 0;  // フレーム番号の開始位置
+const int FRAME_ID_LEN = 1;    // フレーム番号の長さ
 
 /* フレーム展開器 */
 class FrameDecoder{
@@ -22,7 +23,6 @@ class FrameDecoder{
         const tjhandle handle;         // JPEGデコーダ
         const tranbuf_ptr_t recv_buf;  // 受信フレームバッファ
         const viewbuf_ptr_t view_buf;  // 表示フレームバッファ
-        JsonHandler recv_frame;        // 受信フレーム
         
         void decode(unsigned char *jpeg_frame, const unsigned long jpeg_size,  // フレームを展開
                     const int id);

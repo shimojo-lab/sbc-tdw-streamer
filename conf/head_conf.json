@@ -23,9 +23,9 @@
         "receive_buffer_size": 16
     },
     "compression": {
-        "init_subsampling_type": "yuv444",
+        "init_subsampling_type": "yuv422",
         "init_jpeg_quality": 90,
-        "jpeg_decoder_num": 1,
+        "jpeg_decoder_num": 2,
         "jpeg_tuning_term": 100
     },
     "display_node": [
