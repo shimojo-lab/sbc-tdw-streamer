@@ -1,5 +1,5 @@
 /*******************************
-*     display_client.hpp       *
+*      display_client.hpp      *
 *  (ディスプレイクライアント)  *
 *******************************/
 
@@ -7,15 +7,13 @@
 #define DISPLAY_CLIENT_HPP
 
 #include "config_parser.hpp"
-#include "view_framebuffer.hpp"
-#include "sync_message_generator.hpp"
 #include "frame_receiver.hpp"
 #include "frame_decoder.hpp"
 #include "frame_viewer.hpp"
 #include <boost/thread.hpp>
 
 using init_params_t = std::tuple<
-    int, int, int, int, int, int, int
+    int, int, int, int, int, int, int, int, int
 >;
 
 /* ディスプレイクライアント */

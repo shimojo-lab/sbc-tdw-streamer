@@ -45,7 +45,7 @@ void FrameDecoder::decode(unsigned char *jpeg_frame, const unsigned long jpeg_si
     const int tj_stat2 = tjDecompress2(this->handle,
                                        jpeg_frame,
                                        jpeg_size,
-                                       this->view_buf->getDrawArea(id),
+                                       this->view_buf->getDrawPage(id),
                                        frame_w,
                                        frame_w*COLOR_CHANNEL_NUM,
                                        frame_h,
@@ -62,9 +62,9 @@ void FrameDecoder::decode(unsigned char *jpeg_frame, const unsigned long jpeg_si
 /* フレーム展開を開始 */
 void FrameDecoder::run(){
     while(true){
-        // 展開時間を計測 (デバッグ用)
         #ifdef DEBUG
-        const auto start = std::chrono::system_clock::now();
+        // 時間計測を開始
+        const hr_chrono_t pre_time = std::chrono::high_resolution_clock::now();
         #endif
         
         // フレームを取り出し
@@ -76,12 +76,13 @@ void FrameDecoder::run(){
         const unsigned long jpeg_size = (unsigned long)jpeg_str.length();
         std::vector<unsigned char> jpeg_frame(jpeg_str.c_str(), jpeg_str.c_str()+jpeg_size);
         this->decode(jpeg_frame.data(), jpeg_size, id);
-        this->view_buf->activateFrame(id);
+        this->view_buf->activatePage(id);
         
         #ifdef DEBUG
-        const auto end = std::chrono::system_clock::now();
-        const double elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count();
-        _ml::debug(std::to_string(elapsed) + "fps");
+        // 展開時間を表示
+        const hr_chrono_t post_time = std::chrono::high_resolution_clock::now();
+        const double elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(post_time-pre_time).count();
+        _ml::debug(std::to_string(elapsed) + "msec");
         #endif
     }
 }

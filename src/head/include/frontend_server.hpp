@@ -22,8 +22,8 @@ class FrontendServer{
         int display_num;                       // 全ディスプレイ数
         JsonHandler init_params;               // 初期化メッセージ用パラメータ
         int connected_num = 0;                 // 接続済ディスプレイノード数
-        std::atomic<int> sampling_type;        // クロマサブサンプリングの形式
-        std::atomic<int> quality;              // JPEG品質係数
+        jpeg_params_t sampling_type_list;      // クロマサブサンプル比
+        jpeg_params_t quality_list;            // JPEG品質係数
         std::vector<std::string> ip_addrs;     // ディスプレイノードのIP
         std::vector<tranbuf_ptr_t> send_bufs;  // 送信フレームバッファ
         boost::thread send_thre;               // フレーム送信スレッド

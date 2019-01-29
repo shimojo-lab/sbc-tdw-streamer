@@ -31,8 +31,10 @@ const init_params_t DisplayClient::parseInitMsg(const std::string& msg){
     const int dec_thre_num = init_params.getIntParam("dec_thre_num");
     const int target_fps = init_params.getIntParam("target_fps");
     const int tuning_term = init_params.getIntParam("tuning_term");
+    const int sampling_type = init_params.getIntParam("sampling_type");
+    const int quality = init_params.getIntParam("quality");
     return std::forward_as_tuple(
-        width, height, stream_port, recvbuf_num, dec_thre_num, target_fps, tuning_term
+        width, height, stream_port, recvbuf_num, dec_thre_num, target_fps, tuning_term, sampling_type, quality
     );
 }
 
@@ -62,12 +64,12 @@ void DisplayClient::onRecvInit(const err_t& err, size_t t_bytes){
     
     // 初期化メッセージをパース
     const auto data = this->stream_buf.data();
-    std::string msg(_asio::buffers_begin(data), _asio::buffers_begin(data)+t_bytes);
-    msg.erase(msg.length()-MSG_DELIMITER_LEN);
-    int width, height, stream_port, recvbuf_num, dec_thre_num, target_fps, tuning_term;
+    std::string recv_msg(_asio::buffers_begin(data), _asio::buffers_end(data));
+    recv_msg.erase(recv_msg.length()-MSG_DELIMITER_LEN);
+    int width, height, stream_port, recvbuf_num, dec_thre_num, target_fps, tuning_term, sampling_type, quality;
     std::tie(
-        width, height, stream_port, recvbuf_num, dec_thre_num, target_fps, tuning_term
-    ) = this->parseInitMsg(msg);
+        width, height, stream_port, recvbuf_num, dec_thre_num, target_fps, tuning_term, sampling_type, quality
+    ) = this->parseInitMsg(recv_msg);
     
     // 別スレッドでフレーム受信器を起動
     const tranbuf_ptr_t recv_buf = std::make_shared<TransceiveFramebuffer>(recvbuf_num);
@@ -88,10 +90,9 @@ void DisplayClient::onRecvInit(const err_t& err, size_t t_bytes){
     }
     
     // 同スレッドでフレーム表示器を起動
-    SyncMessageGenerator generator(target_fps, tuning_term, recv_buf);
+    SyncMessageGenerator generator(target_fps, tuning_term, recv_buf, sampling_type, quality);
     FrameViewer viewer(this->ios,
                        this->sock,
-                       recv_buf,
                        view_buf,
                        this->fb_dev,
                        width,

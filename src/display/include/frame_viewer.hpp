@@ -9,10 +9,7 @@
 #include "mutex_logger.hpp"
 #include "transceive_framebuffer.hpp"
 #include "socket_utils.hpp"
-#include "sync_utils.hpp"
-#include "json_handler.hpp"
 #include "sync_message_generator.hpp"
-#include "view_framebuffer.hpp"
 #include <cstring>
 extern "C"{
     #include <fcntl.h>
@@ -33,7 +30,6 @@ class FrameViewer{
         _asio::io_service& ios;           // I/Oイベントループ
         _ip::tcp::socket& sock;           // TCPソケット
         _asio::streambuf stream_buf;      // ストリームバッファ
-        const tranbuf_ptr_t recv_buf;     // 受信フレームバッファ
         const viewbuf_ptr_t view_buf;     // 表示フレームバッファ
         int fb;                           // フレームバッファのデバイスファイル
         int tty;                          // デバイス端末のデバイスファイル
@@ -41,7 +37,10 @@ class FrameViewer{
         unsigned char *fb_ptr;            // フレームバッファの先頭
         SyncMessageGenerator& generator;  // 同期メッセージ生成器
         const unsigned char *next_frame;  // 次番フレーム
-        hr_chrono_t pre_time;             // 1周期の開始時刻
+        hr_chrono_t pre_t;                // 処理開始時刻
+        hr_chrono_t post_t;               // 処理終了時刻
+        hr_chrono_t view_start_t;         // 表示1周期の開始時刻
+        hr_chrono_t view_end_t;           // 表示1周期の終了時刻
         
         const bool openFramebuffer(const std::string& fb_dev,  // フレームバッファをオープン
                                    const int width, const int height);
@@ -53,9 +52,9 @@ class FrameViewer{
     
     public:
         FrameViewer(_asio::io_service& ios, _ip::tcp::socket& sock,  // コンストラクタ
-                    const tranbuf_ptr_t recv_buf, const viewbuf_ptr_t view_buf,
-                    const std::string fb_dev, const int width, const int height,
-                    const std::string tty_dev, SyncMessageGenerator& generator);
+                    const viewbuf_ptr_t view_buf, const std::string& fb_dev,
+                    const int width, const int height, const std::string& tty_dev,
+                    SyncMessageGenerator& generator);
         ~FrameViewer();  // デストラクタ
 };
 

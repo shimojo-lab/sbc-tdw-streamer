@@ -6,40 +6,99 @@
 #include "sync_message_generator.hpp"
 
 /* コンストラクタ */
-SyncMessageGenerator::SyncMessageGenerator(const int target_fps, const int tuning_term, const tranbuf_ptr_t recv_buf):
-    target_fps(target_fps),
+SyncMessageGenerator::SyncMessageGenerator(const int target_fps, const int tuning_term,
+                                           const tranbuf_ptr_t recv_buf, const int sampling_type,
+                                           const int quality):
     tuning_term(tuning_term),
-    recv_buf(recv_buf)
-{
-    // 計測値を初期化
-    this->start_time = std::chrono::high_resolution_clock::now();
-    this->pre_recvbuf_stored = this->recv_buf->getStoredNum();
+    recv_buf(recv_buf),
+    sampling_type(sampling_type),
+    quality(quality),
+    available_time(1000.0/(double)target_fps)
+{}
+
+/* 品質係数を変更 */
+void SyncMessageGenerator::tuneQuality(int& param_flag, int& change_flag, const int type){
+    param_flag = JPEG_QUALITY_CHANGE;
+    if(type == JPEG_PARAM_DOWN){
+        change_flag = JPEG_PARAM_DOWN;
+        --this->quality;
+    }else{
+        change_flag = JPEG_PARAM_UP;
+        ++this->quality;
+    }
+}
+
+/* クロマサブサンプル比を変更 */
+void SyncMessageGenerator::tuneSamplingType(int& param_flag, int& change_flag, const int type){
+    param_flag = JPEG_SAMPLING_CHANGE;
+    if(type == JPEG_PARAM_DOWN){
+        change_flag = JPEG_PARAM_DOWN;
+        switch(this->sampling_type){
+        case TJSAMP_444:
+            this->sampling_type = TJSAMP_422;
+            break;
+        case TJSAMP_422:
+            this->sampling_type = TJSAMP_420;
+            break;
+        }
+    }else{
+        change_flag = JPEG_PARAM_UP;
+        switch(this->sampling_type){
+        case TJSAMP_422:
+            this->sampling_type = TJSAMP_444;
+            break;
+        case TJSAMP_420:
+            this->sampling_type = TJSAMP_422;
+            break;
+        }
+    }
 }
 
 /* パラメータ変更要求の内容を決定 */
 void SyncMessageGenerator::decideTuningRequest(int& param_flag, int& change_flag){
-    // 1周期の平均フレームレートを計算
-    hr_chrono_t end_time = std::chrono::high_resolution_clock::now();
-    const double delta_t = std::chrono::duration_cast<std::chrono::milliseconds>(end_time-this->start_time).count();
-    const double fps = 1000.0 / delta_t / (double)this->tuning_term;
-    
-    // 受信フレームバッファ使用領域数の変化を計算
-    const int post_recvbuf_stored = this->recv_buf->getStoredNum();
-    const int diff_stored = post_recvbuf_stored - this->pre_recvbuf_stored;
-    
-    // フレーム展開速度が不十分ならクロマサブサンプル比を変更
-    if(fps < target_fps){
-        param_flag = JPEG_SAMPLING_CHANGE;
-        change_flag = JPEG_PARAM_DOWN;
-    }else{
-        // フレーム受信速度が不十分なら品質係数を変更
-        param_flag = JPEG_QUALITY_CHANGE;
-        change_flag = diff_stored<0 ? JPEG_PARAM_DOWN : JPEG_PARAM_UP;
+    if(!dec_tuned){  // 表示バッファ供給速度をチューニング
+        const double wait_t = this->wait_t_sum / (double)this->tuning_term;
+        const double sync_t = this->sync_t_sum / (double)this->tuning_term;
+        const double view_t = this->view_t_sum / (double)this->tuning_term;
+        const double idle_wait_t = this->available_time - sync_t - view_t;
+        
+        if(wait_t>idle_wait_t){
+            const double diff_t = this->pre_wait_t - wait_t;
+            const double expected_wait_t = wait_t - diff_t * (double)(this->quality-1);
+            if(this->quality!=JPEG_QUALITY_MIN && expected_wait_t<idle_wait_t){
+                this->tuneQuality(param_flag, change_flag, JPEG_PARAM_DOWN);
+            }else{
+                this->tuneSamplingType(param_flag, change_flag, JPEG_PARAM_DOWN);
+            }
+            this->pre_wait_t = wait_t;
+            this->wait_t_sum = 0.0;
+            this->sync_t_sum = 0.0;
+            this->view_t_sum = 0.0; 
+        }else{
+            this->dec_tuned = true;
+            this->best_quality = this->quality;
+            this->best_sampling_type = this->sampling_type;
+            this->pre_recvbuf_stored = this->recv_buf->getStoredNum();
+        }
+    }else{  // 受信バッファ供給速度をチューニング
+        const int recvbuf_stored = this->recv_buf->getStoredNum();
+        const int diff_stored = recvbuf_stored - this->pre_recvbuf_stored;
+        
+        if(recvbuf_stored==0 || diff_stored<0){
+            if(this->sampling_type != TJSAMP_420){
+                this->tuneSamplingType(param_flag, change_flag, JPEG_PARAM_DOWN);
+            }else{
+                this->tuneQuality(param_flag, change_flag, JPEG_PARAM_DOWN);
+            }
+        }else{
+            if(this->quality != this->best_quality){
+                this->tuneQuality(param_flag, change_flag, JPEG_PARAM_UP);
+            }else if(this->sampling_type != this->best_sampling_type){
+                this->tuneSamplingType(param_flag, change_flag, JPEG_PARAM_UP);
+            }
+        }
+        this->pre_recvbuf_stored = recvbuf_stored;
     }
-    
-    // 計測値を更新
-    this->start_time = end_time;
-    this->pre_recvbuf_stored = post_recvbuf_stored;
 }
 
 /* 同期メッセージを生成 */
@@ -47,10 +106,11 @@ const std::string SyncMessageGenerator::generate(){
     // 変更要求の内容を決定
     int param_flag = JPEG_NO_CHANGE;
     int change_flag = JPEG_PARAM_KEEP;
+    ++this->frame_count;
     if(this->frame_count == this->tuning_term){
         this->decideTuningRequest(param_flag, change_flag);
+        this->frame_count = 0;
     }
-    ++this->frame_count;
     
     // JSON形式でシリアライズ
     this->sync_params.setIntParam("param", param_flag);

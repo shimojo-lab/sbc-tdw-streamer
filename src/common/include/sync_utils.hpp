@@ -6,9 +6,14 @@
 #ifndef SYNC_UTILS_HPP
 #define SYNC_UTILS_HPP
 
+#include <vector>
+#include <atomic>
 #include <chrono>
 
-using hr_chrono_t = std::chrono::high_resolution_clock::time_point;
+namespace _chrono = std::chrono;
+
+using jpeg_params_t = std::vector<std::atomic<int>>;
+using hr_chrono_t = _chrono::high_resolution_clock::time_point;
 
 const int VIEWBUF_EXTRA_NUM = 3;     // 表示フレームバッファの余剰領域数
 const int JPEG_TUNING_OFF = 0;       // JPEGパラメータ非変更フラグ

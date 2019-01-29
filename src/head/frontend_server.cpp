@@ -12,10 +12,10 @@ FrontendServer::FrontendServer(_asio::io_service& ios, ConfigParser& parser, con
 {
     // パラメータを受け取り
     std::string video_src;
-    int framerate, column, row, bezel_w, bezel_h, width, height, stream_port, sendbuf_num, recvbuf_num;
+    int target_fps, column, row, bezel_w, bezel_h, width, height, stream_port, sendbuf_num, recvbuf_num;
     int sampling_type_, quality_, dec_thre_num, tuning_term;
     std::tie(
-        video_src, framerate, column, row, bezel_w, bezel_h, width, height, stream_port,
+        video_src, target_fps, column, row, bezel_w, bezel_h, width, height, stream_port,
         sendbuf_num, recvbuf_num, sampling_type_, quality_, dec_thre_num, tuning_term, this->ip_addrs
     ) = parser.getFrontendServerParams();
     this->display_num = column * row;
@@ -24,19 +24,23 @@ FrontendServer::FrontendServer(_asio::io_service& ios, ConfigParser& parser, con
     this->init_params.setIntParam("width", width);
     this->init_params.setIntParam("height", height);
     this->init_params.setIntParam("stream_port", stream_port);
-    this->init_params.setIntParam("framerate", framerate);
+    this->init_params.setIntParam("target_fps", target_fps);
     this->init_params.setIntParam("recvbuf_num", recvbuf_num);
     this->init_params.setIntParam("dec_thre_num", dec_thre_num);
     this->init_params.setIntParam("tuning_term", tuning_term);
+    this->init_params.setIntParam("sampling_type", sampling_type_);
+    this->init_params.setIntParam("quality", quality_);
     
     // パラメータを初期化
     this->sock = std::make_shared<_ip::tcp::socket>(ios);
     this->socks = std::vector<sock_ptr_t>(this->display_num);
-    this->sampling_type.store(sampling_type_, std::memory_order_release);
-    this->quality.store(quality_, std::memory_order_release);
     this->send_bufs = std::vector<tranbuf_ptr_t>(this->display_num);
+    this->sampling_type_list = jpeg_params_t(this->display_num);
+    this->quality_list = jpeg_params_t(this->display_num);
     for(int i=0; i<this->display_num; ++i){
         this->send_bufs[i] = std::make_shared<TransceiveFramebuffer>(sendbuf_num);
+        this->sampling_type_list[i].store(sampling_type_, std::memory_order_release);
+        this->quality_list[i].store(quality_, std::memory_order_release);
     }
     
     // 別スレッドでフレーム圧縮器を起動
@@ -132,8 +136,8 @@ void FrontendServer::runFrameEncoder(const std::string video_src, const int colu
                          bezel_h,
                          width,
                          height,
-                         this->sampling_type,
-                         this->quality,
+                         this->sampling_type_list,
+                         this->quality_list,
                          this->send_bufs
     );
     encoder.run();
@@ -154,8 +158,8 @@ void FrontendServer::runFrameSender(const int stream_port, const int viewbuf_num
 void FrontendServer::runSyncManager(){
     SyncManager manager(this->ios,
                         this->socks,
-                        this->sampling_type,
-                        this->quality
+                        this->sampling_type_list,
+                        this->quality_list
     );
     manager.run();
 }

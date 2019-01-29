@@ -12,6 +12,9 @@
 extern "C"{
     #include <turbojpeg.h>
 }
+#ifdef DEBUG
+#include "sync_utils.hpp"
+#endif
 
 const int JPEG_FAILED = -1;    // JPEG展開失敗時の返り値
 const int FRAME_ID_INDEX = 0;  // フレーム番号の開始位置

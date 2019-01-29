@@ -8,12 +8,12 @@
 /* コンストラクタ */
 FrameEncoder::FrameEncoder(const std::string video_src, const int column, const int row,
                            const int bezel_w, const int bezel_h, const int width, const int height,
-                           std::atomic<int>& sampling_type, std::atomic<int>& quality,
+                           jpeg_params_t& sampling_type_list, jpeg_params_t& quality_list,
                            std::vector<tranbuf_ptr_t>& send_bufs):
     handle(tjInitCompress()),
     display_num(column*row),
-    sampling_type(sampling_type),
-    quality(quality),
+    sampling_type_list(sampling_type_list),
+    quality_list(quality_list),
     send_bufs(send_bufs)
 {
     // JPEGエンコーダを初期化
@@ -23,7 +23,7 @@ FrameEncoder::FrameEncoder(const std::string video_src, const int column, const 
         std::exit(EXIT_FAILURE);
     }
     
-    // 再生動画を読込み
+    // 表示する動画・画像を読込み
     this->video = cv::VideoCapture(video_src.c_str());
     if(!this->video.isOpened()){
         _ml::caution("Failed to open video", video_src);
@@ -32,7 +32,7 @@ FrameEncoder::FrameEncoder(const std::string video_src, const int column, const 
     
     // リサイズ用パラメータを設定
     cv::Mat video_frame;
-    this->video >> video_frame;
+    video >> video_frame;
     this->setResizeParams(
         column, row, bezel_w, bezel_h, width, height, video_frame.cols, video_frame.rows
     );
@@ -101,33 +101,31 @@ void FrameEncoder::resize(cv::Mat& video_frame){
 }
 
 /* フレームをJPEGで符号化 */
-void FrameEncoder::encode(const int sampling_type, const int quality){
-    for(int i=0; i<this->display_num; ++i){
-        unsigned char *jpeg_frame = NULL;
-        unsigned long jpeg_size = 0;
-        const int tj_stat = tjCompress2(this->handle,
-                                        raw_frames[i].data,
-                                        raw_frames[i].cols,
-                                        raw_frames[i].cols*COLOR_CHANNEL_NUM,
-                                        raw_frames[i].rows,
-                                        TJPF_RGB,
-                                        &jpeg_frame,
-                                        &jpeg_size,
-                                        sampling_type,
-                                        quality,
-                                        TJFLAG_FASTDCT
-        );
-        if(tj_stat == JPEG_FAILED){
-            const std::string err_msg(tjGetErrorStr());
-            _ml::warn("JPEG encode failed", err_msg);
-        }else{
-            const std::string jpeg_str(jpeg_frame, jpeg_frame+jpeg_size);
-            this->send_bufs[i]->push(jpeg_str);
-        }
+void FrameEncoder::encode(const int id){
+    unsigned char *jpeg_frame = NULL;
+    unsigned long jpeg_size = 0;
+    const int tj_stat = tjCompress2(this->handle,
+                                    this->raw_frames[id].data,
+                                    this->raw_frames[id].cols,
+                                    this->raw_frames[id].cols*COLOR_CHANNEL_NUM,
+                                    this->raw_frames[id].rows,
+                                    TJPF_RGB,
+                                    &jpeg_frame,
+                                    &jpeg_size,
+                                    this->sampling_type_list[id].load(std::memory_order_acquire),
+                                    this->quality_list[id].load(std::memory_order_acquire),
+                                    TJFLAG_FASTDCT
+    );
+    if(tj_stat == JPEG_FAILED){
+        const std::string err_msg(tjGetErrorStr());
+        _ml::warn("JPEG encode failed", err_msg);
+    }else{
+        const std::string jpeg_str(jpeg_frame, jpeg_frame+jpeg_size);
+        this->send_bufs[id]->push(jpeg_str);
     }
 }
 
-/* フレーム圧縮を開始 */
+/* フレーム圧縮を開始 (動画表示用) */
 void FrameEncoder::run(){
     cv::Mat video_frame;
     while(true){
@@ -143,9 +141,9 @@ void FrameEncoder::run(){
         }
         
         // フレームを圧縮
-        this->encode(this->sampling_type.load(std::memory_order_acquire),
-                     this->quality.load(std::memory_order_acquire)
-        );
+        for(int i=0; i<this->display_num; ++i){
+            this->encode(i);
+        }
     }
 }
 

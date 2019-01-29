@@ -23,7 +23,7 @@ class FrameReceiver{
         void onRecvFrame(const err_t& err, size_t t_bytes);    // フレーム受信時のコールバック
     
     public:
-        FrameReceiver(_asio::io_service& ios, const std::string ip_addr,  // コンストラクタ
+        FrameReceiver(_asio::io_service& ios, const std::string& ip_addr,  // コンストラクタ
                       const int stream_port, const tranbuf_ptr_t recv_buf);
 };
 

@@ -86,7 +86,7 @@ $(DISP)/view_framebuffer.o: $(DISP)/view_framebuffer.cpp
 	$(CXX) $(CXXFLAGS) -I$(DISP)/include -I$(COMN)/include -c -o $@ $<
 
 $(DISP)/sync_message_generator.o: $(DISP)/sync_message_generator.cpp
-	$(CXX) $(CXXFLAGS) -I$(DISP)/include -I$(COMN)/include -c -o $@ $<
+	$(CXX) $(CXXFLAGS) -I$(DISP)/include -I$(COMN)/include -I$(JPEG_HDR) -c -o $@ $<
 
 $(DISP)/frame_receiver.o: $(DISP)/frame_receiver.cpp
 	$(CXX) $(CXXFLAGS) -I$(DISP)/include -I$(COMN)/include -c -o $@ $<

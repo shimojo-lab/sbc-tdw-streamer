@@ -6,7 +6,7 @@
 #include "frame_receiver.hpp"
 
 /* コンストラクタ */
-FrameReceiver::FrameReceiver(_asio::io_service& ios, const std::string ip_addr, const int stream_port,
+FrameReceiver::FrameReceiver(_asio::io_service& ios, const std::string& ip_addr, const int stream_port,
                              const tranbuf_ptr_t recv_buf):
     ios(ios),
     sock(ios),
@@ -47,7 +47,7 @@ void FrameReceiver::onRecvFrame(const err_t& err, size_t t_bytes){
     }else{
         // フレームを取得
         const auto data = this->stream_buf.data();
-        std::string recv_msg(_asio::buffers_begin(data), _asio::buffers_begin(data)+t_bytes);
+        std::string recv_msg(_asio::buffers_begin(data), _asio::buffers_end(data));
         recv_msg.erase(recv_msg.length()-MSG_DELIMITER_LEN);
         this->recv_buf->push(recv_msg);
         this->stream_buf.consume(t_bytes);

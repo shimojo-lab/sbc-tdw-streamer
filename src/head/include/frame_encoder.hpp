@@ -7,9 +7,8 @@
 #define FRAME_ENCODER_HPP
 
 #include "mutex_logger.hpp"
+#include "sync_utils.hpp"
 #include "transceive_framebuffer.hpp"
-#include <vector>
-#include <atomic>
 #include <cstdlib>
 #include <opencv2/core.hpp>
 #include <opencv2/videoio.hpp>
@@ -25,14 +24,14 @@ const int JPEG_FAILED = -1;       // JPEG圧縮失敗時の返り値
 class FrameEncoder{
     private:
         const tjhandle handle;                  // JPEGエンコーダ
-        cv::VideoCapture video;                 // 再生動画
+        cv::VideoCapture video;                 // 表示する動画
         const int display_num;                  // 全ディスプレイ数
         double ratio;                           // リサイズ倍率
         int interpolation_type;                 // リサイズ方式
         cv::Mat resized_frame;                  // リサイズ後のフレーム
         cv::Rect roi;                           // リサイズフレームの貼り付け位置
-        std::atomic<int>& sampling_type;        // クロマサブサンプル比
-        std::atomic<int>& quality;              // JPEG品質係数
+        jpeg_params_t& sampling_type_list;      // クロマサブサンプル比
+        jpeg_params_t& quality_list;            // JPEG品質係数
         std::vector<cv::Rect> regions;          // ディスプレイノードの各領域
         std::vector<cv::Mat> raw_frames;        // ディスプレイノードの各フレーム
         std::vector<tranbuf_ptr_t>& send_bufs;  // 送信フレームバッファ
@@ -41,12 +40,12 @@ class FrameEncoder{
                              const int bezel_w, const int bezel_h, const int width, const int height,
                              const int frame_w, const int frame_h);
         void resize(cv::Mat& video_frame);                           // フレームをリサイズ
-        void encode(const int sampling_type, const int quality);     // フレームをJPEG圧縮
+        void encode(const int id);                                   // フレームをJPEG圧縮
     
     public:
         FrameEncoder(const std::string video_src, const int column,  // コンストラクタ
                      const int row, const int bezel_w, const int bezel_h, const int width,
-                     const int height, std::atomic<int>& sampling_type, std::atomic<int>& quality,
+                     const int height, jpeg_params_t& sampling_type_list, jpeg_params_t& quality_list,
                      std::vector<tranbuf_ptr_t>& send_bufs);
         ~FrameEncoder();  // デストラクタ
         void run();       // フレーム圧縮を開始

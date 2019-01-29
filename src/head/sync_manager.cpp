@@ -7,12 +7,12 @@
 
 /* コンストラクタ */
 SyncManager::SyncManager(_asio::io_service& ios, std::vector<sock_ptr_t>& socks,
-                         std::atomic<int>& sampling_type, std::atomic<int>& quality):
+                         jpeg_params_t& sampling_type_list, jpeg_params_t& quality_list):
     ios(ios),
     socks(socks),
     display_num(socks.size()),
-    sampling_type(sampling_type),
-    quality(quality)
+    sampling_type_list(sampling_type_list),
+    quality_list(quality_list)
 {
     // パラメータを初期化
     this->sync_count.store(0, std::memory_order_release);
@@ -27,34 +27,43 @@ void SyncManager::parseSyncMsg(const std::string& sync_msg, const int id){
     const int param_flag = this->sync_params.getIntParam("param");
     const int change_flag = this->sync_params.getIntParam("change");
     
-    if(param_flag == JPEG_SAMPLING_CHANGE){
-        // クロマサブサンプル比を変更 
+    if(param_flag == JPEG_SAMPLING_CHANGE){  // クロマサブサンプル比を変更 
+        std::string new_type;
         if(change_flag == JPEG_PARAM_UP){
-            switch(this->sampling_type.load(std::memory_order_acquire)){
+            switch(this->sampling_type_list[id].load(std::memory_order_acquire)){
                 case TJSAMP_422:
-                    this->sampling_type.store(TJSAMP_444, std::memory_order_release);
+                    this->sampling_type_list[id].store(TJSAMP_444, std::memory_order_release);
+                    new_type = "yuv444";
                     break;
                 case TJSAMP_420:
-                    this->sampling_type.store(TJSAMP_422, std::memory_order_release);
+                    this->sampling_type_list[id].store(TJSAMP_422, std::memory_order_release);
+                    new_type = "yuv422";
                     break;
             }
         }else if(change_flag == JPEG_PARAM_DOWN){
-            switch(this->sampling_type.load(std::memory_order_acquire)){
+            switch(this->sampling_type_list[id].load(std::memory_order_acquire)){
                 case TJSAMP_444:
-                    this->sampling_type.store(TJSAMP_422);
+                    this->sampling_type_list[id].store(TJSAMP_422);
+                    new_type = "yuv422";
                     break;
                 case TJSAMP_422:
-                    this->sampling_type.store(TJSAMP_420);
+                    this->sampling_type_list[id].store(TJSAMP_420);
+                    new_type = "yuv420";
                     break;
             }
         }
-    }else if(param_flag == JPEG_QUALITY_CHANGE){
-        // 品質係数を変更
-        if(change_flag==JPEG_PARAM_UP && this->quality.load(std::memory_order_acquire)<JPEG_QUALITY_MAX){
-            this->quality.fetch_add(1, std::memory_order_release);
-        }else if(change_flag==JPEG_PARAM_DOWN && this->quality.load(std::memory_order_acquire)>JPEG_QUALITY_MIN){
-            this->quality.fetch_sub(1, std::memory_order_release);
+        _ml::notice("Display"+std::to_string(id)+": "+"Chroma subsampling changed to "+new_type);
+    }else if(param_flag == JPEG_QUALITY_CHANGE){  // 品質係数を変更
+        std::string new_quality;
+        const int quality = this->quality_list[id].load(std::memory_order_acquire);
+        if(change_flag==JPEG_PARAM_UP && quality<JPEG_QUALITY_MAX){
+            this->quality_list[id].fetch_add(1, std::memory_order_release);
+            new_quality = std::to_string(quality+1);
+        }else if(change_flag==JPEG_PARAM_DOWN && quality>JPEG_QUALITY_MIN){
+            this->quality_list[id].fetch_sub(1, std::memory_order_release);
+            new_quality = std::to_string(quality-1);
         }
+        _ml::notice("Display"+std::to_string(id)+": "+"Quality factor changed to "+new_quality);
     }
 }
 
@@ -67,7 +76,7 @@ void SyncManager::onRecvSync(const err_t& err, size_t t_bytes, const int id){
     
     // 同期メッセージをパース
     const auto data = this->stream_bufs[id]->data();
-    std::string sync_msg(_asio::buffers_begin(data), _asio::buffers_begin(data)+t_bytes);
+    std::string sync_msg(_asio::buffers_begin(data), _asio::buffers_end(data));
     sync_msg.erase(sync_msg.length()-MSG_DELIMITER_LEN);
     this->parseSyncMsg(sync_msg, id);
     this->stream_bufs[id]->consume(t_bytes);
@@ -75,10 +84,13 @@ void SyncManager::onRecvSync(const err_t& err, size_t t_bytes, const int id){
     // 全ディスプレイノード間で同期
     this->sync_count.fetch_add(1, std::memory_order_release);
     if(this->sync_count.load(std::memory_order_acquire) == this->display_num){
+        #ifdef DEBUG
         const auto post_time = std::chrono::system_clock::now();
         double elapsed = 1000.0 / std::chrono::duration_cast<std::chrono::milliseconds>(post_time-this->pre_time).count();
         _ml::debug(elapsed);
         this->pre_time = post_time;
+        #endif
+        
         this->sync_count.store(0, std::memory_order_release);
         this->sendSync();
     }

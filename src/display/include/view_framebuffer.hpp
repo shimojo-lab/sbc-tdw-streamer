@@ -9,8 +9,8 @@
 #include <vector>
 #include <memory>
 #include <atomic>
-#include <thread>
 #include <chrono>
+#include <thread>
 
 const int COLOR_CHANNEL_NUM = 3;          // 色のチャネル数
 const int VIEWBUF_SPINLOCK_INTERVAL = 1;  // スピンロック中の待機時間
@@ -18,20 +18,20 @@ const int VIEWBUF_SPINLOCK_INTERVAL = 1;  // スピンロック中の待機時�
 /* 表示フレームバッファ */
 class ViewFramebuffer{
     private:
-        const int viewbuf_num;                          // フレームバッファの領域数
-        std::vector<unsigned char*> viewbuf_ptrs;       // フレームバッファの先頭
-        std::vector<std::atomic<bool>> viewbuf_states;  // フレームバッファの使用状況
-        int cur_page = 0;                               // フレームバッファの表示領域
+        const int page_num;                          // バッファ領域数
+        std::vector<unsigned char*> page_ptrs;       // バッファ領域
+        std::vector<std::atomic<bool>> page_states;  // バッファ領域の管理フラグ
+        int cur_page = 0;                            // 表示するバッファ領域
     
     public:
         ViewFramebuffer(const int width, const int height,  // コンストラクタ
-                        const int viewbuf_num);
+                        const int page_num);
         ~ViewFramebuffer();                                 // デストラクタ
-        unsigned char *getDrawArea(const int id);           // フレームバッファの描画領域を取得
-        const unsigned char *getDisplayArea();              // フレームバッファの表示領域を取得
-        const int getCurrentPage();                         // 表示領域のインデックスを取得
-        void activateFrame(const int id);                   // フレーム領域の表示を有効化
-        void deactivateFrame();                             // フレーム領域の表示を無効化
+        unsigned char *getDrawPage(const int id);           // 描画するバッファ領域を取得
+        const unsigned char *getDisplayPage();              // 表示するバッファ領域を取得
+        const int getCurrentPage();                         // 表示するバッファ領域の番号を取得
+        void activatePage(const int id);                    // バッファ領域の表示を有効化
+        void deactivatePage();                              // バッファ領域の表示を無効化
 };
 
 using viewbuf_ptr_t = std::shared_ptr<ViewFramebuffer>;
