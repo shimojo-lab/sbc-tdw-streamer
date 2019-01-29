@@ -67,7 +67,7 @@ void SyncMessageGenerator::decideTuningRequest(int& param_flag, int& change_flag
             const double expected_wait_t = wait_t - diff_t * (double)(this->quality-1);
             if(this->quality!=JPEG_QUALITY_MIN && expected_wait_t<idle_wait_t){
                 this->tuneQuality(param_flag, change_flag, JPEG_PARAM_DOWN);
-            }else{
+            }else if(this->sampling_type != TJSAMP_420){
                 this->tuneSamplingType(param_flag, change_flag, JPEG_PARAM_DOWN);
             }
             this->pre_wait_t = wait_t;
@@ -84,10 +84,10 @@ void SyncMessageGenerator::decideTuningRequest(int& param_flag, int& change_flag
         const int recvbuf_stored = this->recv_buf->getStoredNum();
         const int diff_stored = recvbuf_stored - this->pre_recvbuf_stored;
         
-        if(recvbuf_stored==0 || diff_stored<0){
+        if(recvbuf_stored==0 || diff_stored<1){
             if(this->sampling_type != TJSAMP_420){
                 this->tuneSamplingType(param_flag, change_flag, JPEG_PARAM_DOWN);
-            }else{
+            }else if(this->quality != JPEG_QUALITY_MIN){
                 this->tuneQuality(param_flag, change_flag, JPEG_PARAM_DOWN);
             }
         }else{

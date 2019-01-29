@@ -118,6 +118,8 @@ void FrameViewer::onRecvSync(const err_t& err, size_t t_bytes){
         _ml::caution("Failed to receive sync message", err.message());
         std::exit(EXIT_FAILURE);
     }
+    this->post_t = _chrono::high_resolution_clock::now();
+    this->generator.sync_t_sum += _chrono::duration_cast<_chrono::milliseconds>(this->post_t-this->pre_t).count();
     
     // フレームを表示
     this->pre_t = _chrono::high_resolution_clock::now();
@@ -141,6 +143,7 @@ void FrameViewer::onRecvSync(const err_t& err, size_t t_bytes){
     this->generator.wait_t_sum += _chrono::duration_cast<_chrono::milliseconds>(this->post_t-this->pre_t).count();
     
     // 同期メッセージを送信
+    this->pre_t = _chrono::high_resolution_clock::now();
     this->sendSync();
 }
 

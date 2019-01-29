@@ -2,17 +2,17 @@
     "//": "ヘッドノードの設定",
     "video": {
         "src": "/home/kazuya/sbc-tdw-streamer/test/a.mp4",
-        "framerate": 10
+        "framerate": 20
     },
     "layout": {
-        "column": 2,
-        "row": 2,
+        "column": 1,
+        "row": 1,
         "bezel_width": 0,
         "bezel_height": 0
     },
     "resolution": {
-        "width": 1280,
-        "height": 720
+        "width": 1920,
+        "height": 1080
     },
     "port": {
         "frontend_server": 11111,
@@ -29,10 +29,7 @@
         "jpeg_tuning_term": 10
     },
     "display_node": [
-        "192.168.10.42",
-        "192.168.10.53",
-        "192.168.10.55",
-        "192.168.10.56"
+        "192.168.10.42"
     ]
 }
 

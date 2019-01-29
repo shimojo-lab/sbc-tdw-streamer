@@ -52,7 +52,7 @@ void SyncManager::parseSyncMsg(const std::string& sync_msg, const int id){
                     break;
             }
         }
-        _ml::notice("Display"+std::to_string(id)+": "+"Chroma subsampling changed to "+new_type);
+        _ml::notice("Display"+std::to_string(id)+": "+"Chroma subsampling is changed to "+new_type);
     }else if(param_flag == JPEG_QUALITY_CHANGE){  // 品質係数を変更
         std::string new_quality;
         const int quality = this->quality_list[id].load(std::memory_order_acquire);
@@ -63,7 +63,7 @@ void SyncManager::parseSyncMsg(const std::string& sync_msg, const int id){
             this->quality_list[id].fetch_sub(1, std::memory_order_release);
             new_quality = std::to_string(quality-1);
         }
-        _ml::notice("Display"+std::to_string(id)+": "+"Quality factor changed to "+new_quality);
+        _ml::notice("Display"+std::to_string(id)+": "+"Quality is changed to "+new_quality);
     }
 }
 
