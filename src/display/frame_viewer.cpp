@@ -118,6 +118,14 @@ void FrameViewer::onRecvSync(const err_t& err, size_t t_bytes){
         _ml::caution("Failed to receive sync message", err.message());
         std::exit(EXIT_FAILURE);
     }
+    const auto data = this->stream_buf.data();
+    std::string recv_msg(_asio::buffers_begin(data), _asio::buffers_end(data));
+    recv_msg.erase(recv_msg.length()-MSG_DELIMITER_LEN);
+    if(recv_msg == "reset"){
+        this->generator.dec_tuned = false;
+    }
+    this->stream_buf.consume(t_bytes);
+    
     this->post_t = _chrono::high_resolution_clock::now();
     this->generator.sync_t_sum += _chrono::duration_cast<_chrono::milliseconds>(this->post_t-this->pre_t).count();
     

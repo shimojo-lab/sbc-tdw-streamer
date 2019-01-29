@@ -19,14 +19,14 @@
         "frame_streamer": 20000
     },
     "buffer": {
-        "send_buffer_size": 16,
-        "receive_buffer_size": 16
+        "send_buffer_size": 4,
+        "receive_buffer_size": 8
     },
     "compression": {
         "init_subsampling_type": "yuv444",
         "init_jpeg_quality": 100,
         "jpeg_decoder_num": 2,
-        "jpeg_tuning_term": 10
+        "jpeg_tuning_term": 50
     },
     "display_node": [
         "192.168.10.42"

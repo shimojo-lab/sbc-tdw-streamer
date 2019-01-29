@@ -56,13 +56,13 @@ void SyncMessageGenerator::tuneSamplingType(int& param_flag, int& change_flag, c
 
 /* パラメータ変更要求の内容を決定 */
 void SyncMessageGenerator::decideTuningRequest(int& param_flag, int& change_flag){
-    if(!dec_tuned){  // 表示バッファ供給速度をチューニング
+    if(!this->dec_tuned){  // 表示バッファ供給速度をチューニング
         const double wait_t = this->wait_t_sum / (double)this->tuning_term;
         const double sync_t = this->sync_t_sum / (double)this->tuning_term;
         const double view_t = this->view_t_sum / (double)this->tuning_term;
         const double idle_wait_t = this->available_time - sync_t - view_t;
         
-        if(wait_t>idle_wait_t){
+        if(wait_t > idle_wait_t){
             const double diff_t = this->pre_wait_t - wait_t;
             const double expected_wait_t = wait_t - diff_t * (double)(this->quality-1);
             if(this->quality!=JPEG_QUALITY_MIN && expected_wait_t<idle_wait_t){
@@ -84,7 +84,7 @@ void SyncMessageGenerator::decideTuningRequest(int& param_flag, int& change_flag
         const int recvbuf_stored = this->recv_buf->getStoredNum();
         const int diff_stored = recvbuf_stored - this->pre_recvbuf_stored;
         
-        if(recvbuf_stored==0 || diff_stored<1){
+        if(recvbuf_stored==0 || diff_stored<-1){
             if(this->sampling_type != TJSAMP_420){
                 this->tuneSamplingType(param_flag, change_flag, JPEG_PARAM_DOWN);
             }else if(this->quality != JPEG_QUALITY_MIN){

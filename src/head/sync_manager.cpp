@@ -7,10 +7,12 @@
 
 /* コンストラクタ */
 SyncManager::SyncManager(_asio::io_service& ios, std::vector<sock_ptr_t>& socks,
-                         jpeg_params_t& sampling_type_list, jpeg_params_t& quality_list):
+                         const int target_fps, jpeg_params_t& sampling_type_list,
+                         jpeg_params_t& quality_list):
     ios(ios),
     socks(socks),
     display_num(socks.size()),
+    target_fps(target_fps),
     sampling_type_list(sampling_type_list),
     quality_list(quality_list)
 {
@@ -84,15 +86,19 @@ void SyncManager::onRecvSync(const err_t& err, size_t t_bytes, const int id){
     // 全ディスプレイノード間で同期
     this->sync_count.fetch_add(1, std::memory_order_release);
     if(this->sync_count.load(std::memory_order_acquire) == this->display_num){
-        #ifdef DEBUG
-        const auto post_time = std::chrono::system_clock::now();
-        double elapsed = 1000.0 / std::chrono::duration_cast<std::chrono::milliseconds>(post_time-this->pre_time).count();
-        _ml::debug(elapsed);
-        this->pre_time = post_time;
-        #endif
-        
+        ++this->frame_count;
+        const hr_chrono_t post_t = _chrono::high_resolution_clock::now();
+        this->elapsed_t += _chrono::duration_cast<_chrono::milliseconds>(post_t-this->pre_t).count();
+        bool reset_flag = false;
+        if(this->elapsed_t > 1000.0){
+            std::cout << this->frame_count << "fps\n";
+            reset_flag = this->frame_count<this->target_fps ? true : false;
+            this->elapsed_t -= 1000.0;
+            this->frame_count = 0;
+        }
+        this->pre_t = post_t;
         this->sync_count.store(0, std::memory_order_release);
-        this->sendSync();
+        this->sendSync(reset_flag);
     }
 }
 
@@ -112,11 +118,11 @@ void SyncManager::onSendSync(const err_t& err, size_t t_bytes, const int id){
 }
 
 /* 同期メッセージを送信 */
-void SyncManager::sendSync(){
-    const std::string send_msg = std::to_string(this->next_id) + MSG_DELIMITER;
+void SyncManager::sendSync(const bool reset_flag){
+    const std::string send_msg = reset_flag ? "reset" : "";
     for(int i=0; i<this->display_num; ++i){
         _asio::async_write(*this->socks[i],
-                           _asio::buffer(send_msg),
+                           _asio::buffer(send_msg+MSG_DELIMITER),
                            boost::bind(&SyncManager::onSendSync, this, _ph::error, _ph::bytes_transferred, i)
         );
     }
@@ -124,6 +130,7 @@ void SyncManager::sendSync(){
 
 /* 同期メッセージの受信を開始 */
 void SyncManager::run(){
+    this->pre_t = _chrono::high_resolution_clock::now();
     for(int i=0; i<this->display_num; ++i){
         _asio::async_read_until(*this->socks[i],
                                 *this->stream_bufs[i],

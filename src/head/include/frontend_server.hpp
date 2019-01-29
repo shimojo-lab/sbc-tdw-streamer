@@ -20,6 +20,7 @@ class FrontendServer{
         _ip::tcp::acceptor acc;                // TCPアクセプタ
         std::vector<sock_ptr_t> socks;         // 接続済TCPソケット
         int display_num;                       // 全ディスプレイ数
+        int target_fps;                        // 目標フレームレート
         JsonHandler init_params;               // 初期化メッセージ用パラメータ
         int connected_num = 0;                 // 接続済ディスプレイノード数
         jpeg_params_t sampling_type_list;      // クロマサブサンプル比
