@@ -31,7 +31,7 @@ class SyncManager{
         hr_clock_t pre_t;                          // 1周期の開始時刻
         int frame_count = 0;                       // 表示済フレーム数
         double elapsed_t = 0.0;                    // 経過時間
-        int elapsed_sec = 0;                       // 経過秒数
+        int total_sec = 0;                         // 経過秒数
         
         const std::string tuneYUV(const int change_flag, const int id);      // YUVサンプル比を変更
         const std::string tuneQuality(const int change_flag, const int id);  // 品質係数を変更
@@ -42,7 +42,7 @@ class SyncManager{
         
     public:
         SyncManager(_asio::io_service& ios, std::vector<sock_ptr_t>& socks,  // コンストラクタ
-                    const int target_fps, jpeg_params_t& sampling_type_list,
+                    const int target_fps, jpeg_params_t& yuv_format_list,
                     jpeg_params_t& quality_list);
         void run();  // 同期メッセージの受信を開始
 };

@@ -7,9 +7,6 @@
 
 /* Main関数 */
 int main(int argc, char *argv[]){
-    // 標準出力の同期をオフ
-    std::ios::sync_with_stdio(false);
-    
     // 設定ファイルをパース
     if(argc != ARGUMENT_NUM){
         _ml::caution("Number of arguments is invalid", "Usage: sbc_client <config file>");
