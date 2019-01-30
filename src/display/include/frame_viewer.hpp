@@ -50,6 +50,9 @@ class FrameViewer{
                                    const int width, const int height);
         void hideCursor(const std::string& tty_dev);           // カーソルを非表示化
         void displayFrame();                                   // フレームを表示
+        void sendSync();                                       // 同期メッセージを受信
+        void onSendSync(const err_t& err, size_t t_bytes);     // 同期メッセージ送信時のコールバック
+        void onRecvSync(const err_t& err, size_t t_bytes);     // 同期メッセージ受信時のコールバック
     
     public:
         FrameViewer(_asio::io_service& ios, _ip::tcp::socket& sock,  // コンストラクタ
@@ -57,7 +60,6 @@ class FrameViewer{
                     const int width, const int height, const std::string& tty_dev,
                     SyncMessageGenerator& generator);
         ~FrameViewer();  // デストラクタ
-        void run();      // フレーム表示を開始
 };
 
 #endif  /* FRAME_VIEWER_HPP */

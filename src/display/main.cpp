@@ -20,7 +20,7 @@ int main(int argc, char *argv[]){
     // ディスプレイクライアントを起動
     _asio::io_service ios;
     DisplayClient client(ios, parser);
-    client.run();
+    ios.run();
     
     return EXIT_SUCCESS;
 }

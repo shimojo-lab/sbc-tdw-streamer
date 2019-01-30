@@ -11,7 +11,13 @@ DisplayClient::DisplayClient(_asio::io_service& ios, ConfigParser& parser):
     sock(ios)
 {
     // パラメータを設定
-    std::tie(this->ip_addr, this->fs_port, this->fb_dev, this->tty_dev) = parser.getDisplayClientParams();
+    int fs_port;
+    std::tie(this->ip_addr, fs_port, this->fb_dev, this->tty_dev) = parser.getDisplayClientParams();
+    
+    // ヘッドノードに接続
+    this->sock.async_connect(_ip::tcp::endpoint(_ip::address::from_string(this->ip_addr), fs_port),
+                             boost::bind(&DisplayClient::onConnect, this, _ph::error)
+    );
 }
 
 /* 初期化メッセージをパース */
@@ -32,22 +38,27 @@ const init_params_t DisplayClient::parseInitMsg(const std::string& msg){
     );
 }
 
-/* ディスプレイクライアントを起動 */
-void DisplayClient::run(){
-    // ヘッドノードに接続
-    err_t err;
-    this->sock.connect(_ip::tcp::endpoint(_ip::address::from_string(this->ip_addr), this->fs_port), err);
+/* ヘッドノード接続時のコールバック */
+void DisplayClient::onConnect(const err_t& err){
     if(err){
         _ml::caution("Could not connect to head node", err.message());
         std::exit(EXIT_FAILURE);
     }
     _ml::notice("Connected to head node");
     
-    // 初期化メッセージの受信を開始
-    _asio::read_until(this->sock, this->stream_buf, MSG_DELIMITER, err);
+    // 初期化メッセージを受信
+    _asio::async_read_until(this->sock,
+                            this->stream_buf,
+                            MSG_DELIMITER,
+                            boost::bind(&DisplayClient::onRecvInit, this, _ph::error, _ph::bytes_transferred)
+    );
+}
+
+/* 初期化メッセージ受信時のコールバック */
+void DisplayClient::onRecvInit(const err_t& err, size_t t_bytes){
     if(err){
         _ml::caution("Could not receive init message", err.message());
-        std::exit(EXIT_FAILURE);
+        return;
     }
     _ml::notice("Received init message from head node");
     
@@ -95,8 +106,7 @@ void DisplayClient::run(){
 /* 別スレッドでフレーム受信器を起動 */
 void DisplayClient::runFrameReceiver(const int stream_port, const tranbuf_ptr_t recv_buf){
     _asio::io_service ios;
-    FrameReceiver receiver(ios, recv_buf);
-    receiver.run(this->ip_addr, stream_port);
+    FrameReceiver receiver(ios, this->ip_addr, stream_port, recv_buf);
 }
 
 /* 別スレッドでフレーム展開器を起動 */

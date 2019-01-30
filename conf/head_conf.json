@@ -5,8 +5,8 @@
         "framerate": 25
     },
     "layout": {
-        "column": 2,
-        "row": 2,
+        "column": 1,
+        "row": 1,
         "bezel_width": 0,
         "bezel_height": 0
     },
@@ -29,10 +29,7 @@
         "tuning_term": 50
     },
     "display_node": [
-        "192.168.10.42",
-        "192.168.10.53",
-        "192.168.10.55",
-        "192.168.10.56"
+        "192.168.10.42"
     ]
 }
 
