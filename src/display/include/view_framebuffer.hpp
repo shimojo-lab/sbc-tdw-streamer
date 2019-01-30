@@ -6,10 +6,8 @@
 #ifndef VIEW_FRAMEBUFFER_HPP
 #define VIEW_FRAMEBUFFER_HPP
 
-#include <vector>
+#include "sync_utils.hpp"
 #include <memory>
-#include <atomic>
-#include <chrono>
 #include <thread>
 
 const int COLOR_CHANNEL_NUM = 3;          // 色のチャネル数
@@ -18,10 +16,10 @@ const int VIEWBUF_SPINLOCK_INTERVAL = 1;  // スピンロック中の待機時�
 /* 表示フレームバッファ */
 class ViewFramebuffer{
     private:
-        const int page_num;                          // バッファ領域数
-        std::vector<unsigned char*> page_ptrs;       // バッファ領域
-        std::vector<std::atomic<bool>> page_states;  // バッファ領域の管理フラグ
-        int cur_page = 0;                            // 表示するバッファ領域
+        const int page_num;                         // バッファ領域数
+        std::vector<unsigned char*> page_ptrs;      // バッファ領域
+        std::vector<std::atomic_bool> page_states;  // バッファ領域の管理フラグ
+        int cur_page = 0;                           // 表示するバッファ領域
     
     public:
         ViewFramebuffer(const int width, const int height,  // コンストラクタ

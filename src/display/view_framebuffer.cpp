@@ -35,7 +35,7 @@ unsigned char *ViewFramebuffer::getDrawPage(const int id){
 /* 表示するバッファ領域を取得 */
 const unsigned char *ViewFramebuffer::getDisplayPage(){
     while(!this->page_states[this->cur_page].load(std::memory_order_acquire)){
-        std::this_thread::sleep_for(std::chrono::nanoseconds(VIEWBUF_SPINLOCK_INTERVAL));
+        std::this_thread::sleep_for(_chrono::nanoseconds(VIEWBUF_SPINLOCK_INTERVAL));
     }
     return this->page_ptrs[this->cur_page];
 }

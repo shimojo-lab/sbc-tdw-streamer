@@ -20,8 +20,8 @@ const bool ConfigParser::readParams(const _pt::ptree& conf){
     // 各種パラメータを取得
     std::string sampling_name;
     try{
-        this->video_src = this->getStrParam("video.src");
-        this->framerate = this->getIntParam("video.framerate");
+        this->src = this->getStrParam("video.src");
+        this->target_fps = this->getIntParam("video.framerate");
         this->column = this->getIntParam("layout.column");
         this->row = this->getIntParam("layout.row");
         this->bezel_w = this->getIntParam("layout.bezel_width");
@@ -30,26 +30,14 @@ const bool ConfigParser::readParams(const _pt::ptree& conf){
         this->height = this->getIntParam("resolution.height");
         this->fs_port = this->getIntParam("port.frontend_server");
         this->stream_port = this->getIntParam("port.frame_streamer");
-        this->sendbuf_size = this->getIntParam("buffer.send_buffer_size");
-        this->recvbuf_size = this->getIntParam("buffer.receive_buffer_size");
-        sampling_name = this->getStrParam("compression.init_subsampling_type");
-        this->quality = this->getIntParam("compression.init_jpeg_quality");
-        this->dec_thre_num = this->getIntParam("compression.jpeg_decoder_num");
-        this->tuning_term = this->getIntParam("compression.jpeg_tuning_term");
+        this->sendbuf_num = this->getIntParam("buffer.sender_capacity");
+        this->recvbuf_num = this->getIntParam("buffer.receiver_capacity");
+        this->yuv_format = this->getStrParam("compression.init_yuv_format");
+        this->quality = this->getIntParam("compression.init_quality");
+        this->dec_thre_num = this->getIntParam("compression.decoder_num");
+        this->tuning_term = this->getIntParam("compression.tuning_term");
     }catch(...){
         _ml::caution("Could not get parameter", "Config file is invalid");
-        return false;
-    }
-    
-    // クロマサブサンプル比を設定
-    if(sampling_name == "yuv444"){
-        this->sampling_type = TJSAMP_444;
-    }else if(sampling_name == "yuv422"){
-        this->sampling_type = TJSAMP_422;
-    }else if(sampling_name == "yuv420"){
-        this->sampling_type = TJSAMP_420;
-    }else{
-        _ml::caution("Could not get parameter", "chroma subsampling type is invalid");
         return false;
     }
     
@@ -71,8 +59,8 @@ const int ConfigParser::getFrontendServerPort(){
 
 /* フロントエンドサーバへ値渡し */
 const fs_params_t ConfigParser::getFrontendServerParams(){
-    const std::string video_src = this->video_src;
-    const int framerate = this->framerate;
+    const std::string src = this->src;
+    const int target_fps = this->target_fps;
     const int column = this->column;
     const int row = this->row;
     const int bezel_w = this->bezel_w;
@@ -80,16 +68,16 @@ const fs_params_t ConfigParser::getFrontendServerParams(){
     const int width = this->width;
     const int height = this->height;
     const int stream_port = this->stream_port;
-    const int sendbuf_size = this->sendbuf_size;
-    const int recvbuf_size = this->recvbuf_size;
-    const int sampling_type = this->sampling_type;
+    const int sendbuf_num = this->sendbuf_num;
+    const int recvbuf_num = this->recvbuf_num;
+    const std::string yuv_format = this->yuv_format;
     const int quality = this->quality;
     const int dec_thre_num = this->dec_thre_num;
     const int tuning_term = this->tuning_term;
-    const std::vector<std::string> ip_addrs = this->ip_addrs;
+    const ip_list_t ip_addrs = this->ip_addrs;
     return std::forward_as_tuple(
-        video_src, framerate, column, row, bezel_w, bezel_h, width, height, stream_port,
-        sendbuf_size, recvbuf_size, sampling_type, quality, dec_thre_num, tuning_term, ip_addrs
+        src, target_fps, column, row, bezel_w, bezel_h, width, height, stream_port,
+        sendbuf_num, recvbuf_num, yuv_format, quality, dec_thre_num, tuning_term, ip_addrs
     );
 }
 

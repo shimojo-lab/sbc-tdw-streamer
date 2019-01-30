@@ -6,27 +6,27 @@
 #include "frame_encoder.hpp"
 
 /* コンストラクタ */
-FrameEncoder::FrameEncoder(const std::string video_src, const int column, const int row,
+FrameEncoder::FrameEncoder(const std::string src, const int column, const int row,
                            const int bezel_w, const int bezel_h, const int width, const int height,
-                           jpeg_params_t& sampling_type_list, jpeg_params_t& quality_list,
+                           jpeg_params_t& yuv_format_list, jpeg_params_t& quality_list,
                            std::vector<tranbuf_ptr_t>& send_bufs):
     handle(tjInitCompress()),
     display_num(column*row),
-    sampling_type_list(sampling_type_list),
+    yuv_format_list(yuv_format_list),
     quality_list(quality_list),
     send_bufs(send_bufs)
 {
     // JPEGエンコーダを初期化
     if(this->handle == NULL){
-        std::string err_msg(tjGetErrorStr());
+        const std::string err_msg(tjGetErrorStr());
         _ml::caution("Failed to init JPEG encoder", err_msg);
         std::exit(EXIT_FAILURE);
     }
     
     // 表示する動画・画像を読込み
-    this->video = cv::VideoCapture(video_src.c_str());
+    this->video = cv::VideoCapture(src.c_str());
     if(!this->video.isOpened()){
-        _ml::caution("Failed to open video", video_src);
+        _ml::caution("Failed to open video", src);
         std::exit(EXIT_FAILURE);
     }
     
@@ -82,13 +82,7 @@ void FrameEncoder::setResizeParams(const int column, const int row, const int be
 /* フレームをリサイズ */
 void FrameEncoder::resize(cv::Mat& video_frame){
     // アスペクト比を維持して拡大
-    cv::resize(video_frame,
-               video_frame,
-               cv::Size(),
-               this->ratio,
-               this->ratio,
-               this->interpolation_type
-    );
+    cv::resize(video_frame, video_frame, cv::Size(), this->ratio, this->ratio, this->interpolation_type);
     
     // 背景と重ねてパディング
     cv::Mat paste_area = this->resized_frame(this->roi);
@@ -112,7 +106,7 @@ void FrameEncoder::encode(const int id){
                                     TJPF_RGB,
                                     &jpeg_frame,
                                     &jpeg_size,
-                                    this->sampling_type_list[id].load(std::memory_order_acquire),
+                                    this->yuv_format_list[id].load(std::memory_order_acquire),
                                     this->quality_list[id].load(std::memory_order_acquire),
                                     TJFLAG_FASTDCT
     );

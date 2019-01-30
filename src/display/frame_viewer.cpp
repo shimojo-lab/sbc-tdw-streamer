@@ -21,11 +21,6 @@ FrameViewer::FrameViewer(_asio::io_service& ios, _ip::tcp::socket& sock,
     
     // カーソルを非表示化
     this->hideCursor(tty_dev);
-    
-    // フレーム表示を開始
-    this->next_frame = this->view_buf->getDisplayPage();
-    this->sendSync();
-    ios.run();
 }
 
 /* デストラクタ */
@@ -101,72 +96,67 @@ void FrameViewer::displayFrame(){
     msync(this->fb_ptr, this->fb_size, MS_SYNC|MS_INVALIDATE);
     std::this_thread::sleep_for(std::chrono::milliseconds(DISPLAY_INTERVAL));
 }
-
-/* 同期メッセージを送信 */
-void FrameViewer::sendSync(){
-    // メッセージを送信
-    const std::string send_msg = this->generator.generate() + MSG_DELIMITER;
-    _asio::async_write(this->sock,
-                       _asio::buffer(send_msg),
-                       boost::bind(&FrameViewer::onSendSync, this, _ph::error, _ph::bytes_transferred)
-    );
-}
-
-/* 同期メッセージ受信時のコールバック */
-void FrameViewer::onRecvSync(const err_t& err, size_t t_bytes){
-    if(err){
-        _ml::caution("Failed to receive sync message", err.message());
-        std::exit(EXIT_FAILURE);
-    }
-    const auto data = this->stream_buf.data();
-    std::string recv_msg(_asio::buffers_begin(data), _asio::buffers_end(data));
-    recv_msg.erase(recv_msg.length()-MSG_DELIMITER_LEN);
-    if(recv_msg == "reset"){
-        this->generator.dec_tuned = false;
-    }
-    this->stream_buf.consume(t_bytes);
     
-    this->post_t = _chrono::high_resolution_clock::now();
-    this->generator.sync_t_sum += _chrono::duration_cast<_chrono::milliseconds>(this->post_t-this->pre_t).count();
-    
-    // フレームを表示
-    this->pre_t = _chrono::high_resolution_clock::now();
-    this->displayFrame();
-    this->view_buf->deactivatePage();
-    this->post_t = _chrono::high_resolution_clock::now();
-    this->generator.view_t_sum += _chrono::duration_cast<_chrono::milliseconds>(this->post_t-this->pre_t).count();
-    
+/* フレーム表示を開始 */
+void FrameViewer::run(){
+    err_t err;
     #ifdef DEBUG
-    // フレームレートを算出
-    this->view_end_t = _chrono::high_resolution_clock::now();
-    const double fps = 1000.0 / _chrono::duration_cast<_chrono::milliseconds>(this->view_end_t-this->view_start_t).count();
-    std::cout << fps << "fps\n"
-    this->view_start_t = this->view_end_t;
+    this->pre_view_t = _chrono::high_resolution_clock::now();
     #endif
     
-    // 次番フレームを確保
-    this->pre_t = _chrono::high_resolution_clock::now();
-    this->next_frame = this->view_buf->getDisplayPage();
-    this->post_t = _chrono::high_resolution_clock::now();
-    this->generator.wait_t_sum += _chrono::duration_cast<_chrono::milliseconds>(this->post_t-this->pre_t).count();
-    
-    // 同期メッセージを送信
-    this->pre_t = _chrono::high_resolution_clock::now();
-    this->sendSync();
-}
-
-/* 同期メッセージ送信時のコールバック */
-void FrameViewer::onSendSync(const err_t& err, size_t t_bytes){
-    if(err){
-        _ml::caution("Could not send sync message", err.message());
-        return;
+    while(true){
+        // 次番フレームを取得
+        this->pre_t = _chrono::high_resolution_clock::now();
+        this->next_frame = this->view_buf->getDisplayPage();
+        this->post_t = _chrono::high_resolution_clock::now();
+        this->generator.wait_t_sum += _chrono::duration_cast<_chrono::milliseconds>(this->post_t-this->pre_t).count();
+        
+        // 同期メッセージを送信
+        this->pre_t = _chrono::high_resolution_clock::now();
+        const std::string send_msg = this->generator.generate() + MSG_DELIMITER;
+        _asio::write(this->sock, _asio::buffer(send_msg), err);
+        if(err){
+            _ml::caution("Could not send sync message", err.message());
+            std::exit(EXIT_FAILURE);
+        }
+        
+        // 同期メッセージを受信
+        _asio::read_until(this->sock, this->stream_buf, MSG_DELIMITER, err);
+        if(err){
+            _ml::caution("Could not receive sync message", err.message());
+            std::exit(EXIT_FAILURE);
+        }
+        const auto data = this->stream_buf.data();
+        std::string recv_msg(_asio::buffers_begin(data), _asio::buffers_end(data));
+        const int t_bytes = recv_msg.length();
+        recv_msg.erase(recv_msg.length()-MSG_DELIMITER_LEN);
+        if(std::stoi(recv_msg) == JPEG_PARAM_UP){
+            this->generator.tuning_mode = DEC_SPEED_DOWN;
+        }
+        this->stream_buf.consume(t_bytes);
+        this->post_t = _chrono::high_resolution_clock::now();
+        this->generator.sync_t_sum += _chrono::duration_cast<_chrono::milliseconds>(this->post_t-this->pre_t).count();
+        
+        // フレームを表示
+        this->pre_t = _chrono::high_resolution_clock::now();
+        this->displayFrame();
+        this->view_buf->deactivatePage();
+        this->post_t = _chrono::high_resolution_clock::now();
+        this->generator.view_t_sum += _chrono::duration_cast<_chrono::milliseconds>(this->post_t-this->pre_t).count();
+        
+        // フレームレートを算出
+        #ifdef DEBUG
+        ++this->frame_count;
+        const hr_clock_t post_view_t = _chrono::high_resolution_clock::now();
+        this->elapsed += _chrono::duration_cast<_chrono::milliseconds>(this->post_view_t-this->pre_view_t).count();
+        if(this->elapsed > 1000.0){
+            ++this->total_sec;
+            std::cout << this->total_sec << "s: " << frame_count << "fps" << std::endl;
+            this->elapsed -= 1000.0;
+            this->frame_count = 0;
+        }
+        this->view_start_t = this->view_end_t;
+        #endif
     }
-    
-    // 同期メッセージを受信
-    _asio::async_read_until(this->sock,
-                            this->stream_buf,
-                            MSG_DELIMITER,
-                            boost::bind(&FrameViewer::onRecvSync, this, _ph::error, _ph::bytes_transferred)
-    );
 }
 

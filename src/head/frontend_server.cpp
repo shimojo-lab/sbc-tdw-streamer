@@ -11,14 +11,27 @@ FrontendServer::FrontendServer(_asio::io_service& ios, ConfigParser& parser, con
     acc(ios, _ip::tcp::endpoint(_ip::tcp::v4(), fs_port))
 {
     // パラメータを受け取り
-    std::string video_src;
+    std::string src, yuv_format_name;
     int column, row, bezel_w, bezel_h, width, height, stream_port, sendbuf_num, recvbuf_num;
-    int sampling_type_, quality_, dec_thre_num, tuning_term;
+    int quality, dec_thre_num, tuning_term;
     std::tie(
-        video_src, this->target_fps, column, row, bezel_w, bezel_h, width, height, stream_port,
-        sendbuf_num, recvbuf_num, sampling_type_, quality_, dec_thre_num, tuning_term, this->ip_addrs
+        src, this->target_fps, column, row, bezel_w, bezel_h, width, height, stream_port,
+        sendbuf_num, recvbuf_num, yuv_format_name, quality, dec_thre_num, tuning_term, this->ip_addrs
     ) = parser.getFrontendServerParams();
     this->display_num = column * row;
+    
+    // YUVサンプル比を設定
+    int yuv_format;
+    if(yuv_format_name == "yuv444"){
+        yuv_format = TJSAMP_444;
+    }else if(yuv_format_name == "yuv422"){
+        yuv_format = TJSAMP_422;
+    }else if(yuv_format_name == "yuv420"){ 
+        yuv_format = TJSAMP_420;
+    }else{
+        _ml::caution("YUV format is invalid", "Check config file");
+        std::exit(EXIT_FAILURE);
+    }
     
     // 初期化メッセージ用パラメータを設定
     this->init_params.setIntParam("width", width);
@@ -28,38 +41,38 @@ FrontendServer::FrontendServer(_asio::io_service& ios, ConfigParser& parser, con
     this->init_params.setIntParam("recvbuf_num", recvbuf_num);
     this->init_params.setIntParam("dec_thre_num", dec_thre_num);
     this->init_params.setIntParam("tuning_term", tuning_term);
-    this->init_params.setIntParam("sampling_type", sampling_type_);
-    this->init_params.setIntParam("quality", quality_);
+    this->init_params.setIntParam("yuv_format", yuv_format);
+    this->init_params.setIntParam("quality", quality);
     
     // パラメータを初期化
     this->sock = std::make_shared<_ip::tcp::socket>(ios);
     this->socks = std::vector<sock_ptr_t>(this->display_num);
     this->send_bufs = std::vector<tranbuf_ptr_t>(this->display_num);
-    this->sampling_type_list = jpeg_params_t(this->display_num);
+    this->yuv_format_list = jpeg_params_t(this->display_num);
     this->quality_list = jpeg_params_t(this->display_num);
     for(int i=0; i<this->display_num; ++i){
         this->send_bufs[i] = std::make_shared<TransceiveFramebuffer>(sendbuf_num);
-        this->sampling_type_list[i].store(sampling_type_, std::memory_order_release);
-        this->quality_list[i].store(quality_, std::memory_order_release);
+        this->yuv_format_list[i].store(yuv_format, std::memory_order_release);
+        this->quality_list[i].store(quality, std::memory_order_release);
     }
     
     // 別スレッドでフレーム圧縮器を起動
-    this->enc_thre = boost::thread(boost::bind(&FrontendServer::runFrameEncoder,
-                                               this,
-                                               video_src,
-                                               column,
-                                               row,
-                                               bezel_w,
-                                               bezel_h,
-                                               width,
-                                               height)
+    this->enc_thre = std::thread(std::bind(&FrontendServer::runFrameEncoder,
+                                           this,
+                                           src,
+                                           column,
+                                           row,
+                                           bezel_w,
+                                           bezel_h,
+                                           width,
+                                           height)
     );
     
     // 別スレッドでフレーム送信器を起動
-    this->send_thre = boost::thread(boost::bind(&FrontendServer::runFrameSender,
-                                                this,
-                                                stream_port,
-                                                dec_thre_num+VIEWBUF_EXTRA_NUM)
+    this->send_thre = std::thread(std::bind(&FrontendServer::runFrameSender,
+                                            this,
+                                            stream_port,
+                                            dec_thre_num+VIEWBUF_EXTRA_NUM)
     );
     
     // 接続待機を開始
@@ -136,7 +149,7 @@ void FrontendServer::runFrameEncoder(const std::string video_src, const int colu
                          bezel_h,
                          width,
                          height,
-                         this->sampling_type_list,
+                         this->yuv_format_list,
                          this->quality_list,
                          this->send_bufs
     );
@@ -159,7 +172,7 @@ void FrontendServer::runSyncManager(){
     SyncManager manager(this->ios,
                         this->socks,
                         this->target_fps,
-                        this->sampling_type_list,
+                        this->yuv_format_list,
                         this->quality_list
     );
     manager.run();

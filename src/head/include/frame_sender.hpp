@@ -22,7 +22,7 @@ class FrameSender{
         const int display_num;                  // 全ディスプレイ数
         int fb_id = 0;                          // 表示フレームバッファのインデックス
         const int viewbuf_num;                  // 表示フレームバッファの領域数
-        std::atomic<int> send_count;            // 送信完了数
+        std::atomic_int send_count;             // 送信完了数
         std::vector<std::string> send_msgs;     // 送信メッセージ
         std::vector<tranbuf_ptr_t>& send_bufs;  // 送信フレームバッファ
         

@@ -12,12 +12,12 @@ FrameSender::FrameSender(_asio::io_service& ios, const int port, const int displ
     acc(ios, _ip::tcp::endpoint(_ip::tcp::v4(), port)),
     display_num(display_num),
     viewbuf_num(viewbuf_num),
+    send_count(0),
     send_msgs(display_num),
     send_bufs(send_bufs)
 {
     // パラメータを初期化
     this->sock = std::make_shared<_ip::tcp::socket>(ios);
-    this->send_count.store(0, std::memory_order_release);
     
     // 送信処理を開始
     _ml::notice("Streaming video frames at :" + std::to_string(port));

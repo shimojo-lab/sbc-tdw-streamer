@@ -7,7 +7,7 @@
 
 /* 通知メッセージを表示 */
 void mutex_logger::notice(const std::string& msg){
-    std::lock_guard<std::mutex> log_lock(mutex_logger::lock);
+    std::lock_guard<std::mutex> log_lock(_ml::lock);
     std::cout << GREEN
               << "[Info] "
               << RESET
@@ -18,7 +18,7 @@ void mutex_logger::notice(const std::string& msg){
 
 /* 警告メッセージを表示 */
 void mutex_logger::warn(const std::string& msg, const std::string& suppl){
-    std::lock_guard<std::mutex> log_lock(mutex_logger::lock);
+    std::lock_guard<std::mutex> log_lock(_ml::lock);
     std::cout << YELLOW
               << "[Warning] "
               << RESET
@@ -31,7 +31,7 @@ void mutex_logger::warn(const std::string& msg, const std::string& suppl){
 
 /* エラーメッセージを表示 */
 void mutex_logger::caution(const std::string& msg, const std::string& suppl){ 
-    std::lock_guard<std::mutex> log_lock(mutex_logger::lock);
+    std::lock_guard<std::mutex> log_lock(_ml::lock);
     std::cerr << RED
               << "[Error] "
               << RESET
@@ -44,7 +44,7 @@ void mutex_logger::caution(const std::string& msg, const std::string& suppl){
 
 /* String型変数を表示 */
 void mutex_logger::debug(const std::string& msg){ 
-    std::lock_guard<std::mutex> log_lock(mutex_logger::lock);
+    std::lock_guard<std::mutex> log_lock(_ml::lock);
     std::cout << CYAN
               << "[Debug] "
               << RESET
@@ -54,7 +54,7 @@ void mutex_logger::debug(const std::string& msg){
 
 /* int型変数を表示 */
 void mutex_logger::debug(const int num){
-    std::lock_guard<std::mutex> log_lock(mutex_logger::lock);
+    std::lock_guard<std::mutex> log_lock(_ml::lock);
     std::cout << CYAN
               << "[Debug] "
               << RESET
@@ -64,7 +64,7 @@ void mutex_logger::debug(const int num){
 
 /* double型変数を表示 */
 void mutex_logger::debug(const double num){
-    std::lock_guard<std::mutex> log_lock(mutex_logger::lock);
+    std::lock_guard<std::mutex> log_lock(_ml::lock);
     std::cout << CYAN
               << "[Debug] "
               << RESET

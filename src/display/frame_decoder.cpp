@@ -11,7 +11,7 @@ FrameDecoder::FrameDecoder(const tranbuf_ptr_t recv_buf, const viewbuf_ptr_t vie
     recv_buf(recv_buf),
     view_buf(view_buf)
 {
-    // JPEGデコータを起動
+    // JPEGデコーダを起動
     if(this->handle == NULL){
         const std::string err_msg(tjGetErrorStr());
         _ml::caution("Failed to init JPEG decoder", err_msg);
@@ -64,7 +64,7 @@ void FrameDecoder::run(){
     while(true){
         #ifdef DEBUG
         // 時間計測を開始
-        const hr_chrono_t pre_time = std::chrono::high_resolution_clock::now();
+        const hr_clock_t pre_t = _chrono::high_resolution_clock::now();
         #endif
         
         // フレームを取り出し
@@ -80,9 +80,9 @@ void FrameDecoder::run(){
         
         #ifdef DEBUG
         // 展開時間を表示
-        const hr_chrono_t post_time = std::chrono::high_resolution_clock::now();
-        const double elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(post_time-pre_time).count();
-        _ml::debug(std::to_string(elapsed) + "msec");
+        const hr_clock_t post_t = _chrono::high_resolution_clock::now();
+        const double elapsed = _chrono::duration_cast<_chrono::milliseconds>(post_t-pre_t).count();
+        _ml::debug("decode:" std::to_string(elapsed) + "msec");
         #endif
     }
 }

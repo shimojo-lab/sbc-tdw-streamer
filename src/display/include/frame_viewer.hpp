@@ -34,21 +34,22 @@ class FrameViewer{
         int fb;                           // フレームバッファのデバイスファイル
         int tty;                          // デバイス端末のデバイスファイル
         int fb_size;                      // フレームバッファのサイズ
-        unsigned char *fb_ptr;            // フレームバッファの先頭
+        unsigned char *fb_ptr;            // フレームバッファのアドレス
         SyncMessageGenerator& generator;  // 同期メッセージ生成器
         const unsigned char *next_frame;  // 次番フレーム
-        hr_chrono_t pre_t;                // 処理開始時刻
-        hr_chrono_t post_t;               // 処理終了時刻
-        hr_chrono_t view_start_t;         // 表示1周期の開始時刻
-        hr_chrono_t view_end_t;           // 表示1周期の終了時刻
+        hr_clock_t pre_t;                 // 処理開始時刻
+        hr_clock_t post_t;                // 処理終了時刻
+        #ifdef DEBUG
+        hr_clock_t pre_view_t;            // 表示1周期の開始時刻
+        int frame_count = 0;              // 表示済みフレーム数
+        int total_sec = 0;                // 経過秒数
+        double elapsed = 0.0;             // 経過時間
+        #endif
         
         const bool openFramebuffer(const std::string& fb_dev,  // フレームバッファをオープン
                                    const int width, const int height);
         void hideCursor(const std::string& tty_dev);           // カーソルを非表示化
         void displayFrame();                                   // フレームを表示
-        void sendSync();                                       // 同期メッセージを送信
-        void onRecvSync(const err_t& err, size_t t_bytes);     // 同期メッセージ受信時のコールバック
-        void onSendSync(const err_t& err, size_t t_bytes);     // 同期メッセージ送信時のコールバック
     
     public:
         FrameViewer(_asio::io_service& ios, _ip::tcp::socket& sock,  // コンストラクタ
@@ -56,6 +57,7 @@ class FrameViewer{
                     const int width, const int height, const std::string& tty_dev,
                     SyncMessageGenerator& generator);
         ~FrameViewer();  // デストラクタ
+        void run();      // フレーム表示を開始
 };
 
 #endif  /* FRAME_VIEWER_HPP */

@@ -1,12 +1,12 @@
 {
     "//": "ヘッドノードの設定",
     "video": {
-        "src": "/home/kazuya/sbc-tdw-streamer/test/a.mp4",
-        "framerate": 20
+        "src": "/home/kazuya/sbc-tdw-streamer/test/c.mp4",
+        "framerate": 25
     },
     "layout": {
-        "column": 1,
-        "row": 1,
+        "column": 2,
+        "row": 2,
         "bezel_width": 0,
         "bezel_height": 0
     },
@@ -19,17 +19,20 @@
         "frame_streamer": 20000
     },
     "buffer": {
-        "send_buffer_size": 4,
-        "receive_buffer_size": 8
+        "sender_capacity": 4,
+        "receiver_capacity": 8
     },
     "compression": {
-        "init_subsampling_type": "yuv444",
-        "init_jpeg_quality": 100,
-        "jpeg_decoder_num": 2,
-        "jpeg_tuning_term": 50
+        "init_yuv_format": "yuv444",
+        "init_quality": 100,
+        "decoder_num": 2,
+        "tuning_term": 50
     },
     "display_node": [
-        "192.168.10.42"
+        "192.168.10.42",
+        "192.168.10.53",
+        "192.168.10.55",
+        "192.168.10.56"
     ]
 }
 

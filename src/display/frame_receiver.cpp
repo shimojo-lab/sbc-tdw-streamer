@@ -6,58 +6,35 @@
 #include "frame_receiver.hpp"
 
 /* コンストラクタ */
-FrameReceiver::FrameReceiver(_asio::io_service& ios, const std::string& ip_addr, const int stream_port,
-                             const tranbuf_ptr_t recv_buf):
+FrameReceiver::FrameReceiver(_asio::io_service& ios, const tranbuf_ptr_t recv_buf):
     ios(ios),
     sock(ios),
     recv_buf(recv_buf)
-{
-    // フレーム受信を開始
-    _ml::notice("Receiving video frames from " + ip_addr + ":" + std::to_string(stream_port));
-    this->run(ip_addr, stream_port);
-}
+{}
 
 /* フレーム受信を開始 */
 void FrameReceiver::run(const std::string& ip_addr, const int stream_port){
-    this->sock.async_connect(_ip::tcp::endpoint(_ip::address::from_string(ip_addr), stream_port),
-                             boost::bind(&FrameReceiver::onConnect, this, _ph::error)
-    );
-    ios.run(); 
-}
-
-/* 接続時のコールバック */
-void FrameReceiver::onConnect(const err_t& err){
+    // ヘッドノードに接続
+    err_t err;
+    this->sock.connect(_ip::tcp::endpoint(_ip::address::from_string(ip_addr), stream_port), err);
     if(err){
         _ml::caution("Failed stream connection with head node", err.message());
         return;
     }
     
     // フレーム受信を開始
-    _asio::async_read_until(this->sock,
-                            this->stream_buf,
-                            MSG_DELIMITER,
-                            boost::bind(&FrameReceiver::onRecvFrame, this, _ph::error, _ph::bytes_transferred)
-    );
-}
-
-/* フレーム受信時のコールバック */
-void FrameReceiver::onRecvFrame(const err_t& err, size_t t_bytes){
-    if(err){
-        _ml::caution("Could not receive frame", err.message());
-    }else{
-        // フレームを取得
-        const auto data = this->stream_buf.data();
-        std::string recv_msg(_asio::buffers_begin(data), _asio::buffers_end(data));
-        recv_msg.erase(recv_msg.length()-MSG_DELIMITER_LEN);
-        this->recv_buf->push(recv_msg);
-        this->stream_buf.consume(t_bytes);
+    while(true){
+        _asio::read_until(this->sock, this->stream_buf, MSG_DELIMITER, err);
+        if(err){
+            _ml::caution("Could not receive frame", err.message());
+        }else{
+            const auto data = this->stream_buf.data();
+            std::string recv_msg(_asio::buffers_begin(data), _asio::buffers_end(data));
+            const int t_bytes = recv_msg.length();
+            recv_msg.erase(recv_msg.length()-MSG_DELIMITER_LEN);
+            this->recv_buf->push(recv_msg);
+            this->stream_buf.consume(t_bytes);
+        }
     }
-    
-    // フレーム受信を再開
-    _asio::async_read_until(this->sock,
-                            this->stream_buf,
-                            MSG_DELIMITER,
-                            boost::bind(&FrameReceiver::onRecvFrame, this, _ph::error, _ph::bytes_transferred)
-    ); 
 }
 
