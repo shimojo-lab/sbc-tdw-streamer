@@ -10,6 +10,7 @@
 #include "socket_utils.hpp"
 #include "sync_utils.hpp"
 #include "json_handler.hpp"
+#include <cmath>
 extern "C"{
     #include <turbojpeg.h>
 }
@@ -38,7 +39,7 @@ class SyncManager{
         void parseSyncMsg(const std::string& msg, const int id);             // 同期メッセージをパース
         void onRecvSync(const err_t& err, size_t t_bytes, const int id);     // 同期メッセージ受信時のコールバック
         void onSendSync(const err_t& err, size_t t_bytes, const int id);     // 同期メッセージ送信時のコールバック
-        void sendSync(const bool reset_flag);                                // 同期メッセージを送信
+        void sendSync();                                                     // 同期メッセージを送信
         
     public:
         SyncManager(_asio::io_service& ios, std::vector<sock_ptr_t>& socks,  // コンストラクタ

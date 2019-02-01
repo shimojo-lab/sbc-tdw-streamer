@@ -13,7 +13,8 @@ SyncMessageGenerator::SyncMessageGenerator(const int target_fps, const int tunin
     recv_buf(recv_buf),
     yuv_format(yuv_format),
     quality(quality),
-    available_t(1000.0/(double)target_fps)
+    min_available_t(1000.0/(double)(target_fps+FPS_JITTER)),
+    max_available_t(1000.0/(double)(target_fps-FPS_JITTER))
 {}
 
 /* YUVサンプル比を変更 */
@@ -54,15 +55,19 @@ void SyncMessageGenerator::switchQuality(const int change_flag){
     }
 }
 
-/* フレーム展開速度を向上 */
-void SyncMessageGenerator::speedUpDecode(int& param_flag, int& change_flag){
+/* フレーム展開速度を確認 */
+const bool SyncMessageGenerator::checkDecodeSpeed(int& param_flag, int& change_flag){
+    // バッファ供給待ち時間を算出
     const double wait_t = this->wait_t_sum / (double)this->tuning_term;
     const double sync_t = this->sync_t_sum / (double)this->tuning_term;
     const double view_t = this->view_t_sum / (double)this->tuning_term;
-    const double idle_wait_t = this->available_t - sync_t - view_t;
+    const double min_wait_t = this->min_available_t - sync_t - view_t;
+    const double max_wait_t = this->max_available_t - sync_t - view_t;
     
-    // 速度が不十分ならパラメータを低減
-    if(wait_t > idle_wait_t){
+    // パラメータ変更内容を決定
+    bool result = false;
+    if(wait_t > max_wait_t){  // 速度が不十分な場合はパラメータを低減
+        result = true;
         change_flag = JPEG_PARAM_DOWN;
         if(this->yuv_format != TJSAMP_420){
             param_flag = JPEG_YUV_CHANGE;
@@ -71,9 +76,17 @@ void SyncMessageGenerator::speedUpDecode(int& param_flag, int& change_flag){
             param_flag = JPEG_QUALITY_CHANGE;
             this->switchQuality(change_flag);
         }
-    }else{
-        // 現在のパラメータを最良値として採用
-        this->tuning_mode = RECV_SPEED_CTRL;
+    }else if(wait_t < min_wait_t){  // 速度が過剰な場合はパラメータを向上
+        result = true;
+        change_flag = JPEG_PARAM_UP;
+        if(this->quality < JPEG_QUALITY_MAX){
+            param_flag = JPEG_QUALITY_CHANGE;
+            this->switchQuality(change_flag);
+        }else if(this->yuv_format != TJSAMP_444){
+            param_flag = JPEG_YUV_CHANGE;
+            this->switchYUV(change_flag);
+        }
+    }else{  // 現在のパラメータを最良値として採用
         this->best_quality = this->quality;
         this->best_yuv_format = this->yuv_format;
         this->pre_recvbuf_stored = this->recv_buf->getStoredNum();
@@ -82,40 +95,19 @@ void SyncMessageGenerator::speedUpDecode(int& param_flag, int& change_flag){
     // 時間計測を再開
     this->wait_t_sum = 0.0;
     this->sync_t_sum = 0.0;
-    this->view_t_sum = 0.0; 
+    this->view_t_sum = 0.0;
+    return result;
 }
 
-/* フレーム展開速度を抑制 */
-void SyncMessageGenerator::speedDownDecode(int& param_flag, int& change_flag){
-    // パラメータを向上
-    change_flag = JPEG_PARAM_UP;
-    if(this->yuv_format != TJSAMP_444){
-        param_flag = JPEG_YUV_CHANGE;
-        this->switchYUV(change_flag);
-    }else if(this->quality < JPEG_QUALITY_MAX){
-        param_flag = JPEG_QUALITY_CHANGE;
-        this->switchQuality(change_flag);
-    }
-    
-    // パラメータの最良値を更新
-    this->tuning_mode = DEC_SPEED_UP;
-    this->best_quality = this->quality;
-    this->best_yuv_format = this->yuv_format;
-    
-    // 時間計測を再開
-    this->wait_t_sum = 0.0;
-    this->sync_t_sum = 0.0;
-    this->view_t_sum = 0.0; 
-}
-
-/* フレーム受信速度を調整 */
-void SyncMessageGenerator::ctrlRecvSpeed(int& param_flag, int& change_flag){
+/* フレーム受信速度を確認 */
+void SyncMessageGenerator::checkRecvSpeed(int& param_flag, int& change_flag){
+    // 受信フレームバッファ残量の変化を算出
     const int recvbuf_stored = this->recv_buf->getStoredNum();
     const int diff_stored = recvbuf_stored - this->pre_recvbuf_stored;
     this->pre_recvbuf_stored = recvbuf_stored;
     
-    // バッファ内フレーム数が減ったら一時的にパラメータ低減
-    if(recvbuf_stored==0 || diff_stored<-1){
+    // パラメータ変更内容を決定
+    if(recvbuf_stored<=4 || diff_stored<-1){  // 受信フレームバッファ内
         change_flag = JPEG_PARAM_DOWN;
         if(this->yuv_format != TJSAMP_420){
             param_flag = JPEG_YUV_CHANGE;
@@ -137,29 +129,17 @@ void SyncMessageGenerator::ctrlRecvSpeed(int& param_flag, int& change_flag){
     }
 }
 
-/* パラメータ変更要求を決定 */
-void SyncMessageGenerator::decideTuningParams(int& param_flag, int& change_flag){
-    switch(this->tuning_mode){
-    case DEC_SPEED_UP:
-        this->speedUpDecode(param_flag, change_flag);
-        break;
-    case DEC_SPEED_DOWN:
-        this->speedDownDecode(param_flag, change_flag);
-        break;
-    case RECV_SPEED_CTRL:
-        this->ctrlRecvSpeed(param_flag, change_flag);
-        break;
-    }
-}
-
 /* 同期メッセージを生成 */
 const std::string SyncMessageGenerator::generate(){
-    // 変更要求の内容を決定
     int param_flag = JPEG_NO_CHANGE;
     int change_flag = JPEG_PARAM_KEEP;
     ++this->frame_count;
+    
+    // 一定周期でパラメータ変更の必要性を判定
     if(this->frame_count == this->tuning_term){
-        this->decideTuningParams(param_flag, change_flag);
+        if(!this->checkDecodeSpeed(param_flag, change_flag)){
+            this->checkRecvSpeed(param_flag, change_flag);
+        }
         this->frame_count = 0;
     }
     

@@ -110,7 +110,6 @@ void SyncManager::onRecvSync(const err_t& err, size_t t_bytes, const int id){
     this->sync_count.fetch_add(1, std::memory_order_release);
     if(this->sync_count.load(std::memory_order_acquire) == this->display_num){
         // 1秒ごとにフレームレートを算出
-        bool dec_speed_down = false;
         ++this->frame_count;
         const hr_clock_t post_t = _chrono::high_resolution_clock::now();
         this->elapsed_t += _chrono::duration_cast<_chrono::milliseconds>(post_t-this->pre_t).count();
@@ -119,13 +118,12 @@ void SyncManager::onRecvSync(const err_t& err, size_t t_bytes, const int id){
             _ml::notice(std::to_string(this->total_sec) + "s: " +
                         std::to_string(this->frame_count) + "fps"
             );
-            dec_speed_down = this->frame_count > this->target_fps;
             this->elapsed_t -= 1000.0;
             this->frame_count = 0;
         }
         this->pre_t = post_t;
         this->sync_count.store(0, std::memory_order_release);
-        this->sendSync(dec_speed_down);
+        this->sendSync();
     }
 }
 
@@ -145,11 +143,11 @@ void SyncManager::onSendSync(const err_t& err, size_t t_bytes, const int id){
 }
 
 /* 同期メッセージを送信 */
-void SyncManager::sendSync(const bool dec_speed_down){
-    const int send_msg = dec_speed_down ? JPEG_PARAM_UP : JPEG_PARAM_KEEP;
+void SyncManager::sendSync(){
+    const std::string send_msg = "sync" + MSG_DELIMITER;
     for(int i=0; i<this->display_num; ++i){
         _asio::async_write(*this->socks[i],
-                           _asio::buffer(std::to_string(send_msg)+MSG_DELIMITER),
+                           _asio::buffer(send_msg),
                            boost::bind(&SyncManager::onSendSync, this, _ph::error, _ph::bytes_transferred, i)
         );
     }

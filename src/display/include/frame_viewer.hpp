@@ -7,9 +7,9 @@
 #define FRAME_VIEWER_HPP
 
 #include "mutex_logger.hpp"
-#include "transceive_framebuffer.hpp"
 #include "socket_utils.hpp"
 #include "sync_message_generator.hpp"
+#include "view_framebuffer.hpp"
 #include <cstring>
 extern "C"{
     #include <fcntl.h>
