@@ -1,7 +1,4 @@
-*.webm
-*.mp4
 *.out
 *.o
 head_server
 display_client
-

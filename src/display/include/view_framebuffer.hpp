@@ -1,7 +1,7 @@
-/******************************
-*    view_framebuffer.hpp    *
-*   (表示フレームバッファ)   *
-******************************/
+/****************************************
+*          view_framebuffer.hpp         *
+*  (the framebuffer to put raw frames)  *
+****************************************/
 
 #ifndef VIEW_FRAMEBUFFER_HPP
 #define VIEW_FRAMEBUFFER_HPP
@@ -10,26 +10,26 @@
 #include <memory>
 #include <thread>
 
-const int COLOR_CHANNEL_NUM = 3;          // 色のチャネル数
-const int VIEWBUF_SPINLOCK_INTERVAL = 1;  // スピンロック中の待機時間
+const int COLOR_CHANNEL_NUM = 3;          // the number of the color channels
+const int VIEWBUF_SPINLOCK_INTERVAL = 1;  // the interval in the spinlock
 
-/* 表示フレームバッファ */
+/* the framebuffer to put raw frames */
 class ViewFramebuffer{
     private:
-        const int page_num;                         // バッファ領域数
-        std::vector<unsigned char*> page_ptrs;      // バッファ領域
-        std::vector<std::atomic_bool> page_states;  // バッファ領域の管理フラグ
-        int cur_page = 0;                           // 表示するバッファ領域
+        const int page_num;                         // the number of domains in the buffer
+        std::vector<unsigned char*> page_ptrs;      // the pointers of domains in the buffer
+        std::vector<std::atomic_bool> page_states;  // the flag to switch the state of each domain
+        int cur_page = 0;                           // the domain on which the next frame is put
     
     public:
-        ViewFramebuffer(const int width, const int height,  // コンストラクタ
+        ViewFramebuffer(const int width, const int height,  // constructor
                         const int page_num);
-        ~ViewFramebuffer();                                 // デストラクタ
-        unsigned char *getDrawPage(const int id);           // 描画するバッファ領域を取得
-        const unsigned char *getDisplayPage();              // 表示するバッファ領域を取得
-        const int getCurrentPage();                         // 表示するバッファ領域の番号を取得
-        void activatePage(const int id);                    // バッファ領域の表示を有効化
-        void deactivatePage();                              // バッファ領域の表示を無効化
+        ~ViewFramebuffer();                                 // destructor
+        unsigned char *getDrawPage(const int id);           // get a domain to put a new frame
+        const unsigned char *getDisplayPage();              // 
+        const int getCurrentPage();                         // get the value of cur_page
+        void activatePage(const int id);                    // make a domain available
+        void deactivatePage();                              // make a domain unavailable
 };
 
 using viewbuf_ptr_t = std::shared_ptr<ViewFramebuffer>;

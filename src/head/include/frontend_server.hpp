@@ -1,7 +1,7 @@
-/*****************************
-*     frontend_server.hpp    *
-*   (フロントエンドサーバ)   *
-*****************************/
+/****************************************
+*          frontend_server.hpp          *
+*  (the class for the frontend server)  *
+****************************************/
 
 #ifndef FRONTEND_SERVER_HPP
 #define FRONTEND_SERVER_HPP
@@ -12,37 +12,37 @@
 #include "sync_manager.hpp"
 #include <thread>
 
-/* フロントエンドサーバ */
+/* the class for the frontend server */
 class FrontendServer{
     private:
-        _asio::io_service& ios;                // I/Oイベントループ
-        sock_ptr_t sock;                       // TCPソケット
-        _ip::tcp::acceptor acc;                // TCPアクセプタ
-        std::vector<sock_ptr_t> socks;         // 接続済TCPソケット
-        int display_num;                       // 全ディスプレイ数
-        int target_fps;                        // 目標フレームレート
-        JsonHandler init_params;               // 初期化メッセージ用パラメータ
-        int connected_num = 0;                 // 接続済ディスプレイノード数
-        jpeg_params_t yuv_format_list;         // YUVサンプル比
-        jpeg_params_t quality_list;            // 品質係数
-        ip_list_t ip_addrs;                    // ディスプレイノードのIP
-        std::vector<tranbuf_ptr_t> send_bufs;  // 送信フレームバッファ
-        std::thread send_thre;                 // フレーム送信スレッド
-        std::thread enc_thre;                  // フレーム圧縮スレッド
+        _asio::io_service& ios;                // the I/O event loop
+        sock_ptr_t sock;                       // the TCP socket
+        _ip::tcp::acceptor acc;                // the TCP acceptor
+        std::vector<sock_ptr_t> socks;         // the in-use TCP sockets
+        int display_num;                       // the number of the displays
+        int target_fps;                        // the target frame rate
+        JsonHandler init_params;               // the parameters packed in the initial message
+        int connected_num = 0;                 // the number of the connected display nodes
+        jpeg_params_t ycbcr_format_list;       // the YCbCr format list for the display nodes
+        jpeg_params_t quality_list;            // the quality factor list for the display nodes
+        ip_list_t ip_addrs;                    // the IP addresses of the display nodes
+        std::vector<tranbuf_ptr_t> send_bufs;  // the send framebuffer
+        std::thread send_thre;                 // the sender thread
+        std::thread enc_thre;                  // the encoder thread
         
-        void waitForConnection();                          // 接続待機を開始
-        void onConnect(const err_t& err);                  // ディスプレイノード接続時のコールバック
-        void onSendInit(const err_t& err,  size_t t_bytes, // 初期化メッセージ送信時のコールバック
+        void waitForConnection();                          // start waiting for connection
+        void onConnect(const err_t& err);                  // the callback function when connected to a display node
+        void onSendInit(const err_t& err,  size_t t_bytes, // the callback function when sending the initial message
                         const std::string ip);
-        void runFrameEncoder(const std::string video_src,  // 別スレッドでフレーム符号化器を起動
+        void runFrameEncoder(const std::string video_src,  // launch the frame encoder
                              const int column, const int row, const int bezel_w, const int bezel_h,
                              const int width, const int height);
-        void runFrameSender(const int stream_port,         // 別スレッドでフレーム送信器を起動
+        void runFrameSender(const int stream_port,         // launch the frame sender
                             const int viewbuf_num);
-        void runSyncManager();                             // 同スレッドで同期制御器を起動
+        void runSyncManager();                             // launch the sync manager
     
     public:
-        FrontendServer(_asio::io_service& ios, ConfigParser& parser, const int fs_port);  // コンストラクタ
+        FrontendServer(_asio::io_service& ios, ConfigParser& parser, const int fs_port);  // constructor
 };
 
 #endif  /* FRONTEND_SERVER_HPP */

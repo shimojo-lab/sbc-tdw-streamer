@@ -1,11 +1,11 @@
-/*****************************
-*      mutex_logger.cpp      *
-*    (排他制御付きロガー)    *
-*****************************/
+/***********************************
+*         mutex_logger.cpp         *
+*  (the logging tools with mutex)  *
+***********************************/
 
 #include "mutex_logger.hpp"
 
-/* 通知メッセージを表示 */
+/* print a notice on the console */
 void mutex_logger::notice(const std::string& msg){
     std::lock_guard<std::mutex> log_lock(_ml::lock);
     std::cout << GREEN
@@ -16,7 +16,7 @@ void mutex_logger::notice(const std::string& msg){
               << std::endl;
 }
 
-/* 警告メッセージを表示 */
+/* print a warning on the console */
 void mutex_logger::warn(const std::string& msg, const std::string& suppl){
     std::lock_guard<std::mutex> log_lock(_ml::lock);
     std::cout << YELLOW
@@ -29,7 +29,7 @@ void mutex_logger::warn(const std::string& msg, const std::string& suppl){
               << std::endl;
 }
 
-/* エラーメッセージを表示 */
+/* print a caution on the console */
 void mutex_logger::caution(const std::string& msg, const std::string& suppl){ 
     std::lock_guard<std::mutex> log_lock(_ml::lock);
     std::cerr << RED
@@ -42,33 +42,33 @@ void mutex_logger::caution(const std::string& msg, const std::string& suppl){
               << std::endl;
 }
 
-/* String型変数を表示 */
-void mutex_logger::debug(const std::string& msg){ 
+/* print a string variable for debug */
+void mutex_logger::debug(const std::string& var){ 
     std::lock_guard<std::mutex> log_lock(_ml::lock);
     std::cout << CYAN
               << "[Debug] "
               << RESET
-              << msg
+              << var
               << std::endl;
 }
 
-/* int型変数を表示 */
-void mutex_logger::debug(const int num){
+/* print a int variable for debug */
+void mutex_logger::debug(const int var){
     std::lock_guard<std::mutex> log_lock(_ml::lock);
     std::cout << CYAN
               << "[Debug] "
               << RESET
-              << std::to_string(num)
+              << std::to_string(var)
               << std::endl;
 }
 
-/* double型変数を表示 */
-void mutex_logger::debug(const double num){
+/* print a double variable for debug */
+void mutex_logger::debug(const double var){
     std::lock_guard<std::mutex> log_lock(_ml::lock);
     std::cout << CYAN
               << "[Debug] "
               << RESET
-              << std::to_string(num)
+              << std::to_string(var)
               << std::endl;
 }
 

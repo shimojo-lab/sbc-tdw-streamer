@@ -1,7 +1,7 @@
-/*************************************
-*       base_config_parser.hpp       *
-*  (設定ファイルパーサの基底クラス)  *
-*************************************/
+/**************************************
+*       base_config_parser.hpp        *
+*  (a super class of config parsers)  *
+**************************************/
 
 #ifndef BASE_CONFIG_PARSER_HPP
 #define BASE_CONFIG_PARSER_HPP
@@ -15,19 +15,19 @@
 
 namespace _pt = boost::property_tree;
 
-/* 設定ファイルパーサの基底クラス */
+/* a super class of config parsers */
 class BaseConfigParser{
     private:
-        virtual const bool readParams(const _pt::ptree& conf);  // パラメータを読み込み
+        virtual const bool readParams(const _pt::ptree& conf);  // read the parameters
     
     protected:
-        _pt::ptree conf;  // パラメータ群
+        _pt::ptree conf;  // a parsed json
         
-        const std::string getStrParam(const std::string& key);  // パラメータを取得 (String型用)
-        const int getIntParam(const std::string& key);          // パラメータを取得 (int型用)
+        const std::string getStrParam(const std::string& key);  // get a string parameter
+        const int getIntParam(const std::string& key);          // get a int parameter
     
     public:
-        BaseConfigParser(const std::string& filename);  // コンストラクタ
+        BaseConfigParser(const std::string& filename);  // constructor
 };
 
 #endif  /* BASE_CONFIG_PARSER_HPP */

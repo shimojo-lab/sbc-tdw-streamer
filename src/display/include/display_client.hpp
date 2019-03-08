@@ -1,7 +1,7 @@
-/*******************************
-*      display_client.hpp      *
-*  (ディスプレイクライアント)  *
-*******************************/
+/***************************************
+*          display_client.hpp          *
+*  (the class for the display client)  *
+***************************************/
 
 #ifndef DISPLAY_CLIENT_HPP
 #define DISPLAY_CLIENT_HPP
@@ -15,28 +15,27 @@ using init_params_t = std::tuple<
     int, int, int, int, int, int, int, int, int
 >;
 
-/* ディスプレイクライアント */
+/* the class for the display client */
 class DisplayClient{
     private:
-        _asio::io_service& ios;              // I/Oイベントループ
-        _ip::tcp::socket sock;               // TCPソケット
-        _asio::streambuf stream_buf;         // ストリームバッファ
-        std::string ip_addr;                 // ヘッドノードのIP
-        std::string fb_dev;                  // フレームバッファのデバイスファイル
-        std::string tty_dev;                 // 端末デバイスのデバイスファイル
-        std::thread recv_thre;               // フレーム受信スレッド
-        std::vector<std::thread> dec_thres;  // フレーム展開スレッド
+        _asio::io_service& ios;              // the I/O event loop
+        _ip::tcp::socket sock;               // the TCP socket
+        _asio::streambuf stream_buf;         // the streambuffer
+        std::string ip_addr;                 // the IP address of the head node
+        std::string fb_dev;                  // the device file of fbdev
+        std::thread recv_thre;               // the receiver thread
+        std::vector<std::thread> dec_thres;  // the decoder threads
         
-        const init_params_t parseInitMsg(const std::string& msg);  // 初期化メッセージをパース
-        void onConnect(const err_t& err);                          // ヘッドノード接続時のコールバック
-        void onRecvInit(const err_t& err, size_t t_bytes);         // 初期化メッセージ受信時のコールバック
-        void runFrameReceiver(const int stream_port,               // 別スレッドでフレーム受信器を起動
+        const init_params_t parseInitMsg(const std::string& msg);  // parse the initial message
+        void onConnect(const err_t& err);                          // the callback when connecting to the head node
+        void onRecvInitMsg(const err_t& err, size_t t_bytes);      // the callback when receving the initial message
+        void runFrameReceiver(const int stream_port,               // launch the frame receiver
                               const tranbuf_ptr_t recv_buf);
-        void runFrameDecoder(const tranbuf_ptr_t recv_buf,         // 別スレッドでフレーム展開器を起動
+        void runFrameDecoder(const tranbuf_ptr_t recv_buf,         // launch the frame decoder
                              const viewbuf_ptr_t view_buf);
     
     public:
-        DisplayClient(_asio::io_service& ios, ConfigParser& parser);  // コンストラクタ
+        DisplayClient(_asio::io_service& ios, ConfigParser& parser);  // constructor
 };
 
 #endif  /* DISPLAY_CLIENT_HPP */

@@ -1,7 +1,7 @@
-/*************************
-*    frame_viewer.hpp    *
-*    (フレーム表示器)    *
-*************************/
+/*********************************
+*        frame_viewer.hpp        *
+*  (the viewer of video frames)  *
+*********************************/
 
 #ifndef FRAME_VIEWER_HPP
 #define FRAME_VIEWER_HPP
@@ -19,47 +19,39 @@ extern "C"{
     #include <linux/kd.h>
 }
 
-const int DEVICE_OPEN_FAILED = -1;                         // デバイスファイルオープン失敗時の返り値
-const int BITS_PER_PIXEL = 24;                             // 1ピクセルあたりのビット数
-constexpr double MAX_FPS = 60.0;                           // 最大フレームレート
-constexpr int DISPLAY_INTERVAL = (int)(1000.0 / MAX_FPS);  // フレーム表示後の待機時間
+const int DEVICE_OPEN_FAILED = -1;                         // the return value in failing the device file
+const int BITS_PER_PIXEL = 24;                             // the number of bits per pixel
+constexpr double MAX_FPS = 60.0;                           // the maximum frame rate
+constexpr int DISPLAY_INTERVAL = (int)(1000.0 / MAX_FPS);  // the interval after displaying a frame
 
-/* フレーム表示器 */
+/* the viewer of video frames */
 class FrameViewer{
     private:
-        _asio::io_service& ios;           // I/Oイベントループ
-        _ip::tcp::socket& sock;           // TCPソケット
-        _asio::streambuf stream_buf;      // ストリームバッファ
-        const viewbuf_ptr_t view_buf;     // 表示フレームバッファ
-        int fb;                           // フレームバッファのデバイスファイル
-        int tty;                          // デバイス端末のデバイスファイル
-        int fb_size;                      // フレームバッファのサイズ
-        unsigned char *fb_ptr;            // フレームバッファのアドレス
-        SyncMessageGenerator& generator;  // 同期メッセージ生成器
-        const unsigned char *next_frame;  // 次番フレーム
-        hr_clock_t pre_t;                 // 処理開始時刻
-        hr_clock_t post_t;                // 処理終了時刻
-        #ifdef DEBUG
-        hr_clock_t pre_view_t;            // 表示1周期の開始時刻
-        int frame_count = 0;              // 表示済みフレーム数
-        int total_sec = 0;                // 経過秒数
-        double elapsed = 0.0;             // 経過時間
-        #endif
+        _asio::io_service& ios;           // the I/O event loop
+        _ip::tcp::socket& sock;           // the TCP socket
+        _asio::streambuf stream_buf;      // the streambuffer
+        const viewbuf_ptr_t view_buf;     // the view framebuffer
+        int fb;                           // the device file of fbdev
+        int fb_size;                      // the size of the framebuffer of fbdev
+        unsigned char *fb_ptr;            // the address of the framebuffer of fbdev
+        SyncMessageGenerator& generator;  // the sync message generator
+        const unsigned char *next_frame;  // a next frame
+        hr_clock_t pre_t;                 // the starting time of a tuning term
+        hr_clock_t post_t;                // the end time of a tuning term
         
-        const bool openFramebuffer(const std::string& fb_dev,  // フレームバッファをオープン
+        const bool openFramebuffer(const std::string& fb_dev,  // open the framebuffer of fbdev
                                    const int width, const int height);
-        void hideCursor(const std::string& tty_dev);           // カーソルを非表示化
-        void displayFrame();                                   // フレームを表示
-        void sendSync();                                       // 同期メッセージを受信
-        void onSendSync(const err_t& err, size_t t_bytes);     // 同期メッセージ送信時のコールバック
-        void onRecvSync(const err_t& err, size_t t_bytes);     // 同期メッセージ受信時のコールバック
+        void displayFrame();                                   // display a frame
+        void sendSync();                                       // send a sync message
+        void onSendSync(const err_t& err, size_t t_bytes);     // the callback when sending a sync message
+        void onRecvSync(const err_t& err, size_t t_bytes);     // the callback when receving a sync message
     
     public:
-        FrameViewer(_asio::io_service& ios, _ip::tcp::socket& sock,  // コンストラクタ
+        FrameViewer(_asio::io_service& ios, _ip::tcp::socket& sock,  // constructor
                     const viewbuf_ptr_t view_buf, const std::string& fb_dev,
                     const int width, const int height, const std::string& tty_dev,
                     SyncMessageGenerator& generator);
-        ~FrameViewer();  // デストラクタ
+        ~FrameViewer();  // destructor
 };
 
 #endif  /* FRAME_VIEWER_HPP */

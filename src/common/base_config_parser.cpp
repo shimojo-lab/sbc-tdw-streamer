@@ -1,13 +1,12 @@
-/*************************************
-*       base_config_parser.cpp       *
-*  (設定ファイルパーサの基底クラス)  *
-*************************************/
+/**************************************
+*       base_config_parser.cpp        *
+*  (a super class of config parsers)  *
+**************************************/
 
 #include "base_config_parser.hpp"
 
-/* コンストラクタ */
+/* constructor (parse a json file) */
 BaseConfigParser::BaseConfigParser(const std::string& conf_file){
-    // 設定ファイルをパース
     try{
         _pt::read_json(conf_file, this->conf);
     }catch(...){
@@ -16,18 +15,18 @@ BaseConfigParser::BaseConfigParser(const std::string& conf_file){
     }
 }
 
-/* パラメータを設定 */
+/* read the parameters in the config file */
 const bool BaseConfigParser::readParams(const _pt::ptree& conf){
     return true;
 }
 
-/* パラメータを取得 (String型用) */
+/* get a string parameter */
 const std::string BaseConfigParser::getStrParam(const std::string& key){
     const std::string param = this->conf.get_optional<std::string>(key).get();
     return param;
 }
 
-/* パラメータを取得 (int型用) */
+/* get a int parameter */
 const int BaseConfigParser::getIntParam(const std::string& key){
     const int param = this->conf.get_optional<int>(key).get();
     return param;

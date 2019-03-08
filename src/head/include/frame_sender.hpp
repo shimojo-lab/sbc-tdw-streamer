@@ -1,7 +1,7 @@
-/*************************
-*    frame_sender.hpp    *
-*    (フレーム送信器)    *
-*************************/
+/********************************
+*       frame_sender.hpp        *
+*  (the sender of JPEG frames)  *
+********************************/
 
 #ifndef FRAME_SENDER_HPP
 #define FRAME_SENDER_HPP
@@ -12,27 +12,27 @@
 #include <vector>
 #include <atomic>
 
-/* フレーム送信器 */
+/* the sender of JPEG frames */
 class FrameSender{
     private:
-        _asio::io_service& ios;                 // I/Oイベントループ
-        sock_ptr_t sock;                        // TCPソケット
-        _ip::tcp::acceptor acc;                 // TCPアクセプタ
-        std::vector<sock_ptr_t> socks;          // 接続済TCPソケット
-        const int display_num;                  // 全ディスプレイ数
-        int fb_id = 0;                          // 表示フレームバッファのインデックス
-        const int viewbuf_num;                  // 表示フレームバッファの領域数
-        std::atomic_int send_count;             // 送信完了数
-        std::vector<std::string> send_msgs;     // 送信メッセージ
-        std::vector<tranbuf_ptr_t>& send_bufs;  // 送信フレームバッファ
+        _asio::io_service& ios;                 // the I/O event loop
+        sock_ptr_t sock;                        // the TCP socket
+        _ip::tcp::acceptor acc;                 // the TCP acceptor
+        std::vector<sock_ptr_t> socks;          // the in-use TCP sockets
+        const int display_num;                  // the number of the displays
+        int fb_id = 0;                          // the index in the view framebuffer
+        const int viewbuf_num;                  // the number of domains in the view framebuffer
+        std::atomic_int send_count;             // the number of sended frames
+        std::vector<std::string> send_msgs;     // the send message
+        std::vector<tranbuf_ptr_t>& send_bufs;  // the send framebuffer
         
-        void run();                                          // 送信処理を開始
-        void sendFrame();                                    // フレームを送信
-        void onConnect(const err_t& err);                    // ディスプレイノード接続時のコールバック
-        void onSendFrame(const err_t& err, size_t t_bytes);  // フレーム送信時のコールバック
+        void run();                                          // start waiting for TCP connection
+        void sendFrame();                                    // send a JPEG frame
+        void onConnect(const err_t& err);                    // the callback when connected by the display node
+        void onSendFrame(const err_t& err, size_t t_bytes);  // the callback when sending a frame
     
     public:
-        FrameSender(_asio::io_service& ios, const int port,  // コンストラクタ
+        FrameSender(_asio::io_service& ios, const int port,  // constructor
                     const int display_num, std::vector<tranbuf_ptr_t>& send_bufs,
                     const int viewbuf_num);
 };

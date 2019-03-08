@@ -1,7 +1,7 @@
-/*******************************
-*        sync_utils.hpp        *
-*  (同期通信用ヘッダファイル)  *
-*******************************/
+/******************************************
+*             sync_utils.hpp              *
+*  (the utilities to pass sync messages)  *
+******************************************/
 
 #ifndef SYNC_UTILS_HPP
 #define SYNC_UTILS_HPP
@@ -15,15 +15,15 @@ namespace _chrono = std::chrono;
 using jpeg_params_t = std::vector<std::atomic_int>;
 using hr_clock_t = _chrono::high_resolution_clock::time_point;
 
-const int VIEWBUF_EXTRA_NUM = 3;      // 表示フレームバッファの余剰領域数
-const int JPEG_NO_CHANGE = 0;         // 変更パラメータ未指定フラグ
-const int JPEG_QUALITY_CHANGE = 1;    // 品質係数変更フラグ
-const int JPEG_YUV_CHANGE = 2;        // YUVサンプル比変更フラグ
-const int JPEG_PARAM_KEEP = 0;        // JPEGパラメータ維持フラグ
-const int JPEG_PARAM_UP = 1;          // JPEGパラメータ向上フラグ
-const int JPEG_PARAM_DOWN = 2;        // JPEGパラメータ低下フラグ
-const int JPEG_QUALITY_MIN = 1;       // 品質係数の最小値
-const int JPEG_QUALITY_MAX = 100;     // 品質係数の最大値
+const int VIEWBUF_EXTRA_NUM = 3;    // the number of extra domains in the view buffer
+const int JPEG_NO_CHANGE = 0;       // the flag not to change the JPEG parameters
+const int JPEG_QUALITY_CHANGE = 1;  // the flag to change the quality factor
+const int JPEG_YCbCr_CHANGE = 2;    // the flag to change the YCbCr format
+const int JPEG_PARAM_KEEP = 0;      // the flag to keep the JPEG parameter
+const int JPEG_PARAM_UP = 1;        // the flag to increase the JPEG parameter
+const int JPEG_PARAM_DOWN = 2;      // the flag to decrease the JPEG parameter
+const int JPEG_QUALITY_MIN = 1;     // the minimum value of the quality factor
+const int JPEG_QUALITY_MAX = 100;   // the maximum value of the quality factor
 
 #endif  /* SYNC_UTILS_HPP */
 

@@ -1,21 +1,20 @@
-/*****************************
-*     config_parser.cpp      *
-*   (設定ファイルのパーサ)   *
-*****************************/
+/**************************************
+*          config_parser.cpp          *
+*  (The parser of display_conf.json)  *
+**************************************/
 
 #include "config_parser.hpp"
 
-/* コンストラクタ */
+/* constructor (load display_conf.json) */
 ConfigParser::ConfigParser(const std::string& conf_file):
     BaseConfigParser(conf_file)
-{   
-    // パラメータを読み込み
+{
     if(!this->readParams(this->conf)){
         std::exit(EXIT_FAILURE);
     }
 }
 
-/* パラメータを読み込み */
+/* read the parameters in JSON */
 const bool ConfigParser::readParams(const _pt::ptree& conf){
     try{
         this->ip = this->getStrParam("head_node.ip");
@@ -29,7 +28,7 @@ const bool ConfigParser::readParams(const _pt::ptree& conf){
     return true;
 }
 
-/* ディスプレイクライアントへ値渡し */
+/* pass the parameters to the display client */
 const dc_params_t ConfigParser::getDisplayClientParams(){
     const std::string ip = this->ip;
     const int port = this->port;

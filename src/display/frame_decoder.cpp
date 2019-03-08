@@ -1,17 +1,17 @@
-/**************************
-*    frame_decoder.cpp    *
-*     (フレーム展開器)    *
-**************************/
+/****************************************
+*           frame_decoder.cpp           *
+*  (the JPEG decoder for video frames)  *
+****************************************/
 
 #include "frame_decoder.hpp"
 
-/* コンストラクタ */
+/* constructor */
 FrameDecoder::FrameDecoder(const tranbuf_ptr_t recv_buf, const viewbuf_ptr_t view_buf):
     handle(tjInitDecompress()),
     recv_buf(recv_buf),
     view_buf(view_buf)
 {
-    // JPEGデコーダを起動
+    // launch the TruboJPEG decoder
     if(this->handle == NULL){
         const std::string err_msg(tjGetErrorStr());
         _ml::caution("Failed to init JPEG decoder", err_msg);
@@ -19,14 +19,14 @@ FrameDecoder::FrameDecoder(const tranbuf_ptr_t recv_buf, const viewbuf_ptr_t vie
     }
 }
 
-/* デストラクタ */
+/* destructor */
 FrameDecoder::~FrameDecoder(){
     tjDestroy(this->handle);
 }
 
-/* フレームを展開 */
+/* decode a JPEG frame */
 void FrameDecoder::decode(unsigned char *jpeg_frame, const unsigned long jpeg_size, const int id){
-    // JPEGのヘッダを読み込み
+    // read the header of the frame
     int frame_w, frame_h, sampling_type;
     const int tj_stat1 = tjDecompressHeader2(this->handle,
                                              jpeg_frame,
@@ -41,7 +41,7 @@ void FrameDecoder::decode(unsigned char *jpeg_frame, const unsigned long jpeg_si
         return;
     }
     
-    // フレームを複号
+    // decode the frame
     const int tj_stat2 = tjDecompress2(this->handle,
                                        jpeg_frame,
                                        jpeg_size,
@@ -59,31 +59,17 @@ void FrameDecoder::decode(unsigned char *jpeg_frame, const unsigned long jpeg_si
     }
 }
 
-/* フレーム展開を開始 */
+/* start decoding JPEG frames */
 void FrameDecoder::run(){
     while(true){
-        #ifdef DEBUG
-        // 時間計測を開始
-        const hr_clock_t pre_t = _chrono::high_resolution_clock::now();
-        #endif
-        
-        // フレームを取り出し
         std::string jpeg_str = this->recv_buf->pop();
         const int id = std::stoi(jpeg_str.substr(FRAME_ID_INDEX, FRAME_ID_LEN));
         jpeg_str.erase(FRAME_ID_INDEX, FRAME_ID_LEN);
         
-        // フレームを展開
         const unsigned long jpeg_size = (unsigned long)jpeg_str.length();
         std::vector<unsigned char> jpeg_frame(jpeg_str.c_str(), jpeg_str.c_str()+jpeg_size);
         this->decode(jpeg_frame.data(), jpeg_size, id);
         this->view_buf->activatePage(id);
-        
-        #ifdef DEBUG
-        // 展開時間を表示
-        const hr_clock_t post_t = _chrono::high_resolution_clock::now();
-        const double elapsed = _chrono::duration_cast<_chrono::milliseconds>(post_t-pre_t).count();
-        _ml::debug("decode:" std::to_string(elapsed) + "msec");
-        #endif
     }
 }
 

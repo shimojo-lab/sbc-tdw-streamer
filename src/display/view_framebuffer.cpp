@@ -1,17 +1,16 @@
-/*****************************
-*    view_framebuffer.cpp    *
-*   (表示フレームバッファ)   *
-*****************************/
+/****************************************
+*          view_framebuffer.cpp         *
+*  (the framebuffer to put raw frames)  *
+****************************************/
 
 #include "view_framebuffer.hpp"
 
-/* コンストラクタ */
+/* constructor (allocate the buffer) */
 ViewFramebuffer::ViewFramebuffer(const int width, const int height, const int page_num):
     page_num(page_num),
     page_ptrs(page_num),
     page_states(page_num)
 {
-    // バッファ領域を確保
     const int frame_size = width * height * COLOR_CHANNEL_NUM;
     for(int i=0; i<this->page_num; ++i){
         this->page_ptrs[i] = new unsigned char[frame_size];
@@ -19,20 +18,20 @@ ViewFramebuffer::ViewFramebuffer(const int width, const int height, const int pa
     }
 }
 
-/* デストラクタ */
+/* destructor (release the buffer) */
 ViewFramebuffer::~ViewFramebuffer(){
     for(int i=0; i<this->page_num; ++i){
         delete[] this->page_ptrs[i];
     }
 }
 
-/* 描画するバッファ領域を取得 */
+/* get a domain to put a new frame */
 unsigned char *ViewFramebuffer::getDrawPage(const int id){
     while(this->page_states[id].load(std::memory_order_acquire));
     return this->page_ptrs[id];
 }
 
-/* 表示するバッファ領域を取得 */
+/* get a domain on which the next frame is put */
 const unsigned char *ViewFramebuffer::getDisplayPage(){
     while(!this->page_states[this->cur_page].load(std::memory_order_acquire)){
         std::this_thread::sleep_for(_chrono::nanoseconds(VIEWBUF_SPINLOCK_INTERVAL));
@@ -40,17 +39,17 @@ const unsigned char *ViewFramebuffer::getDisplayPage(){
     return this->page_ptrs[this->cur_page];
 }
 
-/* 表示するバッファ領域の番号を取得 */
+/* get the value of cur_page */
 const int ViewFramebuffer::getCurrentPage(){
     return this->cur_page;
 }
 
-/* バッファ領域の表示を有効化 */
+/* make a domain available to the frame viewer */
 void ViewFramebuffer::activatePage(const int id){
     this->page_states[id].store(true, std::memory_order_release);
 }
 
-/* バッファ領域の表示を無効化 */
+/* make a domain unavailable to the frame viewer */
 void ViewFramebuffer::deactivatePage(){
     this->page_states[this->cur_page].store(false, std::memory_order_release);
     this->cur_page = (this->cur_page+1) % this->page_num;

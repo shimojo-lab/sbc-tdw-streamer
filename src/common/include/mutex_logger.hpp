@@ -1,7 +1,7 @@
-/*****************************
-*      mutex_logger.hpp      *
-*    (排他制御付きロガー)    *
-*****************************/
+/***********************************
+*         mutex_logger.hpp         *
+*  (the logging tools with mutex)  *
+***********************************/
 
 #ifndef MUTEX_LOGGER_HPP
 #define MUTEX_LOGGER_HPP
@@ -10,21 +10,21 @@
 #include <string>
 #include <mutex>
 
-const std::string GREEN("\033[0;32m");   // 緑文字出力
-const std::string YELLOW("\033[0;33m");  // 黄文字出力
-const std::string RED("\033[0;31m");     // 赤文字出力
-const std::string CYAN("\033[0;36m");    // シアン文字出力
-const std::string RESET("\033[0m");      // 文字色リセット
+const std::string GREEN("\033[0;32m");   // a declaration to use green
+const std::string YELLOW("\033[0;33m");  // a declaration to use yellow
+const std::string RED("\033[0;31m");     // a declaration to use red
+const std::string CYAN("\033[0;36m");    // a declaration to use cyan
+const std::string RESET("\033[0m");      // a declaration to reset color
 
-/* 排他制御付きロガー */
+/* the logging tools with mutex */
 namespace mutex_logger{
-    static std::mutex lock;                                          // 排他制御用のロック
-    void notice(const std::string& msg);                             // 通知メッセージを表示
-    void warn(const std::string& msg, const std::string& suppl);     // 警告メッセージを表示
-    void caution(const std::string& msg, const std::string& suppl);  // エラーメッセージを表示
-    void debug(const std::string& msg);                              // String型変数を表示
-    void debug(const int num);                                       // int型変数を表示
-    void debug(const double num);                                    // double型変数を表示
+    static std::mutex lock;                                          // the mutex lock
+    void notice(const std::string& msg);                             // print a notice
+    void warn(const std::string& msg, const std::string& suppl);     // print a warning
+    void caution(const std::string& msg, const std::string& suppl);  // print a caution
+    void debug(const std::string& var);                              // print a string variable
+    void debug(const int var);                                       // print a int variable
+    void debug(const double var);                                    // print a double variable
 }
 
 namespace _ml = mutex_logger;

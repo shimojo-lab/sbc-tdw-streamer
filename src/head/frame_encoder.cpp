@@ -1,36 +1,36 @@
-/**************************
-*    frame_encoder.cpp    *
-*    (フレーム符号化器)   *
-**************************/
+/****************************************
+*           frame_encoder.cpp           *
+*  (the JPEG encoder for video frames)  *
+****************************************/
 
 #include "frame_encoder.hpp"
 
-/* コンストラクタ */
+/* constructor */
 FrameEncoder::FrameEncoder(const std::string src, const int column, const int row,
                            const int bezel_w, const int bezel_h, const int width, const int height,
-                           jpeg_params_t& yuv_format_list, jpeg_params_t& quality_list,
+                           jpeg_params_t& ycbcr_format_list, jpeg_params_t& quality_list,
                            std::vector<tranbuf_ptr_t>& send_bufs):
     handle(tjInitCompress()),
     display_num(column*row),
-    yuv_format_list(yuv_format_list),
+    ycbcr_format_list(ycbr_format_list),
     quality_list(quality_list),
     send_bufs(send_bufs)
 {
-    // JPEGエンコーダを初期化
+    // initialize the TurboJPEG encoder
     if(this->handle == NULL){
         const std::string err_msg(tjGetErrorStr());
         _ml::caution("Failed to init JPEG encoder", err_msg);
         std::exit(EXIT_FAILURE);
     }
     
-    // 表示する動画・画像を読込み
+    // load the video
     this->video = cv::VideoCapture(src.c_str());
     if(!this->video.isOpened()){
         _ml::caution("Failed to open video", src);
         std::exit(EXIT_FAILURE);
     }
     
-    // リサイズ用パラメータを設定
+    // set the parameters
     cv::Mat video_frame;
     video >> video_frame;
     this->setResizeParams(
@@ -38,35 +38,34 @@ FrameEncoder::FrameEncoder(const std::string src, const int column, const int ro
     );
 }
 
-/* デストラクタ */
+/* destructor (destroy the TurboJPEG encoder)*/
 FrameEncoder::~FrameEncoder(){
-    // JPEGエンコーダを破棄
     tjDestroy(this->handle);
 }
 
-/* リサイズ用パラメータを設定 */
+/* set the parameters for resizing a frame */
 void FrameEncoder::setResizeParams(const int column, const int row, const int bezel_w,
                                    const int bezel_h, const int width, const int height,
                                    const int frame_w, const int frame_h){
-    // リサイズ後のフレームを背景を初期化
+    // initialize the background
     const int bg_w = width * column + bezel_w * 2 * (column - 1);
     const int bg_h = height * row + bezel_h * 2 * (row - 1);
     this->resized_frame = cv::Mat::zeros(cv::Size(bg_w, bg_h), CV_8UC3);
     
-    // リサイズ倍率を設定
+    // set the ratio
     const double x_ratio = (double)bg_w / (double)frame_w;
     const double y_ratio = (double)bg_h / (double)frame_h;
     this->ratio = x_ratio<y_ratio ? x_ratio : y_ratio;
     this->interpolation_type = this->ratio>=1 ? cv::INTER_LINEAR : cv::INTER_AREA;
     
-    // リサイズフレームのパディングを設定
+    // set the padding size
     const int resize_w = (int)((double)frame_w * this->ratio);
     const int resize_h = (int)((double)frame_h * this->ratio);
     const int paste_x = (int)((double)(bg_w - resize_w) / 2.0);
     const int paste_y = (int)((double)(bg_h - resize_h) / 2.0);
     this->roi = cv::Rect(paste_x, paste_y, resize_w, resize_h);
     
-    // ディスプレイノードの担当領域を設定
+    // set the area displayed by each display node
     this->regions = std::vector<cv::Rect>(this->display_num);
     this->raw_frames = std::vector<cv::Mat>(this->display_num);
     for(int j=0; j<row; ++j){
@@ -79,22 +78,22 @@ void FrameEncoder::setResizeParams(const int column, const int row, const int be
     }
 }
 
-/* フレームをリサイズ */
+/* resize a frame */
 void FrameEncoder::resize(cv::Mat& video_frame){
-    // アスペクト比を維持して拡大
+    // resize a video frame
     cv::resize(video_frame, video_frame, cv::Size(), this->ratio, this->ratio, this->interpolation_type);
     
-    // 背景と重ねてパディング
+    // put a resize frame on the background
     cv::Mat paste_area = this->resized_frame(this->roi);
     video_frame.copyTo(paste_area);
     
-    // ディスプレイノードの担当領域毎に分割
+    // divide a frame in accordance with the area list
     for(int i=0; i<this->display_num; ++i){
         this->resized_frame(this->regions[i]).copyTo(this->raw_frames[i]);
     }
 }
 
-/* フレームをJPEGで符号化 */
+/* encode a frame */
 void FrameEncoder::encode(const int id){
     unsigned char *jpeg_frame = NULL;
     unsigned long jpeg_size = 0;
@@ -106,7 +105,7 @@ void FrameEncoder::encode(const int id){
                                     TJPF_RGB,
                                     &jpeg_frame,
                                     &jpeg_size,
-                                    this->yuv_format_list[id].load(std::memory_order_acquire),
+                                    this->ycbcr_format_list[id].load(std::memory_order_acquire),
                                     this->quality_list[id].load(std::memory_order_acquire),
                                     TJFLAG_FASTDCT
     );
@@ -119,14 +118,12 @@ void FrameEncoder::encode(const int id){
     }
 }
 
-/* フレーム圧縮を開始 (動画表示用) */
+/* start encoding video frames */
 void FrameEncoder::run(){
     cv::Mat video_frame;
     while(true){
-        // フレームを1枚取り出し
         this->video >> video_frame;
         
-        // フレームをリサイズ
         try{
             this->resize(video_frame);
         }catch(...){
@@ -134,7 +131,6 @@ void FrameEncoder::run(){
             break;
         }
         
-        // フレームを圧縮
         for(int i=0; i<this->display_num; ++i){
             this->encode(i);
         }

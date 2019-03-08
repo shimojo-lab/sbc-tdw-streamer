@@ -1,11 +1,11 @@
-/*************************
-*    frame_sender.cpp    *
-*    (フレーム送信器)    *
-*************************/
+/********************************
+*       frame_sender.cpp        *
+*  (the sender of jpeg frames)  *
+********************************/
 
 #include "frame_sender.hpp"
 
-/* コンストラクタ */
+/* constructor */
 FrameSender::FrameSender(_asio::io_service& ios, const int port, const int display_num,
                          std::vector<tranbuf_ptr_t>& send_bufs, const int viewbuf_num):
     ios(ios),
@@ -16,15 +16,15 @@ FrameSender::FrameSender(_asio::io_service& ios, const int port, const int displ
     send_msgs(display_num),
     send_bufs(send_bufs)
 {
-    // パラメータを初期化
+    // prepare for TCP sockets
     this->sock = std::make_shared<_ip::tcp::socket>(ios);
     
-    // 送信処理を開始
+    // start waiting for TCP connection
     _ml::notice("Streaming video frames at :" + std::to_string(port));
     this->run();
 }
 
-/* 送信処理を開始 */
+/* start waiting for TCP connection from the display node */
 void FrameSender::run(){
     this->acc.async_accept(*this->sock,
                            boost::bind(&FrameSender::onConnect, this, _ph::error)
@@ -32,7 +32,7 @@ void FrameSender::run(){
     this->ios.run();
 }
 
-/* フレームを送信 */
+/* send a JPEG frame */
 void FrameSender::sendFrame(){
     for(int i=0; i<this->display_num; ++i){
         this->send_msgs[i] = std::to_string(this->fb_id) + this->send_bufs[i]->pop() + MSG_DELIMITER;
@@ -44,7 +44,7 @@ void FrameSender::sendFrame(){
     this->fb_id = (this->fb_id+1) % this->viewbuf_num;
 }
 
-/* ディスプレイノード接続時のコールバック */
+/* the callback when connected by the display node */
 void FrameSender::onConnect(const err_t& err){
     const std::string ip_addr = this->sock->remote_endpoint().address().to_string();
     if(err){
@@ -54,31 +54,31 @@ void FrameSender::onConnect(const err_t& err){
         this->send_count.fetch_add(1, std::memory_order_release);
     }
     
-    // 新規TCPソケットを用意
+    // prepare for a new TCP socket
     this->socks.push_back(this->sock);
     this->sock = std::make_shared<_ip::tcp::socket>(this->ios);
     
     if(this->send_count.load(std::memory_order_acquire) < this->display_num){
-        // 接続待機を再開
+        // restart waiting for TCP connection
         this->acc.async_accept(*this->sock,
                                boost::bind(&FrameSender::onConnect, this, _ph::error)
         );
     }else{
-        // フレーム送信を開始
+        // start JPEG frame streaming
         this->sock->close();
         this->send_count.store(0, std::memory_order_release);
         this->sendFrame();
     }
 }
 
-/* フレーム送信時のコールバック */
+/* the callback when sending a JPEG frame */
 void FrameSender::onSendFrame(const err_t& err, size_t t_bytes){
     if(err){
         _ml::caution("Failed to send frame", err.message());
         std::exit(EXIT_FAILURE);
     }
     
-    // 全送信が完了したら次番フレームを送信
+    // If all the current send processes are finished, start the next send processes
     this->send_count.fetch_add(1, std::memory_order_release);
     if(this->send_count.load(std::memory_order_acquire) == this->display_num){
         this->send_count.store(0, std::memory_order_release);

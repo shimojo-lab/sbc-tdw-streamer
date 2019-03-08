@@ -1,7 +1,7 @@
-/*****************************
-*     config_parser.hpp      *
-*   (設定ファイルのパーサ)   *
-*****************************/
+/***********************************
+*        config_parser.hpp         *
+*  (the parser of head_conf.json)  *
+***********************************/
 
 #ifndef CONFIG_PARSER_HPP
 #define CONFIG_PARSER_HPP
@@ -16,33 +16,33 @@ using fs_params_t = std::tuple<
     int, int, int, ip_list_t
 >;
 
-/* 設定ファイルのパーサ */
+/* the parser of head_conf.json */
 class ConfigParser : public BaseConfigParser{
     private:
-        std::string src;         // 再生動画のソース
-        int target_fps;          // 目標フレームレート
-        int column;              // ディスプレイの横の枚数
-        int row;                 // ディスプレイの縦の枚数
-        int bezel_w;             // 横のベゼル幅
-        int bezel_h;             // 縦のベゼル幅
-        int width;               // ディスプレイの横の画素数
-        int height;              // ディスプレイの縦の画素数
-        int fs_port;             // フロントエンドサーバ用ポート
-        int stream_port;         // フレーム送信用ポート
-        int sendbuf_num;         // 送信フレームバッファの領域数
-        int recvbuf_num;         // 受信フレームバッファの領域数
-        std::string yuv_format;  // YUVサンプル比の初期設定
-        int quality;             // 品質係数の初期値
-        int dec_thre_num;        // フレーム展開スレッド数
-        int tuning_term;         // JPEGパラメータのチューニング周期
-        ip_list_t ip_addrs;      // ディスプレイノードのIP
+        std::string src;           // the video source
+        int target_fps;            // the target frame rate
+        int column;                // the number of displays in a horizontal direction
+        int row;                   // the number of displays in a vertical direction
+        int bezel_w;               // the length of each bezel in a horizontal direction
+        int bezel_h;               // the height of each bezel in a vertical direction
+        int width;                 // the number of horizontal pixels in each display
+        int height;                // the numver of vertical pixels in each display
+        int fs_port;               // the port number for the frontend server
+        int stream_port;           // the port number for streaming JPEG frames
+        int sendbuf_num;           // the number of domains in the send framebuffer
+        int recvbuf_num;           // the number of domains in the receive framebuffer
+        std::string ycbcr_format;  // the initial value of the YCbCr format
+        int quality;               // the initial value of the quality factor
+        int dec_thre_num;          // the number of the decoder threads
+        int tuning_term;           // the tuning term of the JPEG parameters
+        ip_list_t ip_addrs;        // the IP addresses of the display nodes
         
-        const bool readParams(const _pt::ptree& conf) override;  // パラメータを読み込み
+        const bool readParams(const _pt::ptree& conf) override;  // read the parameters
     
     public:
-        ConfigParser(const std::string& filename);    // コンストラクタ
-        const int getFrontendServerPort();            // フロントエンドサーバのポート番号を取得
-        const fs_params_t getFrontendServerParams();  // フロントエンドサーバへ値渡し
+        ConfigParser(const std::string& filename);    // constructor
+        const int getFrontendServerPort();            // get the port number for the frontend server
+        const fs_params_t getFrontendServerParams();  // pass the parameters to the frontend server
 };
 
 #endif  /* CONFIG_PARSER_HPP */

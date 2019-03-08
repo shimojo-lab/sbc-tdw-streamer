@@ -1,13 +1,13 @@
-/*******************************
-*           main.cpp           *
-*  (ヘッドノード用プログラム)  *
-*******************************/
+/************************************
+*              main.cpp             *
+*  (the program for the head node)  *
+************************************/
 
 #include "main.hpp"
 
-/* Main関数 */
+/* the main function */
 int main(int argc, char *argv[]){
-    // 設定ファイルをパース
+    // parse the head_conf.json
     std::string conf_file;
     if(argc != ARGUMENT_NUM){
         _ml::caution("Number of arguments is invalid", "Usage: head_server <config file>");
@@ -15,7 +15,7 @@ int main(int argc, char *argv[]){
     }
     ConfigParser parser(argv[ARGUMENT_INDEX]);
     
-    // フロントエンドサーバを起動
+    // launch the frontend server
     _asio::io_service ios;
     FrontendServer server(ios, parser, parser.getFrontendServerPort());
     ios.run();

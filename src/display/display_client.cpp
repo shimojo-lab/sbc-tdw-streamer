@@ -1,26 +1,26 @@
-/*******************************
-*      display_client.cpp      *
-*  (ディスプレイクライアント)  *
-*******************************/
+/***************************************
+*          display_client.cpp          *
+*  (the class for the display client)  *
+***************************************/
 
 #include "display_client.hpp"
 
-/* コンストラクタ */
+/* constructor */
 DisplayClient::DisplayClient(_asio::io_service& ios, ConfigParser& parser):
     ios(ios),
     sock(ios)
 {
-    // パラメータを設定
+    // set the parameters
     int fs_port;
     std::tie(this->ip_addr, fs_port, this->fb_dev, this->tty_dev) = parser.getDisplayClientParams();
     
-    // ヘッドノードに接続
+    // connect to the head node
     this->sock.async_connect(_ip::tcp::endpoint(_ip::address::from_string(this->ip_addr), fs_port),
                              boost::bind(&DisplayClient::onConnect, this, _ph::error)
     );
 }
 
-/* 初期化メッセージをパース */
+/* parse the initial message */
 const init_params_t DisplayClient::parseInitMsg(const std::string& msg){
     JsonHandler init_params;
     init_params.deserialize(msg);
@@ -38,7 +38,7 @@ const init_params_t DisplayClient::parseInitMsg(const std::string& msg){
     );
 }
 
-/* ヘッドノード接続時のコールバック */
+/* the callback when connecting to the head node */
 void DisplayClient::onConnect(const err_t& err){
     if(err){
         _ml::caution("Could not connect to head node", err.message());
@@ -46,23 +46,22 @@ void DisplayClient::onConnect(const err_t& err){
     }
     _ml::notice("Connected to head node");
     
-    // 初期化メッセージを受信
     _asio::async_read_until(this->sock,
                             this->stream_buf,
                             MSG_DELIMITER,
-                            boost::bind(&DisplayClient::onRecvInit, this, _ph::error, _ph::bytes_transferred)
+                            boost::bind(&DisplayClient::onRecvInitMsg, this, _ph::error, _ph::bytes_transferred)
     );
 }
 
-/* 初期化メッセージ受信時のコールバック */
-void DisplayClient::onRecvInit(const err_t& err, size_t t_bytes){
+/* the callback when receiving the initial message */
+void DisplayClient::onRecvInitMsg(const err_t& err, size_t t_bytes){
     if(err){
         _ml::caution("Could not receive init message", err.message());
         return;
     }
     _ml::notice("Received init message from head node");
     
-    // 初期化メッセージをパース
+    // parse the initial message
     const auto data = this->stream_buf.data();
     std::string recv_msg(_asio::buffers_begin(data), _asio::buffers_end(data));
     recv_msg.erase(recv_msg.length()-MSG_DELIMITER_LEN);
@@ -71,7 +70,7 @@ void DisplayClient::onRecvInit(const err_t& err, size_t t_bytes){
         width, height, stream_port, recvbuf_num, dec_thre_num, target_fps, tuning_term, yuv_format, quality
     ) = this->parseInitMsg(recv_msg);
     
-    // 別スレッドでフレーム受信器を起動
+    // launch the receiver thread
     const tranbuf_ptr_t recv_buf = std::make_shared<TransceiveFramebuffer>(recvbuf_num);
     this->recv_thre = std::thread(std::bind(&DisplayClient::runFrameReceiver,
                                             this,
@@ -79,7 +78,7 @@ void DisplayClient::onRecvInit(const err_t& err, size_t t_bytes){
                                             recv_buf)
     );
     
-    // 別スレッドでフレーム展開器を起動
+    // launch the decoder threads
     const viewbuf_ptr_t view_buf = std::make_shared<ViewFramebuffer>(width, height, dec_thre_num+VIEWBUF_EXTRA_NUM);
     for(int i=0; i<dec_thre_num; ++i){
         this->dec_thres.push_back(
@@ -90,7 +89,7 @@ void DisplayClient::onRecvInit(const err_t& err, size_t t_bytes){
         );
     }
     
-    // 同スレッドでフレーム表示器を起動
+    // launch the frame viewer in this thread
     SyncMessageGenerator generator(target_fps, tuning_term, recv_buf, yuv_format, quality);
     FrameViewer viewer(this->ios,
                        this->sock,
@@ -103,13 +102,13 @@ void DisplayClient::onRecvInit(const err_t& err, size_t t_bytes){
     );
 }
 
-/* 別スレッドでフレーム受信器を起動 */
+/* launch the frame receiver */
 void DisplayClient::runFrameReceiver(const int stream_port, const tranbuf_ptr_t recv_buf){
     _asio::io_service ios;
     FrameReceiver receiver(ios, this->ip_addr, stream_port, recv_buf);
 }
 
-/* 別スレッドでフレーム展開器を起動 */
+/* launch the frame decoder */
 void DisplayClient::runFrameDecoder(const tranbuf_ptr_t recv_buf, const viewbuf_ptr_t view_buf){
     FrameDecoder decoder(recv_buf, view_buf);
     decoder.run();

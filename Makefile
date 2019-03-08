@@ -1,7 +1,4 @@
-##################################
-#            Makefile            #
-#   (sbc-tdw-streamerビルド用)   #
-##################################
+# Makefile
 
 CXX = g++
 CXXFLAGS = -Wall -std=c++11 -O3 -mtune=native -march=native
@@ -17,19 +14,15 @@ HEAD_LDFLAGS = -lboost_system -lboost_thread -lpthread -lturbojpeg \
 DISP_LDFLAGS = -lboost_system -lboost_thread -lpthread -lturbojpeg \
                -L/opt/libjpeg-turbo/lib32
 
-# 全てビルド
-.PHONY: all
-all: build_common build_head build_display
-
-# ヘッドノードでのビルドとテスト
+# build the program for the head node
 .PHONY: head
-head: build_common build_head test_head
+head: build_common build_head
 
-# ディスプレイノードでのビルドとテスト
+# build the program for the display node
 .PHONY: display
-display: build_common build_display test_display
+display: build_common build_display
 
-# 共通モジュールをビルド
+# build the common modules
 .PHONY: build_common
 build_common: $(COMN)/mutex_logger.o $(COMN)/json_handler.o $(COMN)/base_config_parser.o \
 			  $(COMN)/transceive_framebuffer.o
@@ -46,7 +39,7 @@ $(COMN)/base_config_parser.o: $(COMN)/base_config_parser.cpp
 $(COMN)/transceive_framebuffer.o: $(COMN)/transceive_framebuffer.cpp
 	$(CXX) $(CXXFLAGS) -I$(COMN)/include -c -o $@ $<
 
-# ヘッドノード用プログラムをビルド
+# build the program for the head node
 .PHONY: build_head
 build_head: $(COMN)/mutex_logger.o $(COMN)/base_config_parser.o $(COMN)/json_handler.o \
             $(COMN)/transceive_framebuffer.o $(HEAD)/config_parser.o $(HEAD)/frame_encoder.o \
@@ -71,7 +64,7 @@ $(HEAD)/frontend_server.o: $(HEAD)/frontend_server.cpp
 $(HEAD)/main.o: $(HEAD)/main.cpp
 	$(CXX) $(CXXFLAGS) -I$(HEAD)/include -I$(COMN)/include -I$(JPEG_HDR) -c -o $@ $<
 
-# ディスプレイノード用プログラムをビルド
+# build the program for the display node
 .PHONY: build_display
 build_display: $(COMN)/mutex_logger.o $(COMN)/base_config_parser.o $(COMN)/json_handler.o \
                $(COMN)/transceive_framebuffer.o $(DISP)/config_parser.o $(DISP)/view_framebuffer.o \
@@ -103,17 +96,17 @@ $(DISP)/display_client.o: $(DISP)/display_client.cpp
 $(DISP)/main.o: $(DISP)/main.cpp
 	$(CXX) $(CXXFLAGS) -I$(DISP)/include -I$(COMN)/include -I$(JPEG_HDR) -c -o $@ $<
 
-# ヘッドノード用プログラムを起動
+# run the program for the head node
 .PHONY: test_head
 test_head:
 	$(BIN)/head_server $(CONF)/head_conf.json
 
-# ディスプレイノード用プログラムを起動
+# run the program for the display node
 .PHONY: test_display
 test_display:
 	$(BIN)/display_client $(CONF)/display_conf.json
 
-# バイナリファイルを全消去
+# remove the binaries
 .PHONY: clean
 clean:
 	rm -f $(BIN)/*

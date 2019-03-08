@@ -1,23 +1,21 @@
-/*****************************
-*     config_parser.cpp      *
-*   (設定ファイルのパーサ)   *
-*****************************/
+/***********************************
+*        config_parser.cpp         *
+*  (the parser of head_conf.json)  *
+***********************************/
 
 #include "config_parser.hpp"
 
-/* コンストラクタ */
+/* constrcutor (parse head_conf.json) */
 ConfigParser::ConfigParser(const std::string& conf_file):
     BaseConfigParser(conf_file)
 {
-    // パラメータを取得
     if(!this->readParams(this->conf)){
         std::exit(EXIT_FAILURE);
     }
 }
 
-/* パラメータを読み込み */
+/* read the parameters in JSON */
 const bool ConfigParser::readParams(const _pt::ptree& conf){
-    // 各種パラメータを取得
     std::string sampling_name;
     try{
         this->src = this->getStrParam("video.src");
@@ -41,7 +39,6 @@ const bool ConfigParser::readParams(const _pt::ptree& conf){
         return false;
     }
     
-    // ディスプレイノードのIPを取得
     for(const auto& elem : conf.get_child("display_node")){
         this->ip_addrs.push_back(elem.second.data());
     }
@@ -52,12 +49,12 @@ const bool ConfigParser::readParams(const _pt::ptree& conf){
     return true;
 }
 
-/* フロントエンドサーバのポート番号を取得 */
+/* get the port number for the frontend server */
 const int ConfigParser::getFrontendServerPort(){
     return this->fs_port;
 }
 
-/* フロントエンドサーバへ値渡し */
+/* pass the parameters to the frontend server */
 const fs_params_t ConfigParser::getFrontendServerParams(){
     const std::string src = this->src;
     const int target_fps = this->target_fps;

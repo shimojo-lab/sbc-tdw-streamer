@@ -1,53 +1,52 @@
-/*************************
-*    sync_manager.cpp    *
-*      (同期制御器)      *
-*************************/
+/*************************************************
+*               sync_manager.cpp                 *
+*  (the manager of the synchronization process)  *
+*************************************************/
 
 #include "sync_manager.hpp"
 
-/* コンストラクタ */
+/* constructor */
 SyncManager::SyncManager(_asio::io_service& ios, std::vector<sock_ptr_t>& socks,
-                         const int target_fps, jpeg_params_t& yuv_format_list,
+                         const int target_fps, jpeg_params_t& ycbcr_format_list,
                          jpeg_params_t& quality_list):
     ios(ios),
     socks(socks),
     display_num(socks.size()),
     target_fps(target_fps),
     sync_count(0),
-    yuv_format_list(yuv_format_list),
+    ycbcr_format_list(ycbcr_format_list),
     quality_list(quality_list)
 {
-    // パラメータを初期化
     for(int i=0; i<this->display_num; ++i){
         this->stream_bufs.push_back(std::make_shared<_asio::streambuf>());
     }
 }
 
-/* YUVサンプル比を変更 */
-const std::string SyncManager::tuneYUV(const int change_flag, const int id){
+/* change the YCbCr format */
+const std::string SyncManager::changeYCbCr(const int change_flag, const int id){
     std::string new_type = "";
     switch(change_flag){
     case JPEG_PARAM_UP:
-        switch(this->yuv_format_list[id].load(std::memory_order_acquire)){
+        switch(this->ycbcr_format_list[id].load(std::memory_order_acquire)){
         case TJSAMP_422:
-            this->yuv_format_list[id].store(TJSAMP_444, std::memory_order_release);
-            new_type = "yuv444";
+            this->ycbcr_format_list[id].store(TJSAMP_444, std::memory_order_release);
+            new_type = "4:4:4";
             break;
         case TJSAMP_420:
-            this->yuv_format_list[id].store(TJSAMP_422, std::memory_order_release);
-            new_type = "yuv422";
+            this->ycbcr_format_list[id].store(TJSAMP_422, std::memory_order_release);
+            new_type = "4:2:2";
             break;
         }
         break;
     case JPEG_PARAM_DOWN:
-        switch(this->yuv_format_list[id].load(std::memory_order_acquire)){
+        switch(this->ycbcr_format_list[id].load(std::memory_order_acquire)){
         case TJSAMP_444:
-            this->yuv_format_list[id].store(TJSAMP_422, std::memory_order_release);
-            new_type = "yuv422";
+            this->ycbcr_format_list[id].store(TJSAMP_422, std::memory_order_release);
+            new_type = "4:2:2";
             break;
         case TJSAMP_422:
-            this->yuv_format_list[id].store(TJSAMP_420, std::memory_order_release);
-            new_type = "yuv420";
+            this->ycbcr_format_list[id].store(TJSAMP_420, std::memory_order_release);
+            new_type = "4:2:0";
             break;
         }
         break;
@@ -55,8 +54,8 @@ const std::string SyncManager::tuneYUV(const int change_flag, const int id){
     return new_type;
 }
 
-/* 品質係数を変更 */
-const std::string SyncManager::tuneQuality(const int change_flag, const int id){
+/* change the quality factor */
+const std::string SyncManager::changeQuality(const int change_flag, const int id){
     int new_quality;
     switch(change_flag){
     case JPEG_PARAM_UP:
@@ -73,18 +72,18 @@ const std::string SyncManager::tuneQuality(const int change_flag, const int id){
     return std::to_string(new_quality);
 }
 
-/* 同期メッセージをパース */
+/* parse a sync message */
 void SyncManager::parseSyncMsg(const std::string& sync_msg, const int id){
     this->sync_params.deserialize(sync_msg);
     const int param_flag = this->sync_params.getIntParam("param");
     const int change_flag = this->sync_params.getIntParam("change");
     
-    if(param_flag == JPEG_YUV_CHANGE){  // YUVサンプル比を変更 
-        const std::string new_type = this->tuneYUV(change_flag, id);
+    if(param_flag == JPEG_YCbCr_CHANGE){
+        const std::string new_type = this->tuneYCbCr(change_flag, id);
         if(new_type != ""){
-            _ml::notice("Display"+std::to_string(id)+": "+"YUV format is changed to "+new_type);
+            _ml::notice("Display"+std::to_string(id)+": "+"YCbCr format is changed to "+new_type);
         }
-    }else if(param_flag == JPEG_QUALITY_CHANGE){  // 品質係数を変更
+    }else if(param_flag == JPEG_QUALITY_CHANGE){
         std::string new_quality = this->tuneQuality(change_flag, id);
         if(new_quality != ""){
             _ml::notice("Display"+std::to_string(id)+": "+"Quality is changed to "+new_quality);
@@ -92,49 +91,43 @@ void SyncManager::parseSyncMsg(const std::string& sync_msg, const int id){
     }
 }
 
-/* 同期メッセージ受信時のコールバック */
+/* the callback when receiving a sync message */
 void SyncManager::onRecvSync(const err_t& err, size_t t_bytes, const int id){
     if(err){
         _ml::caution("Failed to receive sync message", err.message());
         std::exit(EXIT_FAILURE);
     }
     
-    // 同期メッセージをパース
+    // parse a sync message
     const auto data = this->stream_bufs[id]->data();
     std::string sync_msg(_asio::buffers_begin(data), _asio::buffers_end(data));
     sync_msg.erase(sync_msg.length()-MSG_DELIMITER_LEN);
     this->parseSyncMsg(sync_msg, id);
     this->stream_bufs[id]->consume(t_bytes);
     
-    // 全ディスプレイノード間で同期
+    // synchronize all the display nodes
     this->sync_count.fetch_add(1, std::memory_order_release);
     if(this->sync_count.load(std::memory_order_acquire) == this->display_num){
-        // 1秒ごとにフレームレートを算出
+        // calculate the current frame rate
         ++this->frame_count;
         const hr_clock_t post_t = _chrono::high_resolution_clock::now();
-        this->elapsed_t += _chrono::duration_cast<_chrono::milliseconds>(post_t-this->pre_t).count();
-        if(this->elapsed_t > 1000.0){
-            ++this->total_sec;
-            _ml::notice(std::to_string(this->total_sec) + "s: " +
-                        std::to_string(this->frame_count) + "fps"
-            );
-            this->elapsed_t -= 1000.0;
-            this->frame_count = 0;
-        }
+        const double fps = 1.0 / _chrono::duration_cast<_chrono::milliseconds>(post_t-this->pre_t).count();
+        _ml::notice(std::to_string(this->frame_count) + ": " + std::to_string(fps) + "fps");
+        this->frame_count = 0;
         this->pre_t = post_t;
         this->sync_count.store(0, std::memory_order_release);
         this->sendSync();
     }
 }
 
-/* 同期メッセージ送信時のコールバック */
+/* the callback when sending a sync message */
 void SyncManager::onSendSync(const err_t& err, size_t t_bytes, const int id){
     if(err){
         _ml::caution("Failed to send sync message", err.message());
         std::exit(EXIT_FAILURE);
     }
     
-    // 同期メッセージ受信を再開
+    // restart receiving sync messages
     _asio::async_read_until(*this->socks[id],
                             *this->stream_bufs[id],
                             MSG_DELIMITER,
@@ -142,7 +135,7 @@ void SyncManager::onSendSync(const err_t& err, size_t t_bytes, const int id){
     );
 }
 
-/* 同期メッセージを送信 */
+/* send a sync message */
 void SyncManager::sendSync(){
     const std::string send_msg = "sync" + MSG_DELIMITER;
     for(int i=0; i<this->display_num; ++i){
@@ -153,7 +146,7 @@ void SyncManager::sendSync(){
     }
 }
 
-/* 同期メッセージの受信を開始 */
+/* start the synchronization process */
 void SyncManager::run(){
     this->pre_t = _chrono::high_resolution_clock::now();
     for(int i=0; i<this->display_num; ++i){

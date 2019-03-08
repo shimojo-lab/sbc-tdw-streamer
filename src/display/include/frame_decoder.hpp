@@ -1,7 +1,7 @@
-/**************************
-*    frame_decoder.hpp    *
-*     (フレーム展開器)    *
-**************************/
+/****************************************
+*           frame_decoder.hpp           *
+*  (the JPEG decoder for video frames)  *
+****************************************/
 
 #ifndef FRAME_DECODER_HPP
 #define FRAME_DECODER_HPP
@@ -16,24 +16,24 @@ extern "C"{
 #include "sync_utils.hpp"
 #endif
 
-const int JPEG_FAILED = -1;    // JPEG展開失敗時の返り値
-const int FRAME_ID_INDEX = 0;  // フレーム番号の開始位置
-const int FRAME_ID_LEN = 1;    // フレーム番号の長さ
+const int JPEG_FAILED = -1;    // the return value in failing decoding JPEG
+const int FRAME_ID_INDEX = 0;  // the initial frame ID
+const int FRAME_ID_LEN = 1;    // the length of the frame ID
 
-/* フレーム展開器 */
+/* the JPEG decoder for video frames */
 class FrameDecoder{
     private:
-        const tjhandle handle;         // JPEGデコーダ
-        const tranbuf_ptr_t recv_buf;  // 受信フレームバッファ
-        const viewbuf_ptr_t view_buf;  // 表示フレームバッファ
+        const tjhandle handle;         // the TruboJPEG decoder
+        const tranbuf_ptr_t recv_buf;  // the receive framebuffer
+        const viewbuf_ptr_t view_buf;  // the view framebuffer
         
-        void decode(unsigned char *jpeg_frame, const unsigned long jpeg_size,  // フレームを展開
+        void decode(unsigned char *jpeg_frame, const unsigned long jpeg_size,  // decode a frame
                     const int id);
     
     public:
-        FrameDecoder(const tranbuf_ptr_t recv_buf, const viewbuf_ptr_t view_buf);  // コンストラクタ
-        ~FrameDecoder();  // デストラクタ
-        void run();       // フレーム展開を開始
+        FrameDecoder(const tranbuf_ptr_t recv_buf, const viewbuf_ptr_t view_buf);  // constructor
+        ~FrameDecoder();  // destructor
+        void run();       // start decoding JPEG frames
 };
 
 #endif  /* FRAME_DECODER_HPP */
