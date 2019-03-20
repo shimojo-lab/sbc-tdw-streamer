@@ -21,7 +21,13 @@ A middleware to build a Tiled Display Wall (TDW) with Single Board Computers (SB
   - [Boost C++ Libraries](https://www.boost.org)
   - [FBDEV](https://www.x.org/archive/X11R6.8.0/doc/fbdev.4.html)
 2. Clone this repository, and move into the directory.
-3. Run `make display`.
+3. Stop the other background tasks on the display node. (for higher performance)
+4. Run `fbset -depth 24`. (to use RGB framebuffer)
+  - Select 'Legacy GL driver' in `raspi-config`.
+5. Run `make display`.
+  - For higher performance:
+    - Stop the background tasks (X server, Triggerhappy, ... etc.)
+    - Validate Overclock of the CPU
 
 ## How to run
 1. On the head node,

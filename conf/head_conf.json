@@ -1,6 +1,6 @@
 {
     "video": {
-        "src": "/home/user/video/movie.mp4",
+        "src": "/home/user/video.mp4",
         "framerate": 20,
         "framerate_jitter": 0.5
     },
@@ -29,10 +29,10 @@
         "tuning_term": 50
     },
     "display_node": [
-        "192.168.10.10",
         "192.168.10.11",
         "192.168.10.12",
-        "192.168.10.13"
+        "192.168.10.13",
+        "192.168.10.14"
     ]
 }
 

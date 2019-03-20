@@ -44,7 +44,7 @@ void FrameReceiver::onRecvFrame(const err_t& err, size_t t_bytes){
         _ml::caution("Could not receive frame", err.message());
     }else{
         const auto data = this->stream_buf.data();
-        std::string recv_msg(_asio::buffers_begin(data), _asio::buffers_end(data));
+        std::string recv_msg(_asio::buffers_begin(data), _asio::buffers_begin(data)+t_bytes);
         recv_msg.erase(recv_msg.length()-MSG_DELIMITER_LEN);
         this->recv_buf->push(recv_msg);
         this->stream_buf.consume(t_bytes);

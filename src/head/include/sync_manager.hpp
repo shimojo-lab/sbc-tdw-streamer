@@ -17,6 +17,8 @@ extern "C"{
 
 using streambuf_ptr_t = std::shared_ptr<_asio::streambuf>;
 
+const int FPS_INTERVAL = 100;  // the interval to display the current fps
+
 /* synchronization process manager */
 class SyncManager{
     private:

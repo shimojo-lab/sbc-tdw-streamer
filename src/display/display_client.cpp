@@ -64,7 +64,7 @@ void DisplayClient::onRecvInitMsg(const err_t& err, size_t t_bytes){
     
     // parse the initial message
     const auto data = this->stream_buf.data();
-    std::string recv_msg(_asio::buffers_begin(data), _asio::buffers_end(data));
+    std::string recv_msg(_asio::buffers_begin(data), _asio::buffers_begin(end));
     recv_msg.erase(recv_msg.length()-MSG_DELIMITER_LEN);
     int width, height, stream_port, recvbuf_num, dec_thre_num, target_fps, fps_jitter, tuning_term, ycbcr_format, quality;
     std::tie(

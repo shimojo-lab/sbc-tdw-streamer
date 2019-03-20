@@ -98,7 +98,7 @@ void SyncManager::onRecvSync(const err_t& err, size_t t_bytes, const int id){
     
     // parse a sync message
     const auto data = this->stream_bufs[id]->data();
-    std::string sync_msg(_asio::buffers_begin(data), _asio::buffers_end(data));
+    std::string sync_msg(_asio::buffers_begin(data), _asio::buffers_begin(data)+t_bytes);
     sync_msg.erase(sync_msg.length()-MSG_DELIMITER_LEN);
     this->parseSyncMsg(sync_msg, id);
     this->stream_bufs[id]->consume(t_bytes);
@@ -108,11 +108,12 @@ void SyncManager::onRecvSync(const err_t& err, size_t t_bytes, const int id){
     if(this->sync_count.load(std::memory_order_acquire) == this->display_num){
         // calculate the current frame rate
         ++this->frame_count;
-        const hr_clock_t post_t = _chrono::high_resolution_clock::now();
-        const double fps = 1.0 / _chrono::duration_cast<_chrono::milliseconds>(post_t-this->pre_t).count();
-        _ml::notice(std::to_string(this->frame_count) + ": " + std::to_string(fps) + "fps");
-        this->frame_count = 0;
-        this->pre_t = post_t;
+        if(this->frame_count%FPS_INTERVAL == 0){
+            const hr_clock_t post_t = _chrono::high_resolution_clock::now();
+            const double fps = 1000.0 * (double)FPS_INTERVAL / _chrono::duration_cast<_chrono::milliseconds>(post_t-this->pre_t).count();
+            _ml::notice(std::to_string(this->frame_count) + ": " + std::to_string(fps) + "fps");
+            this->pre_t = post_t;
+        }
         this->sync_count.store(0, std::memory_order_release);
         this->sendSync();
     }
