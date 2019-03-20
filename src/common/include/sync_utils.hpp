@@ -1,6 +1,6 @@
 /******************************************
-*             sync_utils.hpp              *
-*  (the utilities to pass sync messages)  *
+*              sync_utils.hpp             *
+*  (utilities to exchange sync messages)  *
 ******************************************/
 
 #ifndef SYNC_UTILS_HPP
@@ -19,7 +19,7 @@ const int VIEWBUF_EXTRA_NUM = 3;    // the number of extra domains in the view b
 const int JPEG_NO_CHANGE = 0;       // the flag not to change the JPEG parameters
 const int JPEG_QUALITY_CHANGE = 1;  // the flag to change the quality factor
 const int JPEG_YCbCr_CHANGE = 2;    // the flag to change the YCbCr format
-const int JPEG_PARAM_KEEP = 0;      // the flag to keep the JPEG parameter
+const int JPEG_PARAM_KEEP = 0;      // the flag to keep the value of the JPEG parameters
 const int JPEG_PARAM_UP = 1;        // the flag to increase the JPEG parameter
 const int JPEG_PARAM_DOWN = 2;      // the flag to decrease the JPEG parameter
 const int JPEG_QUALITY_MIN = 1;     // the minimum value of the quality factor

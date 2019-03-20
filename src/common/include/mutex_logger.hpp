@@ -1,7 +1,7 @@
-/***********************************
-*         mutex_logger.hpp         *
-*  (the logging tools with mutex)  *
-***********************************/
+/*******************************
+*       mutex_logger.hpp       *
+*  (logging tools with mutex)  *
+*******************************/
 
 #ifndef MUTEX_LOGGER_HPP
 #define MUTEX_LOGGER_HPP
@@ -10,13 +10,13 @@
 #include <string>
 #include <mutex>
 
-const std::string GREEN("\033[0;32m");   // a declaration to use green
-const std::string YELLOW("\033[0;33m");  // a declaration to use yellow
-const std::string RED("\033[0;31m");     // a declaration to use red
-const std::string CYAN("\033[0;36m");    // a declaration to use cyan
-const std::string RESET("\033[0m");      // a declaration to reset color
+const std::string GREEN("\033[0;32m");   // the declaration to use green
+const std::string YELLOW("\033[0;33m");  // the declaration to use yellow
+const std::string RED("\033[0;31m");     // the declaration to use red
+const std::string CYAN("\033[0;36m");    // the declaration to use cyan
+const std::string RESET("\033[0m");      // the declaration to reset color
 
-/* the logging tools with mutex */
+/* logging tools with mutex */
 namespace mutex_logger{
     static std::mutex lock;                                          // the mutex lock
     void notice(const std::string& msg);                             // print a notice

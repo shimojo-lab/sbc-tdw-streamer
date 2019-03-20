@@ -1,7 +1,7 @@
-/****************************************
-*          frontend_server.hpp          *
-*  (the class for the frontend server)  *
-****************************************/
+/************************************
+*        frontend_server.hpp        *
+*  (class for the frontend server)  *
+************************************/
 
 #ifndef FRONTEND_SERVER_HPP
 #define FRONTEND_SERVER_HPP
@@ -12,7 +12,7 @@
 #include "sync_manager.hpp"
 #include <thread>
 
-/* the class for the frontend server */
+/* class for the frontend server */
 class FrontendServer{
     private:
         _asio::io_service& ios;                // the I/O event loop
@@ -20,7 +20,6 @@ class FrontendServer{
         _ip::tcp::acceptor acc;                // the TCP acceptor
         std::vector<sock_ptr_t> socks;         // the in-use TCP sockets
         int display_num;                       // the number of the displays
-        int target_fps;                        // the target frame rate
         JsonHandler init_params;               // the parameters packed in the initial message
         int connected_num = 0;                 // the number of the connected display nodes
         jpeg_params_t ycbcr_format_list;       // the YCbCr format list for the display nodes
@@ -30,9 +29,9 @@ class FrontendServer{
         std::thread send_thre;                 // the sender thread
         std::thread enc_thre;                  // the encoder thread
         
-        void waitForConnection();                          // start waiting for connection
-        void onConnect(const err_t& err);                  // the callback function when connected to a display node
-        void onSendInit(const err_t& err,  size_t t_bytes, // the callback function when sending the initial message
+        void waitForConnection();                          // start waiting for TCP connection
+        void onConnect(const err_t& err);                  // the callback when connected by the display node
+        void onSendInit(const err_t& err,  size_t t_bytes, // the callback when sending the initial message
                         const std::string ip);
         void runFrameEncoder(const std::string video_src,  // launch the frame encoder
                              const int column, const int row, const int bezel_w, const int bezel_h,

@@ -1,7 +1,7 @@
-/***************************************
-*          display_client.hpp          *
-*  (the class for the display client)  *
-***************************************/
+/***********************************
+*        display_client.hpp        *
+*  (class for the display client)  *
+***********************************/
 
 #ifndef DISPLAY_CLIENT_HPP
 #define DISPLAY_CLIENT_HPP
@@ -11,11 +11,9 @@
 #include "frame_decoder.hpp"
 #include "frame_viewer.hpp"
 
-using init_params_t = std::tuple<
-    int, int, int, int, int, int, int, int, int
->;
+using init_params_t = std::tuple<int, int, int, int, int, double, int, int, int, int>;
 
-/* the class for the display client */
+/* class for the display client */
 class DisplayClient{
     private:
         _asio::io_service& ios;              // the I/O event loop

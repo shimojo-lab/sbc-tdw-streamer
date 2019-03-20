@@ -1,18 +1,16 @@
-/**************************************
-*          config_parser.hpp          *
-*  (The parser of display_conf.json)  *
-**************************************/
+/**********************************
+*        config_parser.hpp        *
+*  (parser of display_conf.json)  *
+**********************************/
 
 #ifndef CONFIG_PARSER_HPP
 #define CONFIG_PARSER_HPP
 
 #include "base_config_parser.hpp"
 
-using dc_params_t = std::tuple<
-    std::string, int, std::string, std::string
->;
+using dc_params_t = std::tuple<std::string, int, std::string>;
 
-/* The parser of display_conf.json */
+/* parser of display_conf.json */
 class ConfigParser : public BaseConfigParser{
     private:
         std::string ip;      // the IP address of the head node

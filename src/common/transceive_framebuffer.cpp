@@ -1,7 +1,7 @@
-/*******************************************
-*        transceive_framebuffer.hpp        *
-*  (the framebuffer used in transmission)  *
-*******************************************/
+/****************************************
+*      transceive_framebuffer.hpp       *
+*  (framebuffer used for transmission)  *
+****************************************/
 
 #include "transceive_framebuffer.hpp"
 

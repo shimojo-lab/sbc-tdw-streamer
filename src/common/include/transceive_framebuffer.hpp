@@ -1,7 +1,7 @@
-/*******************************************
-*        transceive_framebuffer.hpp        *
-*  (the framebuffer used in transmission)  *
-*******************************************/
+/****************************************
+*      transceive_framebuffer.hpp       *
+*  (framebuffer used for transmission)  *
+****************************************/
 
 #ifndef TRANSCEIVE_FRAMEBUFFER_HPP
 #define TRANSCEIVE_FRAMEBUFFER_HPP
@@ -14,7 +14,7 @@
 const int BUF_FRONT_INDEX = 0;            // the index of the buffer head
 const int TRANBUF_SPINLOCK_INTERVAL = 1;  // the interval time in the spinlock
 
-/* the framebuffer used in transmission */
+/* framebuffer used for transmission */
 class TransceiveFramebuffer{
     private:
         boost::circular_buffer<std::string> jpeg_buf;  // the buffer

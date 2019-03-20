@@ -1,7 +1,8 @@
 {
     "video": {
         "src": "/home/user/video/movie.mp4",
-        "framerate": 20
+        "framerate": 20,
+        "framerate_jitter": 0.5
     },
     "layout": {
         "column": 2,
@@ -25,7 +26,7 @@
         "init_ycbcr_format": "4:4:4",
         "init_quality": 100,
         "decoder_num": 2,
-        "tuning_term": 20
+        "tuning_term": 50
     },
     "display_node": [
         "192.168.10.10",

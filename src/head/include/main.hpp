@@ -1,7 +1,7 @@
-/************************************
-*             main.hpp              *
-*  (the program for the head node)  *
-************************************/
+/**************************************
+*              main.hpp               *
+*  (main function for the head node)  *
+**************************************/
 
 #ifndef MAIN_HPP
 #define MAIN_HPP

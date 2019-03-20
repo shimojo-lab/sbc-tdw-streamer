@@ -1,7 +1,7 @@
-/***********************************
-*         mutex_logger.cpp         *
-*  (the logging tools with mutex)  *
-***********************************/
+/*******************************
+*       mutex_logger.cpp       *
+*  (logging tools with mutex)  *
+*******************************/
 
 #include "mutex_logger.hpp"
 

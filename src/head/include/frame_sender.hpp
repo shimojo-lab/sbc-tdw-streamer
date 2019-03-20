@@ -1,7 +1,7 @@
-/********************************
-*       frame_sender.hpp        *
-*  (the sender of JPEG frames)  *
-********************************/
+/******************************
+*      frame_sender.hpp       *
+*   (sender of JPEG frames)   *
+******************************/
 
 #ifndef FRAME_SENDER_HPP
 #define FRAME_SENDER_HPP
@@ -12,7 +12,7 @@
 #include <vector>
 #include <atomic>
 
-/* the sender of JPEG frames */
+/* sender of JPEG frames */
 class FrameSender{
     private:
         _asio::io_service& ios;                 // the I/O event loop

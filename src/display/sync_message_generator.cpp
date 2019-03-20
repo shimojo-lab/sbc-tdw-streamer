@@ -1,14 +1,14 @@
-/******************************************************
-*             sync_message_generator.cpp              *
-*  (the generator of messages used as sync messages)  *
-******************************************************/
+/****************************************************
+*            sync_message_generator.cpp             *
+*  (message generator for synchronization process)  *
+****************************************************/
 
 #include "sync_message_generator.hpp"
 
 /* constructor */
-SyncMessageGenerator::SyncMessageGenerator(const int target_fps, const int tuning_term,
-                                           const tranbuf_ptr_t recv_buf, const int ycbcr_format,
-                                           const int quality, const double fps_jitter):
+SyncMessageGenerator::SyncMessageGenerator(const int target_fps, const double fps_jitter,
+                                           const int tuning_term, const tranbuf_ptr_t recv_buf,
+                                           const int ycbcr_format, const int quality):
     tuning_term(tuning_term),
     recv_buf(recv_buf),
     ycbcr_format(ycbcr_format),

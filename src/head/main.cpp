@@ -1,11 +1,11 @@
-/************************************
-*              main.cpp             *
-*  (the program for the head node)  *
-************************************/
+/**************************************
+*              main.cpp               *
+*  (main function for the head node)  *
+**************************************/
 
 #include "main.hpp"
 
-/* the main function */
+/* main function */
 int main(int argc, char *argv[]){
     // parse the head_conf.json
     std::string conf_file;

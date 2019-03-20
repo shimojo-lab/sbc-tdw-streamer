@@ -1,7 +1,7 @@
-/****************************************
-*           frame_encoder.cpp           *
-*  (the JPEG encoder for video frames)  *
-****************************************/
+/************************************
+*         frame_encoder.cpp         *
+*  (JPEG encoder for video frames)  *
+************************************/
 
 #ifndef FRAME_ENCODER_HPP
 #define FRAME_ENCODER_HPP
@@ -20,15 +20,15 @@ extern "C"{
 const int COLOR_CHANNEL_NUM = 3;  // the number of the color channels
 const int JPEG_FAILED = -1;       // the return value in failing JPEG encode
 
-/* the JPEG encoder for video frames */
+/* JPEG encoder for video frames */
 class FrameEncoder{
     private:
         const tjhandle handle;                  // the TurboJPEG encoder
         cv::VideoCapture video;                 // the video
         const int display_num;                  // the number of the displays
         double ratio;                           // the resize ratio
-        int interpolation_type;                 // the method for resizing
-        cv::Mat resized_frame;                  // a resized frame
+        int interpolation_type;                 // the resize method
+        cv::Mat resized_frame;                  // the resized frame
         cv::Rect roi;                           // the area to paste a resized frame
         jpeg_params_t& ycbcr_format_list;       // the YCbCr formats applied for the display nodes
         jpeg_params_t& quality_list;            // the quality factors applied for the display nodes
@@ -49,7 +49,7 @@ class FrameEncoder{
                      const int height, jpeg_params_t& ycbcr_format_list, jpeg_params_t& quality_list,
                      std::vector<tranbuf_ptr_t>& send_bufs);
         ~FrameEncoder();  // destructor
-        void run();       // start encoding video frames
+        void run();       // start encoding frames
 };
 
 #endif  /* FRAME_ENCODER_HPP */

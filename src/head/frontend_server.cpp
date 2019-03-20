@@ -1,7 +1,7 @@
-/****************************************
-*          frontend_server.cpp          *
-*  (the class for the frontend server)  *
-****************************************/
+/************************************
+*        frontend_server.cpp        *
+*  (class for the frontend server)  *
+************************************/
 
 #include "frontend_server.hpp"
 
@@ -13,9 +13,10 @@ FrontendServer::FrontendServer(_asio::io_service& ios, ConfigParser& parser, con
     // get the parameters from the config parser
     std::string src, ycbcr_format_name;
     int column, row, bezel_w, bezel_h, width, height, stream_port, sendbuf_num, recvbuf_num;
-    int quality, dec_thre_num, tuning_term;
+    int target_fps, quality, dec_thre_num, tuning_term;
+    double fps_jitter;
     std::tie(
-        src, this->target_fps, column, row, bezel_w, bezel_h, width, height, stream_port,
+        src, target_fps, fps_jitter, column, row, bezel_w, bezel_h, width, height, stream_port,
         sendbuf_num, recvbuf_num, ycbcr_format_name, quality, dec_thre_num, tuning_term, this->ip_addrs
     ) = parser.getFrontendServerParams();
     this->display_num = column * row;
@@ -37,7 +38,8 @@ FrontendServer::FrontendServer(_asio::io_service& ios, ConfigParser& parser, con
     this->init_params.setIntParam("width", width);
     this->init_params.setIntParam("height", height);
     this->init_params.setIntParam("stream_port", stream_port);
-    this->init_params.setIntParam("target_fps", this->target_fps);
+    this->init_params.setIntParam("target_fps", target_fps);
+    this->init_params.setDoubleParam("fps_jitter", fps_jitter);
     this->init_params.setIntParam("recvbuf_num", recvbuf_num);
     this->init_params.setIntParam("dec_thre_num", dec_thre_num);
     this->init_params.setIntParam("tuning_term", tuning_term);
@@ -171,7 +173,6 @@ void FrontendServer::runFrameSender(const int stream_port, const int viewbuf_num
 void FrontendServer::runSyncManager(){
     SyncManager manager(this->ios,
                         this->socks,
-                        this->target_fps,
                         this->ycbcr_format_list,
                         this->quality_list
     );

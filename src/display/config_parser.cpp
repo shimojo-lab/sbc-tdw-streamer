@@ -1,7 +1,7 @@
-/**************************************
-*          config_parser.cpp          *
-*  (The parser of display_conf.json)  *
-**************************************/
+/**********************************
+*        config_parser.cpp        *
+*  (parser of display_conf.json)  *
+**********************************/
 
 #include "config_parser.hpp"
 
@@ -20,7 +20,6 @@ const bool ConfigParser::readParams(const _pt::ptree& conf){
         this->ip = this->getStrParam("head_node.ip");
         this->port = this->getIntParam("head_node.port");
         this->fb_dev = this->getStrParam("device.framebuffer");
-        this->tty_dev = this->getStrParam("device.tty");
     }catch(...){
         _ml::caution("Could not get parameter", "Config file is invalid");
         return false;
@@ -33,7 +32,6 @@ const dc_params_t ConfigParser::getDisplayClientParams(){
     const std::string ip = this->ip;
     const int port = this->port;
     const std::string fb_dev = this->fb_dev;
-    const std::string tty_dev = this->tty_dev;
-    return std::forward_as_tuple(ip, port, fb_dev, tty_dev);
+    return std::forward_as_tuple(ip, port, fb_dev);
 }
 

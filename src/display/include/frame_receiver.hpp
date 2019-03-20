@@ -1,7 +1,7 @@
-/**********************************
-*        frame_receiver.hpp       *
-*  (the receiver of JPEG frames)  *
-**********************************/
+/********************************
+*      frame_receiver.hpp       *
+*   (receiver of JPEG frames)   *
+********************************/
 
 #ifndef FRAME_RECEIVER_HPP
 #define FRAME_RECEIVER_HPP
@@ -10,7 +10,7 @@
 #include "socket_utils.hpp"
 #include "transceive_framebuffer.hpp"
 
-/* the receiver of JPEG frames */
+/* receiver of JPEG frames */
 class FrameReceiver{
     private:
         _asio::io_service& ios;        // the I/O event loop

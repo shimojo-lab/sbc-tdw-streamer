@@ -11,7 +11,7 @@ A middleware to build a Tiled Display Wall (TDW) with Single Board Computers (SB
   - [OpenCV C++ libraries](https://github.com/opencv/opencv) (with FFmpeg support)
   - [Boost C++ libraries](https://www.boost.org)
 2. Clone this repository, and move into the directory.
-3. Run `make build_head`.
+3. Run `make head`.
 
 ## Display node (Raspberry Pi, TinkerBoard, ... etc.)
 1. Install the dependencies.
@@ -21,7 +21,7 @@ A middleware to build a Tiled Display Wall (TDW) with Single Board Computers (SB
   - [Boost C++ Libraries](https://www.boost.org)
   - [FBDEV](https://www.x.org/archive/X11R6.8.0/doc/fbdev.4.html)
 2. Clone this repository, and move into the directory.
-3. Run `make build_display`.
+3. Run `make display`.
 
 ## How to run
 1. On the head node,

@@ -1,7 +1,7 @@
-/**************************************
-*       base_config_parser.hpp        *
-*  (a super class of config parsers)  *
-**************************************/
+/************************************
+*       base_config_parser.hpp      *
+*  (super class of config parsers)  *
+************************************/
 
 #ifndef BASE_CONFIG_PARSER_HPP
 #define BASE_CONFIG_PARSER_HPP
@@ -23,8 +23,9 @@ class BaseConfigParser{
     protected:
         _pt::ptree conf;  // a parsed json
         
+        const int getIntParam(const std::string& key);          // get an int parameter
+        const double getDoubleParam(const std::string& key);    // get a double parameter
         const std::string getStrParam(const std::string& key);  // get a string parameter
-        const int getIntParam(const std::string& key);          // get a int parameter
     
     public:
         BaseConfigParser(const std::string& filename);  // constructor

@@ -1,7 +1,7 @@
-/********************************
-*       frame_sender.cpp        *
-*  (the sender of jpeg frames)  *
-********************************/
+/******************************
+*      frame_sender.cpp       *
+*   (sender of JPEG frames)   *
+******************************/
 
 #include "frame_sender.hpp"
 

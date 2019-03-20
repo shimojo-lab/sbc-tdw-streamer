@@ -1,7 +1,7 @@
-/****************************************
-*           socket_utils.hpp            *
-*  (the utilities to use a TCP socket)  *
-****************************************/
+/************************************
+*         socket_utils.hpp          *
+*  (utilities to use a TCP socket)  *
+************************************/
 
 #ifndef SOCKET_UTILS_HPP
 #define SOCKET_UTILS_HPP

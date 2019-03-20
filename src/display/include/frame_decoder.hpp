@@ -17,10 +17,10 @@ extern "C"{
 #endif
 
 const int JPEG_FAILED = -1;    // the return value in failing decoding JPEG
-const int FRAME_ID_INDEX = 0;  // the initial frame ID
-const int FRAME_ID_LEN = 1;    // the length of the frame ID
+const int FRAME_ID_INDEX = 0;  // the initial frame index
+const int FRAME_ID_LEN = 1;    // the length of the frame index
 
-/* the JPEG decoder for video frames */
+/* JPEG decoder for video frames */
 class FrameDecoder{
     private:
         const tjhandle handle;         // the TruboJPEG decoder

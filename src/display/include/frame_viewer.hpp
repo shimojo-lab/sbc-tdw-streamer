@@ -1,7 +1,7 @@
-/*********************************
-*        frame_viewer.hpp        *
-*  (the viewer of video frames)  *
-*********************************/
+/*******************************
+*       frame_viewer.hpp       *
+*   (viewer of video frames)   *
+*******************************/
 
 #ifndef FRAME_VIEWER_HPP
 #define FRAME_VIEWER_HPP
@@ -24,7 +24,7 @@ const int BITS_PER_PIXEL = 24;                             // the number of bits
 constexpr double MAX_FPS = 60.0;                           // the maximum frame rate
 constexpr int DISPLAY_INTERVAL = (int)(1000.0 / MAX_FPS);  // the interval after displaying a frame
 
-/* the viewer of video frames */
+/* viewer of video frames */
 class FrameViewer{
     private:
         _asio::io_service& ios;           // the I/O event loop
@@ -49,8 +49,7 @@ class FrameViewer{
     public:
         FrameViewer(_asio::io_service& ios, _ip::tcp::socket& sock,  // constructor
                     const viewbuf_ptr_t view_buf, const std::string& fb_dev,
-                    const int width, const int height, const std::string& tty_dev,
-                    SyncMessageGenerator& generator);
+                    const int width, const int height, SyncMessageGenerator& generator);
         ~FrameViewer();  // destructor
 };
 

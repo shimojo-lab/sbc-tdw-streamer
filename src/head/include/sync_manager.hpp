@@ -1,7 +1,7 @@
-/*************************************************
-*                sync_manager.hpp                *
-*  (the manager of the synchronization process)  *
-*************************************************/
+/**************************************
+*          sync_manager.hpp           *
+*  (synchronization process manager)  *
+**************************************/
 
 #ifndef SYNC_MANAGER_HPP
 #define SYNC_MANAGER_HPP
@@ -17,18 +17,17 @@ extern "C"{
 
 using streambuf_ptr_t = std::shared_ptr<_asio::streambuf>;
 
-/* the manager of the synchronization process */
+/* synchronization process manager */
 class SyncManager{
     private:
         _asio::io_service& ios;                    // the I/O event loop
-        std::vector<sock_ptr_t>& socks;            // in-use TCP sockets
+        std::vector<sock_ptr_t>& socks;            // the in-use TCP sockets
         std::vector<streambuf_ptr_t> stream_bufs;  // the stream buffers
         const int display_num;                     // the number of the displays
-        const int target_fps;                      // the target frame rate
         std::atomic_int sync_count;                // the count of the synchronized displays
         jpeg_params_t& ycbcr_format_list;          // the YCbCr formats applied for the display nodes
         jpeg_params_t& quality_list;               // the quality factors applied for the display nodes
-        JsonHandler sync_params;                   // a parsed sync message
+        JsonHandler sync_params;                   // the parsed sync message
         hr_clock_t pre_t;                          // the starting time of a term
         int frame_count = 0;                       // the count of obsoleted frames
         
@@ -41,8 +40,7 @@ class SyncManager{
         
     public:
         SyncManager(_asio::io_service& ios, std::vector<sock_ptr_t>& socks,  // constructor
-                    const int target_fps, jpeg_params_t& ycbcr_format_list,
-                    jpeg_params_t& quality_list);
+                    jpeg_params_t& ycbcr_format_list, jpeg_params_t& quality_list);
         void run();  // start the synchronizaton process
 };
 

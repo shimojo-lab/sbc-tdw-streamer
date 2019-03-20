@@ -1,7 +1,7 @@
-/***************************************
-*          display_client.cpp          *
-*  (the class for the display client)  *
-***************************************/
+/***********************************
+*        display_client.cpp        *
+*  (class for the display client)  *
+***********************************/
 
 #include "display_client.hpp"
 
@@ -12,7 +12,7 @@ DisplayClient::DisplayClient(_asio::io_service& ios, ConfigParser& parser):
 {
     // set the parameters
     int fs_port;
-    std::tie(this->ip_addr, fs_port, this->fb_dev, this->tty_dev) = parser.getDisplayClientParams();
+    std::tie(this->ip_addr, fs_port, this->fb_dev) = parser.getDisplayClientParams();
     
     // connect to the head node
     this->sock.async_connect(_ip::tcp::endpoint(_ip::address::from_string(this->ip_addr), fs_port),
@@ -28,13 +28,14 @@ const init_params_t DisplayClient::parseInitMsg(const std::string& msg){
     const int height = init_params.getIntParam("height");
     const int stream_port = init_params.getIntParam("stream_port");
     const int target_fps = init_params.getIntParam("target_fps");
+    const double fps_jitter = init_params.getDoubleParam("fps_jitter");
     const int recvbuf_num = init_params.getIntParam("recvbuf_num");
     const int dec_thre_num = init_params.getIntParam("dec_thre_num");
     const int tuning_term = init_params.getIntParam("tuning_term");
-    const int sampling_type = init_params.getIntParam("yuv_format");
+    const int sampling_type = init_params.getIntParam("ycbcr_format");
     const int quality = init_params.getIntParam("quality");
     return std::forward_as_tuple(
-        width, height, stream_port, recvbuf_num, dec_thre_num, target_fps, tuning_term, sampling_type, quality
+        width, height, stream_port, recvbuf_num, dec_thre_num, target_fps, fps_jitter, tuning_term, sampling_type, quality
     );
 }
 
@@ -65,9 +66,9 @@ void DisplayClient::onRecvInitMsg(const err_t& err, size_t t_bytes){
     const auto data = this->stream_buf.data();
     std::string recv_msg(_asio::buffers_begin(data), _asio::buffers_end(data));
     recv_msg.erase(recv_msg.length()-MSG_DELIMITER_LEN);
-    int width, height, stream_port, recvbuf_num, dec_thre_num, target_fps, tuning_term, yuv_format, quality;
+    int width, height, stream_port, recvbuf_num, dec_thre_num, target_fps, fps_jitter, tuning_term, ycbcr_format, quality;
     std::tie(
-        width, height, stream_port, recvbuf_num, dec_thre_num, target_fps, tuning_term, yuv_format, quality
+        width, height, stream_port, recvbuf_num, dec_thre_num, target_fps, fps_jitter, tuning_term, ycbcr_format, quality
     ) = this->parseInitMsg(recv_msg);
     
     // launch the receiver thread
@@ -90,14 +91,13 @@ void DisplayClient::onRecvInitMsg(const err_t& err, size_t t_bytes){
     }
     
     // launch the frame viewer in this thread
-    SyncMessageGenerator generator(target_fps, tuning_term, recv_buf, yuv_format, quality);
+    SyncMessageGenerator generator(target_fps, fps_jitter, tuning_term, recv_buf, ycbcr_format, quality);
     FrameViewer viewer(this->ios,
                        this->sock,
                        view_buf,
                        this->fb_dev,
                        width,
                        height,
-                       this->tty_dev,
                        generator
     );
 }

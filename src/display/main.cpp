@@ -1,11 +1,11 @@
-/***************************************
-*               main.cpp               *
-*  (the program for the display node)  *
-***************************************/
+/*****************************************
+*                main.cpp                *
+*  (main function for the display node)  *
+*****************************************/
 
 #include "main.hpp"
 
-/* the main function */
+/* main function */
 int main(int argc, char *argv[]){
     // parse display_conf.json
     if(argc != ARGUMENT_NUM){

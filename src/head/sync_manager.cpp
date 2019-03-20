@@ -1,18 +1,16 @@
-/*************************************************
-*               sync_manager.cpp                 *
-*  (the manager of the synchronization process)  *
-*************************************************/
+/**************************************
+*          sync_manager.cpp           *
+*  (synchronization process manager)  *
+**************************************/
 
 #include "sync_manager.hpp"
 
 /* constructor */
 SyncManager::SyncManager(_asio::io_service& ios, std::vector<sock_ptr_t>& socks,
-                         const int target_fps, jpeg_params_t& ycbcr_format_list,
-                         jpeg_params_t& quality_list):
+                         jpeg_params_t& ycbcr_format_list, jpeg_params_t& quality_list):
     ios(ios),
     socks(socks),
     display_num(socks.size()),
-    target_fps(target_fps),
     sync_count(0),
     ycbcr_format_list(ycbcr_format_list),
     quality_list(quality_list)
@@ -79,12 +77,12 @@ void SyncManager::parseSyncMsg(const std::string& sync_msg, const int id){
     const int change_flag = this->sync_params.getIntParam("change");
     
     if(param_flag == JPEG_YCbCr_CHANGE){
-        const std::string new_type = this->tuneYCbCr(change_flag, id);
+        const std::string new_type = this->changeYCbCr(change_flag, id);
         if(new_type != ""){
             _ml::notice("Display"+std::to_string(id)+": "+"YCbCr format is changed to "+new_type);
         }
     }else if(param_flag == JPEG_QUALITY_CHANGE){
-        std::string new_quality = this->tuneQuality(change_flag, id);
+        std::string new_quality = this->changeQuality(change_flag, id);
         if(new_quality != ""){
             _ml::notice("Display"+std::to_string(id)+": "+"Quality is changed to "+new_quality);
         }

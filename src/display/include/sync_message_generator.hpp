@@ -1,7 +1,7 @@
-/******************************************************
-*             sync_message_generator.hpp              *
-*  (the generator of messages used as sync messages)  *
-******************************************************/
+/****************************************************
+*            sync_message_generator.hpp             *
+*  (message generator for synchronization process)  *
+****************************************************/
 
 #ifndef SYNC_MESSAGE_GENERATOR_HPP
 #define SYNC_MESSAGE_GENERATOR_HPP
@@ -13,7 +13,7 @@ extern "C"{
     #include <turbojpeg.h>
 }
 
-/* the geneator of messages used as sync messages */
+/* message generator for synchronization process */
 class SyncMessageGenerator{
     private:
         JsonHandler sync_params;       // the parameters packed in a sync message
@@ -34,10 +34,10 @@ class SyncMessageGenerator{
         double sync_t_sum = 0.0;         // the elapsed time in the synchronization process
         double view_t_sum = 0.0;         // the elapsed time in displaying a frame
         
-        SyncMessageGenerator(const int target_fps, const int tuning_term,  // constructor
-                             const tranbuf_ptr_t recv_buf, const int ycbcr_format,
-                             const int quality, const double fps_jitter);
-        const std::string generate();                                      // generate a sync message
+        SyncMessageGenerator(const int target_fps, const double fps_jitter,  // constructor
+                             const int tuning_term, const tranbuf_ptr_t recv_buf,
+                             const int ycbcr_format, const int quality);
+        const std::string generate();                                        // generate a sync message
 };
 
 #endif  /* SYNC_MESSAGE_GENERATOR_HPP */

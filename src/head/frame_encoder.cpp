@@ -1,7 +1,7 @@
-/****************************************
-*           frame_encoder.cpp           *
-*  (the JPEG encoder for video frames)  *
-****************************************/
+/************************************
+*         frame_encoder.cpp         *
+*  (JPEG encoder for video frames)  *
+************************************/
 
 #include "frame_encoder.hpp"
 
@@ -12,7 +12,7 @@ FrameEncoder::FrameEncoder(const std::string src, const int column, const int ro
                            std::vector<tranbuf_ptr_t>& send_bufs):
     handle(tjInitCompress()),
     display_num(column*row),
-    ycbcr_format_list(ycbr_format_list),
+    ycbcr_format_list(ycbcr_format_list),
     quality_list(quality_list),
     send_bufs(send_bufs)
 {
@@ -118,7 +118,7 @@ void FrameEncoder::encode(const int id){
     }
 }
 
-/* start encoding video frames */
+/* start encoding frames */
 void FrameEncoder::run(){
     cv::Mat video_frame;
     while(true){

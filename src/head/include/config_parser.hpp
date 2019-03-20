@@ -1,7 +1,7 @@
-/***********************************
-*        config_parser.hpp         *
-*  (the parser of head_conf.json)  *
-***********************************/
+/*******************************
+*      config_parser.hpp       *
+*  (parser of head_conf.json)  *
+*******************************/
 
 #ifndef CONFIG_PARSER_HPP
 #define CONFIG_PARSER_HPP
@@ -12,15 +12,15 @@
 
 using ip_list_t = std::vector<std::string>;
 using fs_params_t = std::tuple<
-    std::string, int, int, int, int, int, int, int, int, int, int, std::string,
-    int, int, int, ip_list_t
+    std::string, int, double, int, int, int, int, int, int, int, int, int, std::string, int, int, int, ip_list_t
 >;
 
-/* the parser of head_conf.json */
+/* parser of head_conf.json */
 class ConfigParser : public BaseConfigParser{
     private:
         std::string src;           // the video source
         int target_fps;            // the target frame rate
+        double fps_jitter;         // the acceptable jitter of the frame rate
         int column;                // the number of displays in a horizontal direction
         int row;                   // the number of displays in a vertical direction
         int bezel_w;               // the length of each bezel in a horizontal direction

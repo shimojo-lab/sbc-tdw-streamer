@@ -1,7 +1,7 @@
-/***************************************
-*               main.hpp               *
-*  (the program for the display node)  *
-***************************************/
+/*****************************************
+*                main.hpp                *
+*  (main function for the display node)  *
+*****************************************/
 
 #ifndef MAIN_HPP
 #define MAIN_HPP

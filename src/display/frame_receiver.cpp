@@ -1,7 +1,7 @@
-/**********************************
-*        frame_receiver.cpp       *
-*  (the receiver of JPEG frames)  *
-**********************************/
+/********************************
+*      frame_receiver.cpp       *
+*   (receiver of JPEG frames)   *
+********************************/
 
 #include "frame_receiver.hpp"
 

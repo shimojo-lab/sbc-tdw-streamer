@@ -1,7 +1,7 @@
-/****************************************
-*          view_framebuffer.cpp         *
-*  (the framebuffer to put raw frames)  *
-****************************************/
+/**********************************************
+*            view_framebuffer.cpp             *
+*  (framebuffer to put decoded video frames)  *
+**********************************************/
 
 #include "view_framebuffer.hpp"
 
@@ -44,12 +44,12 @@ const int ViewFramebuffer::getCurrentPage(){
     return this->cur_page;
 }
 
-/* make a domain available to the frame viewer */
+/* make a domain displayable to the frame viewer */
 void ViewFramebuffer::activatePage(const int id){
     this->page_states[id].store(true, std::memory_order_release);
 }
 
-/* make a domain unavailable to the frame viewer */
+/* make a domain undisplayable to the frame viewer */
 void ViewFramebuffer::deactivatePage(){
     this->page_states[this->cur_page].store(false, std::memory_order_release);
     this->cur_page = (this->cur_page+1) % this->page_num;

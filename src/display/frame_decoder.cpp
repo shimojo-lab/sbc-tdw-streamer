@@ -1,7 +1,7 @@
-/****************************************
-*           frame_decoder.cpp           *
-*  (the JPEG decoder for video frames)  *
-****************************************/
+/************************************
+*         frame_decoder.cpp         *
+*  (JPEG decoder for video frames)  *
+************************************/
 
 #include "frame_decoder.hpp"
 

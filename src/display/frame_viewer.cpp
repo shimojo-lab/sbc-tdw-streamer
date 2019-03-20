@@ -1,14 +1,14 @@
-/**********************************
- *        frame_viewer.cpp        *
- *  (the viewer of video frames)  *
- *********************************/
+/********************************
+ *       frame_viewer.cpp       *
+ *   (viewer of video frames)   *
+ *******************************/
 
 #include "frame_viewer.hpp"
 
 /* constructor */
 FrameViewer::FrameViewer(_asio::io_service& ios, _ip::tcp::socket& sock, 
                          const viewbuf_ptr_t view_buf, const std::string& fb_dev, const int width,
-                         const int height, const std::string& tty_dev, SyncMessageGenerator& generator):
+                         const int height, SyncMessageGenerator& generator):
     ios(ios),
     sock(sock),
     view_buf(view_buf),
@@ -34,9 +34,7 @@ FrameViewer::FrameViewer(_asio::io_service& ios, _ip::tcp::socket& sock,
 /* destructor */
 FrameViewer::~FrameViewer(){
     munmap(this->fb_ptr, this->fb_size);
-    ioctl(this->tty, KDSETMODE, KD_TEXT);
     close(this->fb);
-    close(this->tty);
 }
 
 /* open the framebuffer of fbdev */
